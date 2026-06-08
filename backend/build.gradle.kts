@@ -4,8 +4,7 @@ plugins {
     kotlin("plugin.spring") version "2.4.0"
     id("org.springframework.boot") version "4.0.6"
     id("io.spring.dependency-management") version "1.1.4"
-    id("java-test-fixtures") 
-    kotlin("jvm") version "2.4.0"
+}
 
 
 group = "me.elgregoss"
