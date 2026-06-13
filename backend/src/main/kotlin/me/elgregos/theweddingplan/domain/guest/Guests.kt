@@ -1,7 +1,8 @@
 package me.elgregos.theweddingplan.domain.guest
 
-import me.elgregos.theweddingplan.domain.guest.Guest
-
 interface Guests {
+
     fun add(guest: Guest): Guest
+    fun update(guest: Guest): Guest
+    fun list(): List<Guest>
 }

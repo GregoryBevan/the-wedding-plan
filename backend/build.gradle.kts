@@ -16,6 +16,7 @@ java {
         languageVersion = JavaLanguageVersion.of(25)
     }
 }
+
 sourceSets {
     create("integrationTest") {
         compileClasspath += sourceSets.main.get().output + sourceSets.testFixtures.get().output
@@ -36,6 +37,13 @@ configurations["integrationTestRuntimeOnly"].extendsFrom(
     configurations.runtimeOnly.get(),
     configurations.testRuntimeOnly.get()
 )
+
+idea {
+    module {
+        testSources.from(sourceSets["integrationTest"].kotlin.srcDirs)
+        testResources.from(sourceSets["integrationTest"].resources.srcDirs)
+    }
+}
 
 repositories {
     mavenCentral()
@@ -61,6 +69,7 @@ dependencies {
 
     integrationTestImplementation(platform(libs.test.containers.bom))
     integrationTestImplementation("org.springframework.boot:spring-boot-starter-test") { exclude(group = "org.mockito") }
+    integrationTestImplementation("org.springframework.boot:spring-boot-restclient-test")
     integrationTestImplementation("org.junit.jupiter:junit-jupiter")
     integrationTestImplementation("org.springframework.boot:spring-boot-testcontainers")
     integrationTestImplementation("org.testcontainers:testcontainers")
@@ -72,7 +81,7 @@ dependencies {
 
 kotlin {
     compilerOptions {
-        freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
+        freeCompilerArgs.addAll("-Xjsr305=strict")
     }
 }
 
@@ -83,15 +92,17 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
-tasks.register<Delete>("cleanLibs") {
-    delete("build/libs")
-}
-
 tasks.register<Test>("integrationTest") {
-    dependsOn("cleanLibs")
     description = "Runs integration tests."
     group = "verification"
     testClassesDirs = sourceSets.getByName("integrationTest").output.classesDirs
-    classpath = sourceSets.getByName("integrationTest").runtimeClasspath
+    classpath = sourceSets.getByName("integrationTest").runtimeClasspath.filter {
+        !it.path.contains("/build/libs/")
+    }
     useJUnitPlatform()
+    environment("LIQUIBASE_DUPLICATE_FILE_MODE", "SILENT")
+}
+
+tasks.named("check") {
+    dependsOn(tasks.named("integrationTest"))
 }
