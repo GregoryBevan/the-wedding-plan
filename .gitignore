@@ -1,0 +1,30 @@
+# --- Standard ---
+.idea
+.DS_Store
+*10.DS_Store?
+.env
+.env.*
+### Language Specific ###
+# Java/Spring
+*.class
+*.jar
+*.war
+*.test
+.gradle/
+build/
+out/
+\*.gradle*
+
+# Node / Frontend (Vue)
+node_modules/
+dist/
+.npm/
+.yarn/
+.pnpmfile
+.pnpm/
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# Database persistence
+/postgres_data/
