@@ -8,6 +8,7 @@
 # Java/Spring
 *.class
 *.jar
+!backend/gradle/wrapper/gradle-wrapper.jar
 *.war
 *.test
 .gradle/
