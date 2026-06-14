@@ -4,7 +4,7 @@
     "useDefineForClassFields": true,
     "module": "ESNext",
     "lib": ["ESNext", "DOM"],
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "strict": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -15,5 +15,5 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["vite/client"]
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"]
+  "include": ["types/**/*.d.ts", "public/src/**/*.ts", "public/src/**/*.d.ts", "public/src/**/*.tsx", "public/src/**/*.vue", "backoffice/src/**/*.ts", "backoffice/src/**/*.d.ts", "backoffice/src/**/*.tsx", "backoffice/src/**/*.vue"]
 }
