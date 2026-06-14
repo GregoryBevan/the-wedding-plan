@@ -1,2 +1,2 @@
-insert into attendee (id, first_name, last_name) values ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'John', 'Doe');
-insert into attendee (id, first_name, last_name) values ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', 'Jane', 'Doe');
+insert into guest (id, version, creation_date, update_date, first_name, last_name, email) values ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 1, '2026-06-13 10:00:00', '2026-06-13 10:00:00', 'John', 'Doe', 'john.doe@example.com');
+insert into guest (id, version, creation_date, update_date, first_name, last_name, email) values ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', 1, '2026-06-13 10:00:00', '2026-06-13 10:00:00', 'Jane', 'Doe', 'jane.doe@example.com');

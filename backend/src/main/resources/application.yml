@@ -1,16 +1,9 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/wedding_db
-    username: user
+    username: admin
     password: password
     driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: true
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: true
-  properties:
-    hibernate:
-      dialect: org.hibernate.dialect.PostgreSQLDialect

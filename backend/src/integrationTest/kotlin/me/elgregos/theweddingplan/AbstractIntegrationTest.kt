@@ -2,17 +2,21 @@ package me.elgregos.theweddingplan
 
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.testcontainers.postgresql.PostgreSQLContainer
+import org.springframework.test.context.ActiveProfiles
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.testcontainers.postgresql.PostgreSQLContainer
 
 @SpringBootTest
 @Testcontainers
+@ActiveProfiles("test")
 abstract class AbstractIntegrationTest {
+
     companion object {
         @Container
         @ServiceConnection
-        val postgres = PostgreSQLContainer("postgres:15-alpine")
+        @JvmStatic
+        val postgres = PostgreSQLContainer("postgres:18-alpine")
             .withDatabaseName("wedding_db")
             .withUsername("user")
             .withPassword("password")
