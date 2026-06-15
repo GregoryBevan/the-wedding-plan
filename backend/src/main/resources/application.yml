@@ -7,3 +7,11 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: true
+
+app:
+  cors:
+    allowed-origins: []
+    allowed-origin-patterns: []
+    allowed-methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+    allowed-headers: [Authorization, Content-Type, Accept, Origin]
+    allow-credentials: true

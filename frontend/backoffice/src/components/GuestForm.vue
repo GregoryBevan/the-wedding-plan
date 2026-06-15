@@ -12,8 +12,15 @@
       placeholder="e.g. Doe"
       required
     />
-    <BaseButton type="submit">
-      Add Guest
+    <BaseInput
+      v-model="form.email"
+      type="email"
+      label="Email"
+      placeholder="e.g. john.doe@email.com"
+      required
+    />
+    <BaseButton type="submit" :disabled="isSubmitting">
+      {{ isSubmitting ? 'Adding guest...' : 'Add Guest' }}
     </BaseButton>
   </form>
 </template>
@@ -23,17 +30,37 @@ import { ref } from 'vue';
 import BaseInput from './ui/BaseInput.vue';
 import BaseButton from './ui/BaseButton.vue';
 
-const emit = defineEmits(['submit']);
+interface GuestFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+const props = withDefaults(defineProps<{
+  isSubmitting?: boolean;
+}>(), {
+  isSubmitting: false
+});
+
+const emit = defineEmits<{
+  (e: 'submit', payload: GuestFormData): void;
+}>();
 
 const form = ref({
   firstName: '',
-  lastName: ''
+  lastName: '',
+  email: ''
 });
 
 const handleSubmit = () => {
+  if (props.isSubmitting) {
+    return;
+  }
+
   emit('submit', { ...form.value });
   // Reset form after submit for now, or keep it depending on UX
   form.value.firstName = '';
   form.value.lastName = '';
+  form.value.email = '';
 };
 </script>

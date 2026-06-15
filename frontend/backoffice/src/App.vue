@@ -6,15 +6,25 @@
     </header>
     <main class="mx-auto max-w-2xl bg-white p-8 rounded-xl shadow-lg border border-secondary/20 text-text">
       <h2 class="text-3xl font-light mb-6 text-center tracking-wide">Add a New Guest</h2>
-      <GuestForm @submit="handleAddGuest" />
+      <GuestForm :is-submitting="isSubmitting" @submit="handleAddGuest" />
+      <p v-if="successMessage" class="mt-4 text-center text-sm text-green-700">{{ successMessage }}</p>
+      <p v-if="errorMessage" class="mt-4 text-center text-sm text-red-700">{{ errorMessage }}</p>
     </main>
   </div>
 </template>
 <script setup lang="ts">
 import GuestForm from './components/GuestForm.vue';
+import { useAddRequest } from './composables/useAddRequest';
+import { createGuest } from './services/guestApi';
 
-const handleAddGuest = (guestData: { firstName: string, lastName: string }) => {
-  console.log('New guest:', guestData);
-  // Here you would typically call an API
+const {
+  isSubmitting,
+  errorMessage,
+  successMessage,
+  submit
+} = useAddRequest(createGuest);
+
+const handleAddGuest = async (guestData) => {
+  await submit(guestData, { successMessage: 'Guest added successfully.' });
 };
 </script>
