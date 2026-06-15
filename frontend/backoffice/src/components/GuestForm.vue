@@ -19,8 +19,8 @@
       placeholder="e.g. john.doe@email.com"
       required
     />
-    <BaseButton type="submit" :disabled="isSubmitting">
-      {{ isSubmitting ? 'Adding guest...' : 'Add Guest' }}
+    <BaseButton type="submit" :disabled="props.isSubmitting">
+      {{ props.isSubmitting ? 'Adding guest...' : 'Add Guest' }}
     </BaseButton>
   </form>
 </template>
