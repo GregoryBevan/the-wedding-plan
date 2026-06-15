@@ -51,6 +51,7 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
     implementation(libs.exposed.spring.boot)
     implementation(libs.exposed.java.time)

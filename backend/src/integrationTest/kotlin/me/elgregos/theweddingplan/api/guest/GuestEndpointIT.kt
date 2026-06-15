@@ -3,9 +3,20 @@ package me.elgregos.theweddingplan.api.guest
 import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
 import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.charlieDavis
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 
 class GuestEndpointIT : AbstractEndpointIntegrationTest() {
+
+    @Test
+    fun `should allow CORS preflight for backoffice origin`() {
+        restTestClient.options().uri("/guests")
+            .header(HttpHeaders.ORIGIN, "http://localhost:5173")
+            .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+            .exchange()
+            .expectStatus().isOk
+            .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:5173")
+    }
 
     @Test
     fun `should add a new guest`() {
