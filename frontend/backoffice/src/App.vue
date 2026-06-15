@@ -15,14 +15,14 @@
 <script setup lang="ts">
 import GuestForm from './components/GuestForm.vue';
 import { useAddRequest } from './composables/useAddRequest';
-import { createGuest } from './services/guestApi';
+import { addGuest } from './services/guestApi';
 
 const {
   isSubmitting,
   errorMessage,
   successMessage,
   submit
-} = useAddRequest(createGuest);
+} = useAddRequest(addGuest);
 
 const handleAddGuest = async (guestData) => {
   await submit(guestData, { successMessage: 'Guest added successfully.' });

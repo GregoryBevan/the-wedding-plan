@@ -4,8 +4,9 @@ export interface CreateGuestPayload {
   email: string;
 }
 
-export const createGuest = async (payload: CreateGuestPayload) => {
-  const response = await fetch('http://localhost:8080/guests', {
+export const addGuest = async (payload: CreateGuestPayload) => {
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
+  const response = await fetch(`${apiBaseUrl}/guests`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
