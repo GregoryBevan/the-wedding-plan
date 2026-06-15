@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev:public": "vite --config vite.config.ts",
+    "dev:backoffice": "vite --config vite.config.ts --base /backoffice",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -14,6 +15,7 @@
     "@vitejs/plugin-vue": "^5.0.0",
     "vite": "^5.0.0",
     "typescript": "^5.0.0",
-    "vue-tsc": "^2.0.0"
+    "vue-tsc": "^2.0.0",
+    "@types/node": "^22.0.0"
   }
 }
