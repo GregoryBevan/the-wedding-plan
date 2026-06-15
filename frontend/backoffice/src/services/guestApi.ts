@@ -4,8 +4,13 @@ export interface CreateGuestPayload {
   email: string;
 }
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+if (!apiBaseUrl) {
+  throw new Error('Missing VITE_API_BASE_URL environment variable.');
+}
+
 export const addGuest = async (payload: CreateGuestPayload) => {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
   const response = await fetch(`${apiBaseUrl}/guests`, {
     method: 'POST',
     headers: {
