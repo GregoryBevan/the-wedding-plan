@@ -2,18 +2,27 @@
   <form @submit.prevent="handleSubmit" class="space-y-6">
     <BaseInput
       v-model="form.firstName"
+      input-id="firstName"
+      name="given-name"
+      autocomplete="given-name"
       label="First Name"
       placeholder="e.g. John"
       required
     />
     <BaseInput
       v-model="form.lastName"
+      input-id="lastName"
+      name="family-name"
+      autocomplete="family-name"
       label="Last Name"
       placeholder="e.g. Doe"
       required
     />
     <BaseInput
       v-model="form.email"
+      input-id="email"
+      name="email"
+      autocomplete="email"
       type="email"
       label="Email"
       placeholder="e.g. john.doe@email.com"

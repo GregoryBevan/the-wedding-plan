@@ -1,7 +1,9 @@
 <template>
   <div>
-    <label v-if="label" class="block text-sm font-medium uppercase tracking-wider">{{ label }}</label>
+    <label v-if="label" :for="inputId" class="block text-sm font-medium uppercase tracking-wider">{{ label }}</label>
     <input
+      :id="inputId"
+      :name="name"
       :type="type"
       :value="modelValue"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
@@ -16,6 +18,8 @@ defineProps<{
   label?: string;
   modelValue?: string;
   type?: string;
+  inputId?: string;
+  name?: string;
 }>();
 
 defineEmits(['update:modelValue']);

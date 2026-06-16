@@ -40,7 +40,10 @@ jobs:
       with:
         version: 9
     - name: Build Frontend
+      env:
+        VITE_API_BASE_URL: http://localhost:8080
       run: |
         pnpm install
+        pnpm run test
         pnpm run build
       working-directory: frontend

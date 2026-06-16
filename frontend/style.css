@@ -1,6 +1,14 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #788f9c;
+  --color-secondary: #bac2bd;
+  --color-accent: #e0cec9;
+  --color-background: #f4f5f5;
+  --color-text: #37474f;
+
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
 
 @layer base {
   html {
