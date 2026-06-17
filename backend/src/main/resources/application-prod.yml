@@ -1,3 +1,15 @@
 app:
+  auth:
+    allowed-emails: ${APP_AUTH_ALLOWED_EMAILS:}
+    success-redirect-url: ${APP_AUTH_SUCCESS_REDIRECT_URL:}
   cors:
-    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:https://app.example.com}
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:}
+
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID:}
+            client-secret: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET:}

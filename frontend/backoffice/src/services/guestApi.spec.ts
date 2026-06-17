@@ -7,6 +7,8 @@ describe('addGuest', () => {
   });
 
   it('calls backend endpoint with expected payload', async () => {
+    document.cookie = 'XSRF-TOKEN=test-csrf-token';
+
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => ({ id: 42 })
@@ -22,8 +24,10 @@ describe('addGuest', () => {
 
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:8080/guests', {
       method: 'POST',
+      credentials: 'include',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-XSRF-TOKEN': 'test-csrf-token'
       },
       body: JSON.stringify(payload)
     });

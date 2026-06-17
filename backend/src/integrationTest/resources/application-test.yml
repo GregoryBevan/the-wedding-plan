@@ -1,9 +1,22 @@
 spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-client-id
+            client-secret: test-client-secret
+  main:
+    allow-bean-definition-overriding: true
   sql:
     init:
       mode: always
 
 app:
+  auth:
+    allowed-emails:
+      - gregory@example.com
+    success-redirect-url: http://localhost:5173
   cors:
     allowed-origins:
       - http://localhost:5173
