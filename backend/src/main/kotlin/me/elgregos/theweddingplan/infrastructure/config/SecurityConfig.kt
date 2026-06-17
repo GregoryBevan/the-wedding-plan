@@ -54,7 +54,6 @@ class SecurityConfig(
             .csrf {
                 it.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                     .csrfTokenRequestHandler(XorCsrfTokenRequestAttributeHandler())
-                    .ignoringRequestMatchers("/auth/logout")
             }
             .cors(Customizer.withDefaults())
             .authorizeHttpRequests { auth ->
