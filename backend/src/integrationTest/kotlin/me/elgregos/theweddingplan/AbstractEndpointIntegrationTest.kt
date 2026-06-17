@@ -4,9 +4,11 @@ import me.elgregos.theweddingplan.TestAuthenticationConfig.Companion.TEST_USER_E
 import org.springframework.http.HttpHeaders
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.servlet.client.RestTestClient
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 abstract class AbstractEndpointIntegrationTest : AbstractIntegrationTest() {
     protected data class CsrfContext(
         val cookies: String,

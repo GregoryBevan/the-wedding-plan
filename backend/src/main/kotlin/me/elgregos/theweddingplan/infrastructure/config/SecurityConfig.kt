@@ -3,12 +3,15 @@ package me.elgregos.theweddingplan.infrastructure.config
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AnonymousAuthenticationToken
 import org.springframework.security.authorization.AuthorizationDecision
 import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.authentication.InsufficientAuthenticationException
 import org.springframework.security.oauth2.core.user.OAuth2User
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler
 import org.springframework.security.web.SecurityFilterChain
@@ -51,10 +54,12 @@ class SecurityConfig(
             .csrf {
                 it.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                     .csrfTokenRequestHandler(XorCsrfTokenRequestAttributeHandler())
+                    .ignoringRequestMatchers("/auth/logout")
             }
             .cors(Customizer.withDefaults())
             .authorizeHttpRequests { auth ->
                 auth
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     .requestMatchers("/guests/**").access { authentication, _ ->
                         val authn = authentication.get()
 
@@ -67,11 +72,15 @@ class SecurityConfig(
 
                         AuthorizationDecision(authProperties.isAllowed(email))
                     }
-                    .requestMatchers("/oauth2/**", "/login/**", "/auth/me", "/error").permitAll()
+                    .requestMatchers("/oauth2/**", "/login/**", "/auth/me", "/auth/logout", "/error").permitAll()
                     .anyRequest().authenticated()
             }
             .oauth2Login { oauth2 ->
                 oauth2.defaultSuccessUrl(resolveSuccessRedirectUrl(), true)
+            }
+            .logout { logout ->
+                logout.logoutUrl("/auth/logout")
+                    .logoutSuccessHandler(HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
             }
             .build()
 

@@ -8,6 +8,19 @@ const getApiBaseUrl = (): string => {
   return apiBaseUrl;
 };
 
+const readCookie = (name: string): string | undefined => {
+  if (typeof document === 'undefined') {
+    return undefined;
+  }
+
+  const token = document.cookie
+    .split(';')
+    .map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith(`${name}=`));
+
+  return token ? decodeURIComponent(token.substring(name.length + 1)) : undefined;
+};
+
 export interface AuthStatus {
   isAuthenticated: boolean;
   email: string | null;
@@ -41,3 +54,22 @@ export const getAuthStatus = async (): Promise<AuthStatus> => {
 };
 
 export const getGoogleLoginUrl = (): string => `${getApiBaseUrl()}/oauth2/authorization/google`;
+
+export const logout = async (): Promise<void> => {
+  const csrfToken = readCookie('XSRF-TOKEN');
+  const headers = new Headers();
+
+  if (csrfToken) {
+    headers.set('X-XSRF-TOKEN', csrfToken);
+  }
+
+  const response = await fetch(`${getApiBaseUrl()}/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+    headers
+  });
+
+  if (!response.ok) {
+    throw new Error('Unable to logout.');
+  }
+};

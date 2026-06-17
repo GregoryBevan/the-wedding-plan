@@ -22,5 +22,5 @@ app:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS}
     allowed-origin-patterns: []
     allowed-methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
-    allowed-headers: [Authorization, Content-Type, Accept, Origin]
+    allowed-headers: [Authorization, Content-Type, Accept, Origin, X-XSRF-TOKEN]
     allow-credentials: true
