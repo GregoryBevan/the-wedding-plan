@@ -18,13 +18,13 @@ const readCookie = (name: string): string | undefined => {
 };
 
 const getApiBaseUrl = (): string => {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL + "/api";
+  const envBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
-  if (!apiBaseUrl) {
+  if (!envBaseUrl) {
     throw new Error('Missing VITE_API_BASE_URL environment variable.');
   }
 
-  return apiBaseUrl;
+  return envBaseUrl + "/api";
 };
 
 export const addGuest = async (payload: CreateGuestPayload) => {
