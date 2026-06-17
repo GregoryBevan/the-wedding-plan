@@ -1,4 +1,7 @@
 app:
+  auth:
+    allowed-emails: ${APP_AUTH_ALLOWED_EMAILS:gregory@example.com,future-wife@example.com}
+    success-redirect-url: ${APP_AUTH_SUCCESS_REDIRECT_URL:http://localhost:5173}
   cors:
     allowed-origins:
       - http://localhost:5173

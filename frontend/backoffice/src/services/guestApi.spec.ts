@@ -4,9 +4,12 @@ import { addGuest } from './guestApi';
 describe('addGuest', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    document.cookie = 'XSRF-TOKEN=; Max-Age=0; path=/';
   });
 
   it('calls backend endpoint with expected payload', async () => {
+    document.cookie = 'XSRF-TOKEN=test-csrf-token';
+
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => ({ id: 42 })
@@ -20,13 +23,20 @@ describe('addGuest', () => {
 
     const result = await addGuest(payload);
 
-    expect(fetchMock).toHaveBeenCalledWith('http://localhost:8080/guests', {
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, options] = fetchMock.mock.calls[0];
+
+    expect(url).toBe('http://localhost:8080/guests');
+    expect(options).toMatchObject({
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      credentials: 'include',
       body: JSON.stringify(payload)
     });
+    expect(options?.headers).toBeInstanceOf(Headers);
+
+    const headers = options?.headers as Headers;
+    expect(headers.get('Content-Type')).toBe('application/json');
+    expect(headers.get('X-XSRF-TOKEN')).toBe('test-csrf-token');
     expect(result).toEqual({ id: 42 });
   });
 

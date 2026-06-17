@@ -4,6 +4,7 @@ import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
 import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.charlieDavis
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 
 class GuestEndpointIT : AbstractEndpointIntegrationTest() {
@@ -19,8 +20,27 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
     }
 
     @Test
-    fun `should add a new guest`() {
+    fun `should redirect unauthenticated guest creation to google login`() {
+        val csrf = csrfContext()
+
         restTestClient.post().uri("/guests")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(charlieDavis)
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.FOUND)
+            .expectHeader().valueMatches(HttpHeaders.LOCATION, ".*/oauth2/authorization/google")
+    }
+
+    @Test
+    fun `should add a new guest`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+
+        restTestClient.post().uri("/guests")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON)
             .body(charlieDavis)
