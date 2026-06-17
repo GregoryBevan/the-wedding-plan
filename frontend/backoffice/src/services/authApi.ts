@@ -70,6 +70,6 @@ export const logout = async (): Promise<void> => {
   });
 
   if (!response.ok) {
-    throw new Error('Unable to logout.');
+    throw new Error('Unable to log out.');
   }
 };
