@@ -3,7 +3,7 @@ app:
     allowed-emails: ${APP_AUTH_ALLOWED_EMAILS:}
     success-redirect-url: ${APP_AUTH_SUCCESS_REDIRECT_URL:}
   cors:
-    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:}
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:https://app.example.com}
 
 spring:
   security:
