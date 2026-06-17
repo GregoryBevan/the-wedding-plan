@@ -51,7 +51,6 @@ class SecurityConfig(
             http
                 .csrf {
                     it.spa()
-                        .ignoringRequestMatchers("/auth/logout")
                 }
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests { auth ->
