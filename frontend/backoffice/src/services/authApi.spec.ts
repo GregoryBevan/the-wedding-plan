@@ -28,6 +28,25 @@ describe('authApi', () => {
     });
   });
 
+  it('maps backend boolean fields without is-prefix', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        authenticated: true,
+        email: 'allowed@example.com',
+        authorized: true
+      })
+    } as Response);
+
+    const result = await getAuthStatus();
+
+    expect(result).toEqual({
+      isAuthenticated: true,
+      email: 'allowed@example.com',
+      isAuthorized: true
+    });
+  });
+
   it('returns backend google oauth2 login url', () => {
     expect(getGoogleLoginUrl()).toBe('http://localhost:8080/oauth2/authorization/google');
   });

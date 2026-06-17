@@ -10,11 +10,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.authentication.InsufficientAuthenticationException
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler
+import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import java.net.URI
 
 @Configuration
 @EnableConfigurationProperties(CorsProperties::class, AuthProperties::class)
@@ -23,25 +24,33 @@ class SecurityConfig(
     private val authProperties: AuthProperties,
 ) {
 
-    private fun resolveSuccessRedirectUrl(): String {
+    internal fun resolveSuccessRedirectUrl(): String {
+        val allowedOrigins = corsProperties.allowedOrigins
+            .map(String::trim)
+            .filter(String::isNotBlank)
+            .map { it.removeSuffix("/") }
+            .toSet()
+
         val configured = authProperties.successRedirectUrl.trim()
-        return if (
-            configured.startsWith("/") ||
-            configured.startsWith("http://") ||
-            configured.startsWith("https://")
-        ) {
-            configured
-        } else {
-            "/"
-        }
+
+        return configured
+            .takeIf(String::isNotBlank)
+            ?.takeIf { it.startsWith("/") || it.originOrNull() in allowedOrigins }
+            ?: "/"
     }
 
+    private fun String.originOrNull(): String? =
+        runCatching { URI(this) }
+            .getOrNull()
+            ?.takeIf { it.scheme == "http" || it.scheme == "https" }
+            ?.let { "${it.scheme}://${it.authority}" }
+
     @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain =
         http
             .csrf {
                 it.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                    .csrfTokenRequestHandler(CsrfTokenRequestAttributeHandler())
+                    .csrfTokenRequestHandler(XorCsrfTokenRequestAttributeHandler())
             }
             .cors(Customizer.withDefaults())
             .authorizeHttpRequests { auth ->
@@ -64,9 +73,8 @@ class SecurityConfig(
             .oauth2Login { oauth2 ->
                 oauth2.defaultSuccessUrl(resolveSuccessRedirectUrl(), true)
             }
+            .build()
 
-        return http.build()
-    }
 
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {

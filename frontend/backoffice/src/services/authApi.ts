@@ -14,6 +14,14 @@ export interface AuthStatus {
   isAuthorized: boolean;
 }
 
+interface RawAuthStatus {
+  isAuthenticated?: boolean;
+  authenticated?: boolean;
+  email?: string | null;
+  isAuthorized?: boolean;
+  authorized?: boolean;
+}
+
 export const getAuthStatus = async (): Promise<AuthStatus> => {
   const response = await fetch(`${getApiBaseUrl()}/auth/me`, {
     credentials: 'include',
@@ -23,7 +31,13 @@ export const getAuthStatus = async (): Promise<AuthStatus> => {
     throw new Error('Unable to retrieve authentication status.');
   }
 
-  return response.json();
+  const payload = await response.json() as RawAuthStatus;
+
+  return {
+    isAuthenticated: payload.isAuthenticated ?? payload.authenticated ?? false,
+    email: payload.email ?? null,
+    isAuthorized: payload.isAuthorized ?? payload.authorized ?? false,
+  };
 };
 
 export const getGoogleLoginUrl = (): string => `${getApiBaseUrl()}/oauth2/authorization/google`;
