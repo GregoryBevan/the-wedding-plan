@@ -6,8 +6,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.servlet.client.RestTestClient
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
@@ -31,30 +29,28 @@ abstract class AbstractEndpointIntegrationTest : AbstractIntegrationTest() {
         }
             .exchange()
             .expectStatus().isOk
-            .returnResult(String::class.java)
+            .expectBody(String::class.java)
+            .returnResult()
+
+        val bodyToken = authProbe.responseBody ?: error("Missing CSRF token from /test/csrf")
 
         val allCookies = authProbe.responseHeaders[HttpHeaders.SET_COOKIE].orEmpty()
         val responseSessionId = allCookies
             .firstOrNull { it.startsWith("JSESSIONID=") }
             ?.substringAfter("JSESSIONID=")
             ?.substringBefore(';')
-        val xsrfCookie = allCookies.firstOrNull { it.startsWith("XSRF-TOKEN=") }
-            ?: error("Missing XSRF-TOKEN cookie")
-        val encodedToken = xsrfCookie.substringAfter("XSRF-TOKEN=").substringBefore(';')
-        val cookieToken = URLDecoder.decode(encodedToken, StandardCharsets.UTF_8)
-        authProbe.responseBody ?: error("Missing CSRF token from /test/csrf")
 
         val cookies = buildString {
             val effectiveSessionId = responseSessionId ?: sessionId
             if (effectiveSessionId != null) {
                 append("JSESSIONID=$effectiveSessionId; ")
             }
-            append("XSRF-TOKEN=$cookieToken")
+            append("XSRF-TOKEN=$bodyToken")
         }
 
         return CsrfContext(
             cookies = cookies,
-            csrfToken = cookieToken,
+            csrfToken = bodyToken,
         )
     }
 
