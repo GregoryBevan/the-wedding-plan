@@ -31,12 +31,12 @@ export const addGuest = async (payload: CreateGuestPayload) => {
   const apiBaseUrl = getApiBaseUrl();
   const csrfToken = readCookie('XSRF-TOKEN');
 
-  const headers: HeadersInit = {
+  const headers = new Headers({
     'Content-Type': 'application/json'
-  };
+  });
 
   if (csrfToken) {
-    headers['X-XSRF-TOKEN'] = csrfToken;
+    headers.set('X-XSRF-TOKEN', csrfToken);
   }
 
   const response = await fetch(`${apiBaseUrl}/guests`, {
