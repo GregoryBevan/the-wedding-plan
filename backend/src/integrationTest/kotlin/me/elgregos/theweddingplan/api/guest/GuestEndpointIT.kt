@@ -12,7 +12,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
 
     @Test
     fun `should allow CORS preflight for backoffice origin`() {
-        restTestClient.options().uri("/guests")
+        restTestClient.options().uri("/api/guests")
             .header(HttpHeaders.ORIGIN, "http://localhost:5173")
             .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
             .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "content-type,x-xsrf-token")
@@ -26,7 +26,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
     fun `should redirect unauthenticated guest creation to google login`() {
         val csrf = csrfContext()
 
-        restTestClient.post().uri("/guests")
+        restTestClient.post().uri("/api/guests")
             .header(HttpHeaders.COOKIE, csrf.cookies)
             .header("X-XSRF-TOKEN", csrf.csrfToken)
             .contentType(MediaType.APPLICATION_JSON)
@@ -46,7 +46,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             email = "${UUID.randomUUID()}-${charlieDavis.email}"
         )
 
-        restTestClient.post().uri("/guests")
+        restTestClient.post().uri("/api/guests")
             .header(HttpHeaders.COOKIE, csrf.cookies)
             .header("X-XSRF-TOKEN", csrf.csrfToken)
             .contentType(MediaType.APPLICATION_JSON)

@@ -9,7 +9,7 @@ class GuestRouter(private val guestEndpoint: GuestEndpoint) {
 
     @Bean
     fun guestRoute() = router {
-        "/guests".nest {
+        "/api/guests".nest {
             POST("", guestEndpoint::addGuest)
         }
     }

@@ -26,7 +26,7 @@ describe('addGuest', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, options] = fetchMock.mock.calls[0];
 
-    expect(url).toBe('http://localhost:8080/guests');
+    expect(url).toBe('http://localhost:8080/api/guests');
     expect(options).toMatchObject({
       method: 'POST',
       credentials: 'include',
