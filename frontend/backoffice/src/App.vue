@@ -45,7 +45,7 @@ const {
 } = useAddRequest(addGuest);
 
 const isLoadingAuth = ref(true);
-const authStatus = ref(null);
+const authStatus = ref<Awaited<ReturnType<typeof getAuthStatus>> | null>(null);
 
 onMounted(async () => {
   try {
