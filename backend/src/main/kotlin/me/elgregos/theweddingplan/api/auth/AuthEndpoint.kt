@@ -10,8 +10,8 @@ import org.springframework.web.servlet.function.ServerResponse
 class AuthEndpoint(private val authProperties: AuthProperties) {
 
     fun me(request: ServerRequest): ServerResponse {
-        val principal = request.principal().orElse(null)
-        val oauth2User = principal as? OAuth2User
+        val authentication = request.principal().orElse(null) as? org.springframework.security.core.Authentication
+        val oauth2User = authentication?.principal as? OAuth2User
         val email = oauth2User?.getAttribute<String>("email")
 
         return ServerResponse.ok().body(
