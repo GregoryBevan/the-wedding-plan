@@ -53,7 +53,7 @@ import { onMounted, ref } from 'vue';
 import GuestForm from './components/GuestForm.vue';
 import { useAddRequest } from './composables/useAddRequest';
 import { addGuest } from './services/guestApi';
-import { getAuthStatus, getGoogleLoginUrl, logout } from './services/authApi';
+import { getAuthStatus, getGoogleLoginUrl, logout, type AuthStatus } from './services/authApi';
 
 const {
   isSubmitting,
@@ -63,7 +63,7 @@ const {
 } = useAddRequest(addGuest);
 
 const isLoadingAuth = ref(true);
-const authStatus = ref<any>(null);
+const authStatus = ref<AuthStatus | null>(null);
 const isLoggingOut = ref(false);
 const logoutErrorMessage = ref('');
 
