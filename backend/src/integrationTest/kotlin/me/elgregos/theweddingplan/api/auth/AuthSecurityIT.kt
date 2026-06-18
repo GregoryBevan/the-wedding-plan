@@ -1,9 +1,9 @@
 package me.elgregos.theweddingplan.api.auth
 
 import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
-import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import kotlin.test.Test
 
 class AuthSecurityIT : AbstractEndpointIntegrationTest() {
 

@@ -7,8 +7,7 @@ This is a fullstack project.
 - **Project Goal**: The application is an iterative wedding planning tool designed to help manage wedding preparations,
   starting with guest management. Note: This goal is evolving as we work iteratively.
 - **Workflow**: After any code modification, ensure you stage the affected files using `git add`.
-- Reload your shell configuration:
-    - `source ${HOME}/.zshrc`
+
 
 ## Backend
 

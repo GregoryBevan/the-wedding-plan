@@ -1,13 +1,14 @@
 package me.elgregos.theweddingplan.api.auth
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
+import assertk.assertions.isTrue
 import me.elgregos.theweddingplan.infrastructure.config.AuthRateLimitProperties
-import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class AuthRateLimiterTest {
 
@@ -18,8 +19,8 @@ class AuthRateLimiterTest {
             clock = fixedClock(),
         )
 
-        assertTrue(limiter.check("127.0.0.1").allowed)
-        assertTrue(limiter.check("127.0.0.1").allowed)
+        assertThat(limiter.check("127.0.0.1").allowed).isTrue()
+        assertThat(limiter.check("127.0.0.1").allowed).isTrue()
     }
 
     @Test
@@ -32,8 +33,8 @@ class AuthRateLimiterTest {
         limiter.check("127.0.0.1")
         val denied = limiter.check("127.0.0.1")
 
-        assertFalse(denied.allowed)
-        assertEquals(60, denied.retryAfterSeconds)
+        assertThat(denied.allowed).isFalse()
+        assertThat(denied.retryAfterSeconds).isEqualTo(60)
     }
 
     @Test
@@ -44,7 +45,7 @@ class AuthRateLimiterTest {
         )
 
         repeat(100) {
-            assertTrue(limiter.check("127.0.0.1").allowed)
+            assertThat(limiter.check("127.0.0.1").allowed).isTrue()
         }
     }
 

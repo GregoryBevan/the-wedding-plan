@@ -6,15 +6,15 @@ import io.mockk.every
 import io.mockk.mockk
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures
 import me.elgregos.theweddingplan.domain.guest.Guests
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 
 class GuestAdderTest {
 
     private lateinit var guests: Guests
     private lateinit var guestAdder: GuestAdder
 
-    @BeforeEach
+    @BeforeTest
     fun setUp() {
         guests = mockk()
         guestAdder = GuestAdder(guests)
