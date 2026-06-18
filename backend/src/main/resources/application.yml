@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/wedding_db
-    username: admin
-    password: password
+    url: jdbc:postgresql://${POSTRGES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
@@ -18,6 +18,10 @@ app:
   auth:
     allowed-emails: ${APP_AUTH_ALLOWED_EMAILS}
     success-redirect-url: ${APP_AUTH_SUCCESS_REDIRECT_URL}
+    rate-limit:
+      enabled: ${APP_AUTH_RATE_LIMIT_ENABLED:true}
+      max-requests-per-window: ${APP_AUTH_RATE_LIMIT_MAX_REQUESTS_PER_WINDOW:60}
+      window-seconds: ${APP_AUTH_RATE_LIMIT_WINDOW_SECONDS:60}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS}
     allowed-origin-patterns: []

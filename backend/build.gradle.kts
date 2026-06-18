@@ -5,6 +5,7 @@ plugins {
     id("idea")
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.spring.dependency.management)
+    id("org.owasp.dependencycheck") version "12.1.8"
 }
 
 

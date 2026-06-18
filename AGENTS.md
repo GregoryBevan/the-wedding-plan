@@ -1,0 +1,2 @@
+- Reload your shell configuration:
+    - `source ${HOME}/.zshrc`

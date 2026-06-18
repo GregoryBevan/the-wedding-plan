@@ -5,7 +5,9 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.function.router
 
 @Configuration
-class AuthRouter(private val authEndpoint: AuthEndpoint) {
+class AuthRouter(
+    private val authEndpoint: AuthEndpoint,
+) {
 
     @Bean
     fun authRoute() = router {

@@ -6,6 +6,12 @@ app:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:https://app.example.com}
 
 spring:
+  servlet:
+    session:
+      cookie:
+        secure: true
+        http-only: true
+        same-site: lax
   security:
     oauth2:
       client:
