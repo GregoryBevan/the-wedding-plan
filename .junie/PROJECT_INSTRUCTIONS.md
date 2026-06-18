@@ -32,6 +32,6 @@ This is a fullstack project.
 ## Frontend
 
 - All frontend code is located in the `frontend` directory.
-- if pnpm or node is not found :
-    - Use `pnpm` from this absolute path: `/opt/homebrew/bin/pnpm`.
-    - Use `node` from this absolute path: `/Users/grego/.local/state/fnm_multishells/4700_1781734884722/bin/node`
+- If pnpm or Node.js is not found:
+    - Ensure Node.js is installed and available on `PATH` (e.g., via fnm/nvm/asdf or your package manager)
+    - Enable Corepack (or install pnpm) so `pnpm` is available on `PATH`
