@@ -1,4 +1,4 @@
-name: Java CI with Gradle
+name: The Wedding Plan CI
 
 on:
   push:
@@ -44,6 +44,7 @@ jobs:
         VITE_API_BASE_URL: http://localhost:8080
       run: |
         pnpm install
+        pnpm audit --audit-level=high
         pnpm run test
         pnpm run build
       working-directory: frontend

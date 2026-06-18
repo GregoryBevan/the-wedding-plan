@@ -2,11 +2,11 @@ package me.elgregos.theweddingplan.api.guest
 
 import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
 import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.charlieDavis
-import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import java.util.*
+import kotlin.test.Test
 
 class GuestEndpointIT : AbstractEndpointIntegrationTest() {
 

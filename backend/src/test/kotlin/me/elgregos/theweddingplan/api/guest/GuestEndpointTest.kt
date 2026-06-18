@@ -4,11 +4,11 @@ import io.mockk.every
 import io.mockk.mockk
 import me.elgregos.theweddingplan.application.guest.GuestAdder
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures
-import org.junit.jupiter.api.Test
 import org.springframework.web.servlet.function.ServerRequest
 import org.springframework.http.HttpStatus
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import kotlin.test.Test
 
 class GuestEndpointTest {
 

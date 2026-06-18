@@ -1,7 +1,8 @@
 package me.elgregos.theweddingplan.infrastructure.config
 
-import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import kotlin.test.Test
 
 class SecurityConfigTest {
 
@@ -9,7 +10,7 @@ class SecurityConfigTest {
     fun `should allow relative success redirect url`() {
         val config = securityConfig(successRedirectUrl = "/backoffice")
 
-        assertEquals("/backoffice", config.resolveSuccessRedirectUrl())
+        assertThat(config.resolveSuccessRedirectUrl()).isEqualTo("/backoffice")
     }
 
     @Test
@@ -19,7 +20,7 @@ class SecurityConfigTest {
             allowedOrigins = listOf("https://backoffice.example.com"),
         )
 
-        assertEquals("https://backoffice.example.com/auth/callback", config.resolveSuccessRedirectUrl())
+        assertThat(config.resolveSuccessRedirectUrl()).isEqualTo("https://backoffice.example.com/auth/callback")
     }
 
     @Test
@@ -29,14 +30,14 @@ class SecurityConfigTest {
             allowedOrigins = listOf("https://backoffice.example.com"),
         )
 
-        assertEquals("/", config.resolveSuccessRedirectUrl())
+        assertThat(config.resolveSuccessRedirectUrl()).isEqualTo("/")
     }
 
     @Test
     fun `should fallback to root for malformed success redirect url`() {
         val config = securityConfig(successRedirectUrl = "javascript:alert(1)")
 
-        assertEquals("/", config.resolveSuccessRedirectUrl())
+        assertThat(config.resolveSuccessRedirectUrl()).isEqualTo("/")
     }
 
     private fun securityConfig(
