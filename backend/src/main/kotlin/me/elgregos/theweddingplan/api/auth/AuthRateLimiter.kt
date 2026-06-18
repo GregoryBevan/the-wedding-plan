@@ -12,6 +12,7 @@ class AuthRateLimiter(
     private val clock: Clock = Clock.systemUTC(),
 ) {
     private val requestsByClient = ConcurrentHashMap<String, Window>()
+    @Volatile private var lastCleanupEpochSecond: Long = 0
 
     fun check(clientKey: String): Decision {
         if (!properties.enabled) {
@@ -19,8 +20,15 @@ class AuthRateLimiter(
         }
 
         val now = Instant.now(clock)
+
         val windowDurationSeconds = properties.windowSeconds.coerceAtLeast(1)
         val maxRequests = properties.maxRequestsPerWindow.coerceAtLeast(1)
+
+        val nowEpochSecond = now.epochSecond
+        if (nowEpochSecond - lastCleanupEpochSecond >= windowDurationSeconds) {
+            lastCleanupEpochSecond = nowEpochSecond
+            requestsByClient.entries.removeAll { now.isAfter(it.value.windowEnd) }
+        }
 
         val updated = requestsByClient.compute(clientKey) { _, current ->
             val refreshed = current?.takeIf { now.isBefore(it.windowEnd) }
