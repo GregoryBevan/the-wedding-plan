@@ -4,9 +4,11 @@ import me.elgregos.theweddingplan.TestAuthenticationConfig.Companion.TEST_USER_E
 import org.springframework.http.HttpHeaders
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.servlet.client.RestTestClient
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 abstract class AbstractEndpointIntegrationTest : AbstractIntegrationTest() {
     protected data class CsrfContext(
         val cookies: String,
@@ -27,24 +29,28 @@ abstract class AbstractEndpointIntegrationTest : AbstractIntegrationTest() {
         }
             .exchange()
             .expectStatus().isOk
-            .returnResult(String::class.java)
+            .expectBody(String::class.java)
+            .returnResult()
+
+        val bodyToken = authProbe.responseBody ?: error("Missing CSRF token from /test/csrf")
 
         val allCookies = authProbe.responseHeaders[HttpHeaders.SET_COOKIE].orEmpty()
-        val xsrfCookie = allCookies.firstOrNull { it.startsWith("XSRF-TOKEN=") }
-            ?: error("Missing XSRF-TOKEN cookie")
-        val encodedToken = xsrfCookie.substringAfter("XSRF-TOKEN=").substringBefore(';')
-        val xsrfToken = authProbe.responseBody ?: error("Missing CSRF token from /test/csrf")
+        val responseSessionId = allCookies
+            .firstOrNull { it.startsWith("JSESSIONID=") }
+            ?.substringAfter("JSESSIONID=")
+            ?.substringBefore(';')
 
         val cookies = buildString {
-            if (sessionId != null) {
-                append("JSESSIONID=$sessionId; ")
+            val effectiveSessionId = responseSessionId ?: sessionId
+            if (effectiveSessionId != null) {
+                append("JSESSIONID=$effectiveSessionId; ")
             }
-            append("XSRF-TOKEN=$encodedToken")
+            append("XSRF-TOKEN=$bodyToken")
         }
 
         return CsrfContext(
             cookies = cookies,
-            csrfToken = xsrfToken,
+            csrfToken = bodyToken,
         )
     }
 

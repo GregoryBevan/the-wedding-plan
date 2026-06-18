@@ -17,15 +17,33 @@
         </a>
       </div>
 
-      <div v-else-if="!authStatus.isAuthorized" class="text-center">
+      <div v-else-if="!authStatus.isAuthorized" class="text-center space-y-4">
         <p>Your account is not authorized to access this backoffice.</p>
+        <button
+          :disabled="isLoggingOut"
+          class="inline-block rounded-md bg-primary px-5 py-2 text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          @click="handleLogout"
+        >
+          {{ isLoggingOut ? 'Signing out…' : 'Logout' }}
+        </button>
+        <p v-if="logoutErrorMessage" class="mt-4 text-center text-sm text-red-700">{{ logoutErrorMessage }}</p>
       </div>
 
       <div v-else>
+        <div class="mb-6 flex justify-end">
+          <button
+            :disabled="isLoggingOut"
+            class="inline-block rounded-md bg-primary px-5 py-2 text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            @click="handleLogout"
+          >
+            {{ isLoggingOut ? 'Signing out…' : 'Logout' }}
+          </button>
+        </div>
         <h2 class="text-3xl font-light mb-6 text-center tracking-wide">Add a New Guest</h2>
         <GuestForm :is-submitting="isSubmitting" @submit="handleAddGuest" />
         <p v-if="successMessage" class="mt-4 text-center text-sm text-green-700">{{ successMessage }}</p>
         <p v-if="errorMessage" class="mt-4 text-center text-sm text-red-700">{{ errorMessage }}</p>
+        <p v-if="logoutErrorMessage" class="mt-4 text-center text-sm text-red-700">{{ logoutErrorMessage }}</p>
       </div>
     </main>
   </div>
@@ -35,7 +53,7 @@ import { onMounted, ref } from 'vue';
 import GuestForm from './components/GuestForm.vue';
 import { useAddRequest } from './composables/useAddRequest';
 import { addGuest } from './services/guestApi';
-import { getAuthStatus, getGoogleLoginUrl } from './services/authApi';
+import { getAuthStatus, getGoogleLoginUrl, logout, type AuthStatus } from './services/authApi';
 
 const {
   isSubmitting,
@@ -45,7 +63,9 @@ const {
 } = useAddRequest(addGuest);
 
 const isLoadingAuth = ref(true);
-const authStatus = ref<Awaited<ReturnType<typeof getAuthStatus>> | null>(null);
+const authStatus = ref<AuthStatus | null>(null);
+const isLoggingOut = ref(false);
+const logoutErrorMessage = ref('');
 
 onMounted(async () => {
   try {
@@ -63,5 +83,27 @@ onMounted(async () => {
 
 const handleAddGuest = async (guestData) => {
   await submit(guestData, { successMessage: 'Guest added successfully.' });
+};
+
+const handleLogout = async () => {
+  if (isLoggingOut.value) {
+    return;
+  }
+
+  isLoggingOut.value = true;
+  logoutErrorMessage.value = '';
+
+  try {
+    await logout();
+    authStatus.value = {
+      isAuthenticated: false,
+      email: null,
+      isAuthorized: false
+    };
+  } catch {
+    logoutErrorMessage.value = 'Unable to sign out. Please try again.';
+  } finally {
+    isLoggingOut.value = false;
+  }
 };
 </script>
