@@ -34,13 +34,11 @@ jobs:
       run: ./gradlew clean build
       working-directory: backend
     - name: Backend dependency vulnerability scan
-      if: ${{ secrets.NVD_API_KEY != '' }}
-      env:
-        NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+      if: ${{ env.NVD_API_KEY != '' }}
       run: ./gradlew dependencyCheckAnalyze
       working-directory: backend
     - name: Backend dependency vulnerability scan skipped (missing NVD_API_KEY)
-      if: ${{ secrets.NVD_API_KEY == '' }}
+      if: ${{ env.NVD_API_KEY == '' }}
       run: echo "Skipping dependencyCheckAnalyze because NVD_API_KEY secret is not configured."
     - name: Setup Node.js
       uses: actions/setup-node@v4
