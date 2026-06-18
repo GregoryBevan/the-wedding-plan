@@ -19,6 +19,8 @@ class AuthRateLimiter(
         }
 
         val now = Instant.now(clock)
+        requestsByClient.entries.removeAll { now.isAfter(it.value.windowEnd) }
+
         val windowDurationSeconds = properties.windowSeconds.coerceAtLeast(1)
         val maxRequests = properties.maxRequestsPerWindow.coerceAtLeast(1)
 
