@@ -33,4 +33,16 @@ object GuestFixtures {
         lastName = "Doe",
         email = "jane.doe@example.com"
     )
+
+    val emmaWilson = guest(
+        firstName = "Emma",
+        lastName = "Wilson",
+        email = "emma.wilson@example.com"
+    )
+
+    val liamMiller = guest(
+        firstName = "Liam",
+        lastName = "Miller",
+        email = "liam.miller@example.com"
+    )
 }
