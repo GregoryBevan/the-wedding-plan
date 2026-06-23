@@ -1,7 +1,10 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { defineComponent, h } from 'vue';
+import { createMemoryHistory } from 'vue-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App.vue';
+import { createBackofficeRouter } from './router';
+import { BACKOFFICE_ROUTE_NAMES } from './router/routeNames';
 import { createGuestPayload } from './testFixtures/guestFixtures';
 
 const authApiMock = vi.hoisted(() => ({
@@ -37,6 +40,30 @@ describe('App auth states', () => {
     vi.clearAllMocks();
   });
 
+  const mountApp = async ({
+    route = '/guests',
+    stubs = globalStubs
+  }: {
+    route?: string;
+    stubs?: Record<string, true | ReturnType<typeof defineComponent>>;
+  } = {}) => {
+    const router = createBackofficeRouter(createMemoryHistory());
+
+    await router.push(route);
+    await router.isReady();
+
+    const wrapper = mount(App, {
+      global: {
+        plugins: [router],
+        stubs
+      }
+    });
+
+    await flushPromises();
+
+    return { wrapper, router };
+  };
+
   it('shows login action for unauthenticated users', async () => {
     authApiMock.getAuthStatus.mockResolvedValue({
       isAuthenticated: false,
@@ -44,14 +71,9 @@ describe('App auth states', () => {
       isAuthorized: false
     });
 
-    const wrapper = mount(App, {
-      global: {
-        stubs: globalStubs
-      }
-    });
+    const { wrapper } = await mountApp({ route: '/guests' });
 
-    await flushPromises();
-
+    expect(authApiMock.getAuthStatus).toHaveBeenCalled();
     expect(wrapper.text()).toContain('Please sign in with Google to access the backoffice.');
     expect(wrapper.find('a').attributes('href')).toBe('http://localhost:8080/oauth2/authorization/google');
   });
@@ -63,57 +85,44 @@ describe('App auth states', () => {
       isAuthorized: false
     });
 
-    const wrapper = mount(App, {
-      global: {
-        stubs: globalStubs
-      }
-    });
-
-    await flushPromises();
+    const { wrapper } = await mountApp({ route: '/guests' });
 
     expect(wrapper.text()).toContain('Your account is not authorized to access this backoffice.');
     expect(wrapper.text()).toContain('Logout');
   });
 
-  it('shows guest list view for authorized users', async () => {
+  it('redirects root route to guest list for authorized users', async () => {
     authApiMock.getAuthStatus.mockResolvedValue({
       isAuthenticated: true,
       email: 'allowed@example.com',
       isAuthorized: true
     });
 
-    const wrapper = mount(App, {
-      global: {
-        stubs: globalStubs
-      }
-    });
+    const { wrapper, router } = await mountApp({ route: '/' });
 
-    await flushPromises();
-
-    expect(wrapper.text()).toContain('Guest list');
+    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.guestList);
     expect(wrapper.findComponent({ name: 'GuestList' }).exists()).toBe(true);
+
+    await wrapper.get('[data-test="user-menu-toggle"]').trigger('click');
+
+    expect(wrapper.text()).toContain('Signed in as');
+    expect(wrapper.text()).toContain('allowed@example.com');
     expect(wrapper.text()).toContain('Logout');
   });
 
-  it('switches to add guest view when clicking add guest button', async () => {
+  it('navigates to add guest route for authorized users', async () => {
     authApiMock.getAuthStatus.mockResolvedValue({
       isAuthenticated: true,
       email: 'allowed@example.com',
       isAuthorized: true
     });
 
-    const wrapper = mount(App, {
-      global: {
-        stubs: globalStubs
-      }
-    });
+    const { wrapper, router } = await mountApp({ route: '/guests' });
 
+    await router.push({ name: BACKOFFICE_ROUTE_NAMES.guestAdd });
     await flushPromises();
 
-    const addGuestButton = wrapper.findAll('button').find((button) => button.text().includes('Add guest'));
-    expect(addGuestButton).toBeDefined();
-    await addGuestButton!.trigger('click');
-
+    expect(router.currentRoute.value.path).toBe('/guests/new');
     expect(wrapper.text()).toContain('Add a New Guest');
     expect(wrapper.findComponent({ name: 'GuestForm' }).exists()).toBe(true);
     expect(wrapper.findComponent({ name: 'GuestList' }).exists()).toBe(false);
@@ -127,21 +136,17 @@ describe('App auth states', () => {
     });
     authApiMock.logout.mockResolvedValue(undefined);
 
-    const wrapper = mount(App, {
-      global: {
-        stubs: globalStubs
-      }
-    });
+    const { wrapper } = await mountApp({ route: '/guests' });
 
-    await flushPromises();
-    await wrapper.get('button').trigger('click');
+    await wrapper.get('[data-test="user-menu-toggle"]').trigger('click');
+    await wrapper.get('[data-test="user-menu-logout"]').trigger('click');
     await flushPromises();
 
     expect(authApiMock.logout).toHaveBeenCalledTimes(1);
     expect(wrapper.text()).toContain('Please sign in with Google to access the backoffice.');
   });
 
-  it('shows add guest success message after submit in add view', async () => {
+  it('shows add guest success message after submit in add guest route', async () => {
     authApiMock.getAuthStatus.mockResolvedValue({
       isAuthenticated: true,
       email: 'allowed@example.com',
@@ -149,28 +154,36 @@ describe('App auth states', () => {
     });
     guestApiMock.addGuest.mockResolvedValue({ id: '1' });
 
-    const wrapper = mount(App, {
-      global: {
-        stubs: {
-          ...globalStubs,
-          GuestForm: guestFormSubmitStub
-        }
+    const { wrapper } = await mountApp({
+      route: '/guests/new',
+      stubs: {
+        ...globalStubs,
+        GuestForm: guestFormSubmitStub
       }
     });
-
-    await flushPromises();
-
-    const addGuestButton = wrapper.findAll('button').find((button) => button.text().includes('Add guest'));
-    expect(addGuestButton).toBeDefined();
-    await addGuestButton!.trigger('click');
 
     await wrapper.get('[data-test="guest-form-submit"]').trigger('click');
     await flushPromises();
 
     expect(wrapper.text()).toContain('Guest added successfully.');
+    expect(wrapper.text()).toContain('Back to guest list');
   });
 
-  it('clears add guest success message after switching away and back to add view', async () => {
+  it('renders not found view for unknown routes', async () => {
+    authApiMock.getAuthStatus.mockResolvedValue({
+      isAuthenticated: true,
+      email: 'allowed@example.com',
+      isAuthorized: true
+    });
+
+    const { wrapper, router } = await mountApp({ route: '/unknown-page' });
+
+    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.notFound);
+    expect(wrapper.text()).toContain('Page not found');
+    expect(wrapper.text()).toContain('Go to guest list');
+  });
+
+  it('keeps add-guest success message isolated per route instance', async () => {
     authApiMock.getAuthStatus.mockResolvedValue({
       isAuthenticated: true,
       email: 'allowed@example.com',
@@ -178,31 +191,24 @@ describe('App auth states', () => {
     });
     guestApiMock.addGuest.mockResolvedValue({ id: '1' });
 
-    const wrapper = mount(App, {
-      global: {
-        stubs: {
-          ...globalStubs,
-          GuestForm: guestFormSubmitStub
-        }
+    const { wrapper, router } = await mountApp({
+      route: '/guests/new',
+      stubs: {
+        ...globalStubs,
+        GuestForm: guestFormSubmitStub
       }
     });
 
-    await flushPromises();
-
-    const addGuestButton = wrapper.findAll('button').find((button) => button.text().includes('Add guest'));
-    const guestListButton = wrapper.findAll('button').find((button) => button.text().includes('Guest list'));
-
-    expect(addGuestButton).toBeDefined();
-    expect(guestListButton).toBeDefined();
-
-    await addGuestButton!.trigger('click');
     await wrapper.get('[data-test="guest-form-submit"]').trigger('click');
     await flushPromises();
 
     expect(wrapper.text()).toContain('Guest added successfully.');
 
-    await guestListButton!.trigger('click');
-    await addGuestButton!.trigger('click');
+    await router.push({ name: BACKOFFICE_ROUTE_NAMES.guestList });
+    await flushPromises();
+    expect(router.currentRoute.value.path).toBe('/guests');
+
+    await router.push({ name: BACKOFFICE_ROUTE_NAMES.guestAdd });
     await flushPromises();
 
     expect(wrapper.text()).not.toContain('Guest added successfully.');
