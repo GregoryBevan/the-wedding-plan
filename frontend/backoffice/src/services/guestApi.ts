@@ -4,6 +4,24 @@ export interface CreateGuestPayload {
   email: string;
 }
 
+export interface GuestResponse {
+  id: string;
+  version: number;
+  creationDate: string;
+  updateDate: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+export interface GuestPageResponse {
+  items: GuestResponse[];
+  page: number;
+  size: number;
+  totalItems: number;
+  totalPages: number;
+}
+
 const readCookie = (name: string): string | undefined => {
   if (typeof document === 'undefined') {
     return undefined;
@@ -25,6 +43,25 @@ const getApiBaseUrl = (): string => {
   }
 
   return envBaseUrl + "/api";
+};
+
+export const listGuests = async ({ page = 0, size = 20 }: { page?: number; size?: number } = {}): Promise<GuestPageResponse> => {
+  const apiBaseUrl = getApiBaseUrl();
+  const queryParams = new URLSearchParams({
+    page: String(page),
+    size: String(size)
+  });
+
+  const response = await fetch(`${apiBaseUrl}/guests?${queryParams}`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+
+  if (!response.ok) {
+    throw new Error('Unable to retrieve guests at the moment.');
+  }
+
+  return response.json() as Promise<GuestPageResponse>;
 };
 
 export const addGuest = async (payload: CreateGuestPayload) => {

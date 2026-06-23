@@ -39,10 +39,33 @@
             {{ isLoggingOut ? 'Signing out…' : 'Logout' }}
           </button>
         </div>
-        <h2 class="text-3xl font-light mb-6 text-center tracking-wide">Add a New Guest</h2>
-        <GuestForm :is-submitting="isSubmitting" @submit="handleAddGuest" />
-        <p v-if="successMessage" class="mt-4 text-center text-sm text-green-700">{{ successMessage }}</p>
-        <p v-if="errorMessage" class="mt-4 text-center text-sm text-red-700">{{ errorMessage }}</p>
+
+        <nav class="mb-6 flex justify-center gap-3">
+          <button
+            class="rounded-md border px-4 py-2"
+            :class="activeView === 'list' ? 'border-primary bg-primary text-white' : 'border-secondary hover:bg-secondary/20'"
+            @click="switchView('list')"
+          >
+            Guest list
+          </button>
+          <button
+            class="rounded-md border px-4 py-2"
+            :class="activeView === 'add' ? 'border-primary bg-primary text-white' : 'border-secondary hover:bg-secondary/20'"
+            @click="switchView('add')"
+          >
+            Add guest
+          </button>
+        </nav>
+
+        <GuestList v-if="activeView === 'list'" />
+
+        <div v-else>
+          <h2 class="text-3xl font-light mb-6 text-center tracking-wide">Add a New Guest</h2>
+          <GuestForm :is-submitting="isSubmitting" @submit="handleAddGuest" />
+          <p v-if="successMessage" class="mt-4 text-center text-sm text-green-700">{{ successMessage }}</p>
+          <p v-if="errorMessage" class="mt-4 text-center text-sm text-red-700">{{ errorMessage }}</p>
+        </div>
+
         <p v-if="logoutErrorMessage" class="mt-4 text-center text-sm text-red-700">{{ logoutErrorMessage }}</p>
       </div>
     </main>
@@ -51,6 +74,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import GuestForm from './components/GuestForm.vue';
+import GuestList from './components/GuestList.vue';
 import { useAddRequest } from './composables/useAddRequest';
 import { addGuest } from './services/guestApi';
 import { getAuthStatus, getGoogleLoginUrl, logout, type AuthStatus } from './services/authApi';
@@ -59,6 +83,7 @@ const {
   isSubmitting,
   errorMessage,
   successMessage,
+  clearMessages,
   submit
 } = useAddRequest(addGuest);
 
@@ -105,5 +130,15 @@ const handleLogout = async () => {
   } finally {
     isLoggingOut.value = false;
   }
+};
+const activeView = ref<'list' | 'add'>('list');
+
+const switchView = (view: 'list' | 'add') => {
+  if (activeView.value === view) {
+    return;
+  }
+
+  clearMessages();
+  activeView.value = view;
 };
 </script>

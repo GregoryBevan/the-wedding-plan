@@ -12,6 +12,11 @@ export function useAddRequest<TPayload, TResult>(
   const errorMessage = ref('');
   const successMessage = ref('');
 
+  const clearMessages = () => {
+    errorMessage.value = '';
+    successMessage.value = '';
+  };
+
   const submit = async (
     payload: TPayload,
     options?: SubmitOptions
@@ -21,8 +26,7 @@ export function useAddRequest<TPayload, TResult>(
     }
 
     if (options?.resetMessages !== false) {
-      errorMessage.value = '';
-      successMessage.value = '';
+      clearMessages();
     }
 
     isSubmitting.value = true;
@@ -49,6 +53,7 @@ export function useAddRequest<TPayload, TResult>(
     isSubmitting,
     errorMessage,
     successMessage,
+    clearMessages,
     submit
   };
 }

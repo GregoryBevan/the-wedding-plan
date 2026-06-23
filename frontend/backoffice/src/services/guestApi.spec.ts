@@ -1,13 +1,45 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { addGuest } from './guestApi';
+import { addGuest, listGuests } from './guestApi';
+import { createGuestPage, createGuestPayload } from '../testFixtures/guestFixtures';
 
-describe('addGuest', () => {
+describe('guestApi', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     document.cookie = 'XSRF-TOKEN=; Max-Age=0; path=/';
   });
 
-  it('calls backend endpoint with expected payload', async () => {
+  it('calls backend list endpoint with default pagination', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => createGuestPage({
+        items: [],
+        totalItems: 0,
+        totalPages: 0
+      })
+    } as Response);
+
+    await listGuests();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, options] = fetchMock.mock.calls[0];
+
+    expect(url).toBe('http://localhost:8080/api/guests?page=0&size=20');
+    expect(options).toMatchObject({
+      method: 'GET',
+      credentials: 'include'
+    });
+  });
+
+  it('throws when list endpoint response is not ok', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      json: async () => ({})
+    } as Response);
+
+    await expect(listGuests()).rejects.toThrow('Unable to retrieve guests at the moment.');
+  });
+
+  it('calls backend create endpoint with expected payload', async () => {
     document.cookie = 'XSRF-TOKEN=test-csrf-token';
 
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
@@ -15,11 +47,7 @@ describe('addGuest', () => {
       json: async () => ({ id: 42 })
     } as Response);
 
-    const payload = {
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@email.com'
-    };
+    const payload = createGuestPayload();
 
     const result = await addGuest(payload);
 
@@ -40,16 +68,12 @@ describe('addGuest', () => {
     expect(result).toEqual({ id: 42 });
   });
 
-  it('throws when backend response is not ok', async () => {
+  it('throws when create endpoint response is not ok', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: false,
       json: async () => ({})
     } as Response);
 
-    await expect(addGuest({
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@email.com'
-    })).rejects.toThrow('Unable to create guest at the moment.');
+    await expect(addGuest(createGuestPayload())).rejects.toThrow('Unable to create guest at the moment.');
   });
 });
