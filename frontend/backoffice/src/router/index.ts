@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import type { RouteRecordRaw, RouterHistory } from 'vue-router';
-import { getAuthStatus } from '../services/authApi';
+import { getSessionAuthStatus } from '../services/authStatusCache';
 import { BACKOFFICE_ROUTE_NAMES } from './routeNames';
 
 const routes: RouteRecordRaw[] = [
@@ -57,7 +57,7 @@ export const createBackofficeRouter = (
     }
 
     try {
-      const status = await getAuthStatus();
+      const status = await getSessionAuthStatus();
 
       if (!status.isAuthenticated) {
         return { name: BACKOFFICE_ROUTE_NAMES.signInRequired };

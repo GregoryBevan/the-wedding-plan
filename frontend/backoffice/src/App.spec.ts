@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App.vue';
 import { createBackofficeRouter } from './router';
 import { BACKOFFICE_ROUTE_NAMES } from './router/routeNames';
+import { clearSessionAuthStatus } from './services/authStatusCache';
 import { createGuestPayload } from './testFixtures/guestFixtures';
 
 const authApiMock = vi.hoisted(() => ({
@@ -37,6 +38,7 @@ const guestFormSubmitStub = defineComponent({
 
 describe('App auth states', () => {
   beforeEach(() => {
+    clearSessionAuthStatus();
     vi.clearAllMocks();
   });
 
@@ -208,6 +210,20 @@ describe('App auth states', () => {
   });
 
   it('renders not found view for unknown routes', async () => {
+    authApiMock.getAuthStatus.mockResolvedValue({
+      isAuthenticated: true,
+      email: 'allowed@example.com',
+      isAuthorized: true
+    });
+
+    const { wrapper, router } = await mountApp({ route: '/unknown-page' });
+
+    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.notFound);
+    expect(wrapper.text()).toContain('Page not found');
+    expect(wrapper.text()).toContain('Go to guest list');
+  });
+
+  it('keeps add-guest success message isolated per route instance', async () => {
     authApiMock.getAuthStatus.mockResolvedValue({
       isAuthenticated: true,
       email: 'allowed@example.com',

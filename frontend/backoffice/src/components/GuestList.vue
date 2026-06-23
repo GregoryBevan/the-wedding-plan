@@ -6,7 +6,13 @@
       <h2 class="text-3xl font-light tracking-wide">Guest List</h2>
 
       <RouterLink
-        :to="{ name: BACKOFFICE_ROUTE_NAMES.guestAdd }"
+        :to="{
+          name: BACKOFFICE_ROUTE_NAMES.guestAdd,
+          query: {
+            page: route.query.page,
+            size: route.query.size
+          }
+        }"
         data-test="add-guest-shortcut"
         aria-label="Add a new guest"
         class="flex h-10 w-10 items-center justify-center rounded-full border border-primary bg-primary text-2xl leading-none text-white hover:opacity-90"

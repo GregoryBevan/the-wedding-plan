@@ -22,7 +22,7 @@ describe('AddGuestView', () => {
     vi.clearAllMocks();
   });
 
-  const mountView = async () => {
+  const mountView = async (initialPath = '/guests/new') => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
@@ -39,7 +39,7 @@ describe('AddGuestView', () => {
       ]
     });
 
-    await router.push('/guests/new');
+    await router.push(initialPath);
     await router.isReady();
 
     const wrapper = mount(defineComponent({
@@ -93,6 +93,17 @@ describe('AddGuestView', () => {
     await flushPromises();
 
     expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.guestList);
+  });
+
+  it('keeps pagination query when navigating back to guest list', async () => {
+    const { wrapper, router } = await mountView('/guests/new?page=2&size=10');
+
+    await wrapper.get('[data-test="back-to-list"]').trigger('click');
+    await flushPromises();
+
+    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.guestList);
+    expect(router.currentRoute.value.query.page).toBe('2');
+    expect(router.currentRoute.value.query.size).toBe('10');
   });
 });
 

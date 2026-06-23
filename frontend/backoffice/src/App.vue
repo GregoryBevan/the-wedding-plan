@@ -23,10 +23,10 @@
 </template>
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import UserMenu from './components/ui/UserMenu.vue';
-import { getAuthStatus, logout } from './services/authApi';
+import { logout } from './services/authApi';
+import { clearSessionAuthStatus, getSessionAuthStatus } from './services/authStatusCache';
 import { BACKOFFICE_ROUTE_NAMES } from './router/routeNames';
 
 const isLoggingOut = ref(false);
@@ -37,17 +37,29 @@ const router = useRouter();
 
 const isProtectedRoute = computed(() => route.matched.some((record) => record.meta.requiresAuthorized));
 
-watch(isProtectedRoute, async (isProtectedRoute) => {
-  if (!isProtectedRoute) {
-    connectedUserEmail.value = null;
+watch(isProtectedRoute, async (isNowProtected, _, onInvalidate) => {
+  let isInvalidated = false;
+  onInvalidate(() => {
+    isInvalidated = true;
+  });
+
+  if (!isNowProtected) {
+    if (!isInvalidated) {
+      connectedUserEmail.value = null;
+    }
     return;
   }
 
   try {
-    const status = await getAuthStatus();
-    connectedUserEmail.value = status.email;
+    const status = await getSessionAuthStatus();
+
+    if (!isInvalidated) {
+      connectedUserEmail.value = status.email;
+    }
   } catch {
-    connectedUserEmail.value = null;
+    if (!isInvalidated) {
+      connectedUserEmail.value = null;
+    }
   }
 }, { immediate: true });
 
@@ -61,6 +73,8 @@ const handleLogout = async () => {
 
   try {
     await logout();
+    clearSessionAuthStatus();
+    connectedUserEmail.value = null;
     await router.push({ name: BACKOFFICE_ROUTE_NAMES.signInRequired });
   } catch {
     logoutErrorMessage.value = 'Unable to sign out. Please try again.';

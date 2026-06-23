@@ -2,7 +2,7 @@
   <div ref="containerRef">
     <div class="mb-6 flex items-center justify-between">
       <RouterLink
-        :to="{ name: BACKOFFICE_ROUTE_NAMES.guestList }"
+        :to="guestListTarget"
         data-test="back-to-list"
         aria-label="Back to guest list"
         class="flex h-10 w-10 items-center justify-center rounded-full border border-primary bg-primary text-2xl leading-none text-white hover:opacity-90"
@@ -26,7 +26,7 @@
         Add another guest
       </button>
       <RouterLink
-        :to="{ name: BACKOFFICE_ROUTE_NAMES.guestList }"
+        :to="guestListTarget"
         class="rounded-md bg-primary px-4 py-2 text-white hover:opacity-90"
       >
         Back to guest list
@@ -36,14 +36,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { onBeforeRouteLeave, RouterLink } from 'vue-router';
+import { computed, ref } from 'vue';
+import { onBeforeRouteLeave, RouterLink, useRoute } from 'vue-router';
 import GuestForm from '../components/GuestForm.vue';
 import { useAddRequest } from '../composables/useAddRequest';
 import { addGuest, type CreateGuestPayload } from '../services/guestApi';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 
 const containerRef = ref<HTMLElement | null>(null);
+const route = useRoute();
 
 const {
   isSubmitting,
@@ -52,6 +53,14 @@ const {
   clearMessages,
   submit
 } = useAddRequest(addGuest);
+
+const guestListTarget = computed(() => ({
+  name: BACKOFFICE_ROUTE_NAMES.guestList,
+  query: {
+    page: route.query.page,
+    size: route.query.size
+  }
+}));
 
 const hasUnsavedFormData = (): boolean => {
   if (!containerRef.value) {
