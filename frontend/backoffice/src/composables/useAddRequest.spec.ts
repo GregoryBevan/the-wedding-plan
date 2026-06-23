@@ -27,6 +27,25 @@ describe('useAddRequest', () => {
     expect(successMessage.value).toBe('');
   });
 
+  it('clears success and error messages on demand', async () => {
+    const addFn = vi
+      .fn()
+      .mockResolvedValueOnce({ id: 1 })
+      .mockRejectedValueOnce(new Error('Boom'));
+    const { clearMessages, submit, errorMessage, successMessage } = useAddRequest(addFn);
+
+    await submit({ firstName: 'John' }, { successMessage: 'Created' });
+    expect(successMessage.value).toBe('Created');
+
+    await submit({ firstName: 'Jane' });
+    expect(errorMessage.value).toBe('Boom');
+
+    clearMessages();
+
+    expect(successMessage.value).toBe('');
+    expect(errorMessage.value).toBe('');
+  });
+
   it('prevents double submit while request is in progress', async () => {
     let resolveAdd!: (value: { id: number }) => void;
     const addFn = vi.fn(() => new Promise<{ id: number }>((resolve) => {
