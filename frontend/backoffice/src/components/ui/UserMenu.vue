@@ -2,7 +2,7 @@
   <div ref="menuRef" class="relative">
     <button
       type="button"
-      data-test="user-menu-toggle"
+      data-test="user-menu-toggle" aria-label="Open user menu" aria-haspopup="menu" :aria-expanded="isOpen"
       class="flex items-center rounded-full border border-secondary/50 bg-white p-1.5 hover:bg-secondary/10"
       :disabled="props.isLoggingOut"
       @click="toggleMenu"
