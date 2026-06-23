@@ -1,6 +1,9 @@
 import { flushPromises, mount } from '@vue/test-utils';
+import { createMemoryHistory, createRouter } from 'vue-router';
+import { defineComponent } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import GuestList from './GuestList.vue';
+import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 import { createGuestPage, createGuestResponse } from '../testFixtures/guestFixtures';
 
 const listGuestsMock = vi.hoisted(() => vi.fn());
@@ -14,6 +17,38 @@ describe('GuestList', () => {
     vi.clearAllMocks();
   });
 
+  const mountGuestList = async (route = '/?page=0&size=10') => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: '/',
+          component: GuestList
+        },
+        {
+          path: '/guests/new',
+          name: BACKOFFICE_ROUTE_NAMES.guestAdd,
+          component: defineComponent({
+            template: '<div />'
+          })
+        }
+      ]
+    });
+
+    await router.push(route);
+    await router.isReady();
+
+    const wrapper = mount(GuestList, {
+      global: {
+        plugins: [router]
+      }
+    });
+
+    await flushPromises();
+
+    return { wrapper, router };
+  };
+
   it('loads and renders guests on mount', async () => {
     listGuestsMock.mockResolvedValue(createGuestPage({
       items: [createGuestResponse()],
@@ -22,9 +57,7 @@ describe('GuestList', () => {
       size: 10
     }));
 
-    const wrapper = mount(GuestList);
-
-    await flushPromises();
+    const { wrapper } = await mountGuestList();
 
     expect(listGuestsMock).toHaveBeenCalledWith({ page: 0, size: 10 });
     expect(wrapper.text()).toContain('John Doe');
@@ -54,9 +87,7 @@ describe('GuestList', () => {
         totalPages: 2
       }));
 
-    const wrapper = mount(GuestList);
-
-    await flushPromises();
+    const { wrapper } = await mountGuestList();
 
     const nextButton = wrapper.findAll('button').find((button) => button.text().includes('Next'));
     expect(nextButton).toBeDefined();
@@ -90,9 +121,7 @@ describe('GuestList', () => {
         totalPages: 2
       }));
 
-    const wrapper = mount(GuestList);
-
-    await flushPromises();
+    const { wrapper } = await mountGuestList('/?page=1&size=10');
 
     const previousButton = wrapper.findAll('button').find((button) => button.text().includes('Previous'));
     expect(previousButton).toBeDefined();
@@ -124,9 +153,7 @@ describe('GuestList', () => {
         totalPages: 2
       }));
 
-    const wrapper = mount(GuestList);
-
-    await flushPromises();
+    const { wrapper } = await mountGuestList();
 
     const previousButtonOnFirstPage = wrapper.findAll('button').find((button) => button.text().includes('Previous'));
     expect(previousButtonOnFirstPage).toBeDefined();
@@ -145,9 +172,7 @@ describe('GuestList', () => {
   it('shows error message and retry button when loading fails', async () => {
     listGuestsMock.mockRejectedValue(new Error('Network error'));
 
-    const wrapper = mount(GuestList);
-
-    await flushPromises();
+    const { wrapper } = await mountGuestList();
 
     expect(wrapper.text()).toContain('Network error');
     expect(wrapper.findAll('button').find((button) => button.text().includes('Try again'))).toBeDefined();
@@ -164,9 +189,7 @@ describe('GuestList', () => {
         totalPages: 1
       }));
 
-    const wrapper = mount(GuestList);
-
-    await flushPromises();
+    const { wrapper } = await mountGuestList();
 
     expect(wrapper.text()).toContain('Network error');
 
@@ -180,5 +203,56 @@ describe('GuestList', () => {
     expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10 });
     expect(wrapper.text()).not.toContain('Network error');
     expect(wrapper.text()).toContain('John Doe');
+  });
+
+  it('normalizes missing pagination query params in the URL', async () => {
+    listGuestsMock.mockResolvedValue(createGuestPage({
+      items: [createGuestResponse()],
+      totalItems: 1,
+      totalPages: 1,
+      size: 10
+    }));
+
+    const { router } = await mountGuestList('/');
+
+    expect(router.currentRoute.value.query.page).toBe('0');
+    expect(router.currentRoute.value.query.size).toBe('10');
+  });
+
+  it('applies only the latest response when requests overlap', async () => {
+    let resolvePage0: ((v: unknown) => void) | null = null;
+    let resolvePage1: ((v: unknown) => void) | null = null;
+
+    const page0Response = createGuestPage({
+      items: [createGuestResponse({ firstName: 'Page0', email: 'p0@example.com' })],
+      page: 0,
+      size: 10,
+      totalItems: 20,
+      totalPages: 2
+    });
+
+    const page1Response = createGuestPage({
+      items: [createGuestResponse({ id: '2', firstName: 'Page1', email: 'p1@example.com' })],
+      page: 1,
+      size: 10,
+      totalItems: 20,
+      totalPages: 2
+    });
+
+    listGuestsMock
+      .mockImplementationOnce(() => new Promise((resolve) => { resolvePage0 = resolve; }))
+      .mockImplementationOnce(() => new Promise((resolve) => { resolvePage1 = resolve; }));
+
+    const { wrapper, router } = await mountGuestList('/?page=0&size=10');
+
+    await router.push('/?page=1&size=10');
+
+    resolvePage1!(page1Response);
+    resolvePage0!(page0Response);
+
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Page1');
+    expect(wrapper.text()).not.toContain('Page0');
   });
 });
