@@ -16,6 +16,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { logout } from '../services/authApi';
+import { clearSessionAuthStatus } from '../services/authStatusCache';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 
 const isLoggingOut = ref(false);
@@ -32,6 +33,7 @@ const handleLogout = async () => {
 
   try {
     await logout();
+    clearSessionAuthStatus();
     await router.push({ name: BACKOFFICE_ROUTE_NAMES.signInRequired });
   } catch {
     logoutErrorMessage.value = 'Unable to sign out. Please try again.';
