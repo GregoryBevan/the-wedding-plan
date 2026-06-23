@@ -10,6 +10,7 @@ class GuestRouter(private val guestEndpoint: GuestEndpoint) {
     @Bean
     fun guestRoute() = router {
         "/api/guests".nest {
+            GET("", guestEndpoint::listGuests)
             POST("", guestEndpoint::addGuest)
         }
     }
