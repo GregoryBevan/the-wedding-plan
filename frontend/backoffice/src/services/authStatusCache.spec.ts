@@ -71,5 +71,64 @@ describe('authStatusCache', () => {
     expect(first.email).toBe('first@example.com');
     expect(second.email).toBe('second@example.com');
   });
+
+  it('refreshes cached data after TTL expires', async () => {
+    const firstStatus = {
+      isAuthenticated: true,
+      email: 'first@example.com',
+      isAuthorized: true
+    };
+
+    const secondStatus = {
+      isAuthenticated: true,
+      email: 'second@example.com',
+      isAuthorized: true
+    };
+
+    authApiMock.getAuthStatus
+      .mockResolvedValueOnce(firstStatus)
+      .mockResolvedValueOnce(secondStatus);
+
+    const first = await getSessionAuthStatus();
+    expect(first.email).toBe('first@example.com');
+    expect(authApiMock.getAuthStatus).toHaveBeenCalledTimes(1);
+
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(Date.now() + 11 * 60 * 1000));
+
+    const second = await getSessionAuthStatus();
+    expect(second.email).toBe('second@example.com');
+    expect(authApiMock.getAuthStatus).toHaveBeenCalledTimes(2);
+
+    vi.useRealTimers();
+  });
+
+  it('skips cache writes if cache was cleared while request was in-flight', async () => {
+    let resolveRequest: ((value: unknown) => void) | null = null;
+    authApiMock.getAuthStatus.mockImplementationOnce(() => new Promise((resolve) => {
+      resolveRequest = resolve;
+    }));
+    authApiMock.getAuthStatus.mockResolvedValueOnce({
+      isAuthenticated: true,
+      email: 'fresh@example.com',
+      isAuthorized: true
+    });
+
+    const pendingRequest = getSessionAuthStatus();
+
+    clearSessionAuthStatus();
+
+    resolveRequest!({
+      isAuthenticated: true,
+      email: 'stale@example.com',
+      isAuthorized: true
+    });
+
+    await pendingRequest;
+
+    const freshRequest = await getSessionAuthStatus();
+    expect(freshRequest.email).toBe('fresh@example.com');
+    expect(authApiMock.getAuthStatus).toHaveBeenCalledTimes(2);
+  });
 });
 
