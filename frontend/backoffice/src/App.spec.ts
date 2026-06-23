@@ -1,6 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { defineComponent, h } from 'vue';
-import { createMemoryHistory } from 'vue-router';
+import { createMemoryHistory, createRouter } from 'vue-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App.vue';
 import { createBackofficeRouter } from './router';
@@ -135,13 +135,35 @@ describe('App auth states', () => {
       isAuthorized: true
     });
 
-    const { router } = await mountApp({ route: '/guests' });
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: '/guests',
+          component: defineComponent(() => () => h('div', 'Guest list')),
+          meta: {
+            requiresAuthorized: true
+          }
+        }
+      ]
+    });
+
+    await router.push('/guests');
+    await router.isReady();
+
+    mount(App, {
+      global: {
+        plugins: [router]
+      }
+    });
+    await flushPromises();
+
     const authStatusCallCountAfterMount = authApiMock.getAuthStatus.mock.calls.length;
 
     await router.push({ path: '/guests', query: { page: '2' } });
     await flushPromises();
 
-    expect(authApiMock.getAuthStatus).toHaveBeenCalledTimes(authStatusCallCountAfterMount + 1);
+    expect(authApiMock.getAuthStatus).toHaveBeenCalledTimes(authStatusCallCountAfterMount);
   });
 
   it('logs out and returns to login state', async () => {
