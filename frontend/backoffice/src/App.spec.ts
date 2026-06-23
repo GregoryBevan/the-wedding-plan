@@ -116,6 +116,7 @@ describe('App auth states', () => {
 
     expect(wrapper.text()).toContain('Add a New Guest');
     expect(wrapper.findComponent({ name: 'GuestForm' }).exists()).toBe(true);
+    expect(wrapper.findComponent({ name: 'GuestList' }).exists()).toBe(false);
   });
 
   it('logs out and returns to login state', async () => {

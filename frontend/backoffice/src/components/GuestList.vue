@@ -2,15 +2,8 @@
   <section>
     <h2 class="mb-6 text-center text-3xl font-light tracking-wide">Guest List</h2>
 
-    <div class="mb-4 flex items-center justify-between text-sm text-text/80">
+    <div class="mb-4 text-sm text-text/80">
       <p>Showing {{ guestPage.items.length }} of {{ guestPage.totalItems }} guests</p>
-      <button
-        class="rounded-md border border-secondary px-3 py-1 hover:bg-secondary/20 disabled:cursor-not-allowed disabled:opacity-60"
-        :disabled="isLoading"
-        @click="loadGuests(currentPage)"
-      >
-        Refresh
-      </button>
     </div>
 
     <p v-if="isLoading" class="py-8 text-center text-sm">Loading guests...</p>
@@ -81,7 +74,7 @@ import { computed, onMounted, ref } from 'vue';
 import { formatDateInTimeZone } from '../composables/useDateFormatter';
 import { listGuests, type GuestPageResponse } from '../services/guestApi';
 
-const DEFAULT_PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 10;
 
 const guestPage = ref<GuestPageResponse>({
   items: [],

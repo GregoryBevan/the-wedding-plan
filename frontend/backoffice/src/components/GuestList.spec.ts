@@ -18,14 +18,15 @@ describe('GuestList', () => {
     listGuestsMock.mockResolvedValue(createGuestPage({
       items: [createGuestResponse()],
       totalItems: 1,
-      totalPages: 1
+      totalPages: 1,
+      size: 10
     }));
 
     const wrapper = mount(GuestList);
 
     await flushPromises();
 
-    expect(listGuestsMock).toHaveBeenCalledWith({ page: 0, size: 20 });
+    expect(listGuestsMock).toHaveBeenCalledWith({ page: 0, size: 10 });
     expect(wrapper.text()).toContain('John Doe');
     expect(wrapper.text()).toContain('john.doe@email.com');
   });
@@ -35,6 +36,7 @@ describe('GuestList', () => {
       .mockResolvedValueOnce(createGuestPage({
         items: [createGuestResponse()],
         page: 0,
+        size: 10,
         totalItems: 30,
         totalPages: 2
       }))
@@ -47,6 +49,7 @@ describe('GuestList', () => {
           email: 'jane.doe@email.com'
         })],
         page: 1,
+        size: 10,
         totalItems: 30,
         totalPages: 2
       }));
@@ -60,7 +63,7 @@ describe('GuestList', () => {
     await nextButton!.trigger('click');
     await flushPromises();
 
-    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 1, size: 20 });
+    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 1, size: 10 });
     expect(wrapper.text()).toContain('Jane Doe');
   });
 
@@ -75,12 +78,14 @@ describe('GuestList', () => {
           email: 'jane.doe@email.com'
         })],
         page: 1,
+        size: 10,
         totalItems: 30,
         totalPages: 2
       }))
       .mockResolvedValueOnce(createGuestPage({
         items: [createGuestResponse()],
         page: 0,
+        size: 10,
         totalItems: 30,
         totalPages: 2
       }));
@@ -94,8 +99,47 @@ describe('GuestList', () => {
     await previousButton!.trigger('click');
     await flushPromises();
 
-    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 20 });
+    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10 });
     expect(wrapper.text()).toContain('John Doe');
+  });
+
+  it('disables previous button on first page and enables it on second page', async () => {
+    listGuestsMock
+      .mockResolvedValueOnce(createGuestPage({
+        items: [createGuestResponse()],
+        page: 0,
+        size: 10,
+        totalItems: 30,
+        totalPages: 2
+      }))
+      .mockResolvedValueOnce(createGuestPage({
+        items: [createGuestResponse({
+          id: '2',
+          firstName: 'Jane',
+          email: 'jane.doe@email.com'
+        })],
+        page: 1,
+        size: 10,
+        totalItems: 30,
+        totalPages: 2
+      }));
+
+    const wrapper = mount(GuestList);
+
+    await flushPromises();
+
+    const previousButtonOnFirstPage = wrapper.findAll('button').find((button) => button.text().includes('Previous'));
+    expect(previousButtonOnFirstPage).toBeDefined();
+    expect(previousButtonOnFirstPage!.attributes('disabled')).toBeDefined();
+
+    const nextButton = wrapper.findAll('button').find((button) => button.text().includes('Next'));
+    expect(nextButton).toBeDefined();
+    await nextButton!.trigger('click');
+    await flushPromises();
+
+    const previousButtonOnSecondPage = wrapper.findAll('button').find((button) => button.text().includes('Previous'));
+    expect(previousButtonOnSecondPage).toBeDefined();
+    expect(previousButtonOnSecondPage!.attributes('disabled')).toBeUndefined();
   });
 
   it('shows error message and retry button when loading fails', async () => {
@@ -107,5 +151,34 @@ describe('GuestList', () => {
 
     expect(wrapper.text()).toContain('Network error');
     expect(wrapper.findAll('button').find((button) => button.text().includes('Try again'))).toBeDefined();
+  });
+
+  it('retries loading guests when clicking Try again after an error', async () => {
+    listGuestsMock
+      .mockRejectedValueOnce(new Error('Network error'))
+      .mockResolvedValueOnce(createGuestPage({
+        items: [createGuestResponse()],
+        page: 0,
+        size: 10,
+        totalItems: 1,
+        totalPages: 1
+      }));
+
+    const wrapper = mount(GuestList);
+
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Network error');
+
+    const retryButton = wrapper.findAll('button').find((button) => button.text().includes('Try again'));
+    expect(retryButton).toBeDefined();
+
+    await retryButton!.trigger('click');
+    await flushPromises();
+
+    expect(listGuestsMock).toHaveBeenCalledTimes(2);
+    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10 });
+    expect(wrapper.text()).not.toContain('Network error');
+    expect(wrapper.text()).toContain('John Doe');
   });
 });

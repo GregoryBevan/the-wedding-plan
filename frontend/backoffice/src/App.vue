@@ -1,8 +1,8 @@
 <template>
   <div class="min-h-screen bg-background p-8 font-serif">
-    <header class="mb-10 flex items-center justify-center space-x-8 border-b border-secondary pb-8">
-      <img src="./assets/logo.svg" alt="Wedding Logo" class="w-24 h-24" />
-      <h1 class="text-5xl font-light tracking-widest text-text">Wedding Plan</h1>
+    <header class="mb-5 flex items-center justify-center space-x-3 border-b border-secondary pb-3">
+      <img src="./assets/logo.svg" alt="Wedding Logo" class="w-14 h-14" />
+      <h1 class="text-3xl font-light tracking-wide text-text">Wedding Plan</h1>
     </header>
     <main class="mx-auto max-w-2xl bg-white p-8 rounded-xl shadow-lg border border-secondary/20 text-text">
       <p v-if="isLoadingAuth" class="text-center text-sm">Checking authentication…</p>
@@ -76,8 +76,14 @@ import { onMounted, ref } from 'vue';
 import GuestForm from './components/GuestForm.vue';
 import GuestList from './components/GuestList.vue';
 import { useAddRequest } from './composables/useAddRequest';
-import { addGuest } from './services/guestApi';
+import { addGuest, CreateGuestPayload } from './services/guestApi';
 import { getAuthStatus, getGoogleLoginUrl, logout, type AuthStatus } from './services/authApi';
+
+const isLoadingAuth = ref(true);
+const authStatus = ref<AuthStatus | null>(null);
+const isLoggingOut = ref(false);
+const logoutErrorMessage = ref('');
+const activeView = ref<'list' | 'add'>('list');
 
 const {
   isSubmitting,
@@ -86,11 +92,6 @@ const {
   clearMessages,
   submit
 } = useAddRequest(addGuest);
-
-const isLoadingAuth = ref(true);
-const authStatus = ref<AuthStatus | null>(null);
-const isLoggingOut = ref(false);
-const logoutErrorMessage = ref('');
 
 onMounted(async () => {
   try {
@@ -106,7 +107,7 @@ onMounted(async () => {
   }
 });
 
-const handleAddGuest = async (guestData) => {
+const handleAddGuest = async (guestData: CreateGuestPayload) => {
   await submit(guestData, { successMessage: 'Guest added successfully.' });
 };
 
@@ -131,7 +132,6 @@ const handleLogout = async () => {
     isLoggingOut.value = false;
   }
 };
-const activeView = ref<'list' | 'add'>('list');
 
 const switchView = (view: 'list' | 'add') => {
   if (activeView.value === view) {
