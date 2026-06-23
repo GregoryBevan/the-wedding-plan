@@ -37,8 +37,8 @@ const router = useRouter();
 
 const isProtectedRoute = computed(() => route.matched.some((record) => record.meta.requiresAuthorized));
 
-watch(() => route.fullPath, async () => {
-  if (!isProtectedRoute.value) {
+watch(isProtectedRoute, async (isProtectedRoute) => {
+  if (!isProtectedRoute) {
     connectedUserEmail.value = null;
     return;
   }

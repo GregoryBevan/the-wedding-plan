@@ -128,6 +128,22 @@ describe('App auth states', () => {
     expect(wrapper.findComponent({ name: 'GuestList' }).exists()).toBe(false);
   });
 
+  it('does not refetch auth status in App when only the query string changes', async () => {
+    authApiMock.getAuthStatus.mockResolvedValue({
+      isAuthenticated: true,
+      email: 'allowed@example.com',
+      isAuthorized: true
+    });
+
+    const { router } = await mountApp({ route: '/guests' });
+    const authStatusCallCountAfterMount = authApiMock.getAuthStatus.mock.calls.length;
+
+    await router.push({ path: '/guests', query: { page: '2' } });
+    await flushPromises();
+
+    expect(authApiMock.getAuthStatus).toHaveBeenCalledTimes(authStatusCallCountAfterMount + 1);
+  });
+
   it('logs out and returns to login state', async () => {
     authApiMock.getAuthStatus.mockResolvedValue({
       isAuthenticated: true,
