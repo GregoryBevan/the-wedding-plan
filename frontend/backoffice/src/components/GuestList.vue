@@ -108,6 +108,7 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 const route = useRoute();
 const router = useRouter();
+let latestRequestId = 0;
 
 const currentPage = computed(() => guestPage.value.page);
 const displayedTotalPages = computed(() => Math.max(guestPage.value.totalPages, 1));
@@ -155,21 +156,28 @@ const updatePaginationQuery = async (page: number, size: number, replace = false
 };
 
 const loadGuests = async (page: number, size: number) => {
-  if (isLoading.value) {
-    return;
-  }
-
+  const requestId = ++latestRequestId;
   isLoading.value = true;
   errorMessage.value = '';
 
   try {
-    guestPage.value = await listGuests({ page, size });
+    const result = await listGuests({ page, size });
+
+    if (requestId !== latestRequestId) {
+      return;
+    }
+
+    guestPage.value = result;
   } catch (error: unknown) {
-    errorMessage.value = error instanceof Error
-      ? error.message
-      : 'Unexpected error while loading guests.';
+    if (requestId === latestRequestId) {
+      errorMessage.value = error instanceof Error
+        ? error.message
+        : 'Unexpected error while loading guests.';
+    }
   } finally {
-    isLoading.value = false;
+    if (requestId === latestRequestId) {
+      isLoading.value = false;
+    }
   }
 };
 

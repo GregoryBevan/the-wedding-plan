@@ -218,4 +218,41 @@ describe('GuestList', () => {
     expect(router.currentRoute.value.query.page).toBe('0');
     expect(router.currentRoute.value.query.size).toBe('10');
   });
+
+  it('applies only the latest response when requests overlap', async () => {
+    let resolvePage0: ((v: unknown) => void) | null = null;
+    let resolvePage1: ((v: unknown) => void) | null = null;
+
+    const page0Response = createGuestPage({
+      items: [createGuestResponse({ firstName: 'Page0', email: 'p0@example.com' })],
+      page: 0,
+      size: 10,
+      totalItems: 20,
+      totalPages: 2
+    });
+
+    const page1Response = createGuestPage({
+      items: [createGuestResponse({ id: '2', firstName: 'Page1', email: 'p1@example.com' })],
+      page: 1,
+      size: 10,
+      totalItems: 20,
+      totalPages: 2
+    });
+
+    listGuestsMock
+      .mockImplementationOnce(() => new Promise((resolve) => { resolvePage0 = resolve; }))
+      .mockImplementationOnce(() => new Promise((resolve) => { resolvePage1 = resolve; }));
+
+    const { wrapper, router } = await mountGuestList('/?page=0&size=10');
+
+    await router.push('/?page=1&size=10');
+
+    resolvePage1!(page1Response);
+    resolvePage0!(page0Response);
+
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Page1');
+    expect(wrapper.text()).not.toContain('Page0');
+  });
 });

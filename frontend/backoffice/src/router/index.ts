@@ -42,7 +42,7 @@ const routes: RouteRecordRaw[] = [
 ];
 
 export const createBackofficeRouter = (
-  history: RouterHistory = createWebHistory(import.meta.env.BASE_URL)
+  history: RouterHistory = createWebHistory(import.meta.env.VITE_ROUTER_BASE ?? '/')
 ) => {
   const router = createRouter({
     history,

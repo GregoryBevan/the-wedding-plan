@@ -229,6 +229,20 @@ describe('App auth states', () => {
       email: 'allowed@example.com',
       isAuthorized: true
     });
+
+    const { wrapper, router } = await mountApp({ route: '/unknown-page' });
+
+    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.notFound);
+    expect(wrapper.text()).toContain('Page not found');
+    expect(wrapper.text()).toContain('Go to guest list');
+  });
+
+  it('keeps add-guest success message isolated per route instance', async () => {
+    authApiMock.getAuthStatus.mockResolvedValue({
+      isAuthenticated: true,
+      email: 'allowed@example.com',
+      isAuthorized: true
+    });
     guestApiMock.addGuest.mockResolvedValue({ id: '1' });
 
     const { wrapper, router } = await mountApp({
