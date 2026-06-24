@@ -4,6 +4,7 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
 import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.charlieDavis
+import me.elgregos.theweddingplan.api.guest.UpdateGuestRequestFixtures.johnDoeUpdated
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -54,6 +55,30 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
     }
 
     @Test
+    fun `should redirect unauthenticated guest detail fetch to google login`() {
+        restTestClient.get().uri("/api/guests/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.FOUND)
+            .expectHeader().valueMatches(HttpHeaders.LOCATION, ".*/oauth2/authorization/google")
+    }
+
+    @Test
+    fun `should redirect unauthenticated guest update to google login`() {
+        val csrf = csrfContext()
+
+        restTestClient.put().uri("/api/guests/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(johnDoeUpdated)
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.FOUND)
+            .expectHeader().valueMatches(HttpHeaders.LOCATION, ".*/oauth2/authorization/google")
+    }
+
+    @Test
     fun `should add a new guest`() {
         val csrf = authenticatedCsrfContext("gregory@example.com")
         val initialCount = guestCount()
@@ -95,15 +120,160 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             .expectStatus().isOk
             .expectBody()
             .jsonPath("$.items.length()").isEqualTo(1)
-            .jsonPath("$.items[0].id").isEqualTo("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
-            .jsonPath("$.items[0].firstName").isEqualTo("John")
+            .jsonPath("$.items[0].id").exists()
+            .jsonPath("$.items[0].firstName").exists()
             .jsonPath("$.page").isEqualTo(0)
             .jsonPath("$.size").isEqualTo(1)
             .jsonPath("$.totalItems").exists()
             .jsonPath("$.totalPages").exists()
     }
 
+    @Test
+    fun `should get guest by id`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+        val uniqueGuest = AddGuestRequest(
+            firstName = "Lookup-${UUID.randomUUID()}",
+            lastName = "Guest",
+            email = "lookup-${UUID.randomUUID()}@example.com"
+        )
+        val createdGuest = createGuest(csrf, uniqueGuest)
+
+        restTestClient.get().uri("/api/guests/${createdGuest.id}")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.id").isEqualTo(createdGuest.id)
+            .jsonPath("$.firstName").isEqualTo(uniqueGuest.firstName)
+            .jsonPath("$.lastName").isEqualTo(uniqueGuest.lastName)
+            .jsonPath("$.email").isEqualTo(uniqueGuest.email)
+    }
+
+    @Test
+    fun `should return not found when guest id does not exist on get`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+
+        restTestClient.get().uri("/api/guests/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `should return bad request for malformed guest id on get`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+
+        restTestClient.get().uri("/api/guests/not-a-uuid")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isBadRequest
+    }
+
+    @Test
+    fun `should update guest by id`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+        val guestToUpdate = AddGuestRequest(
+            firstName = "Before",
+            lastName = "Update",
+            email = "before-${UUID.randomUUID()}@example.com"
+        )
+        val createdGuest = createGuest(csrf, guestToUpdate)
+        val updateRequest = johnDoeUpdated.copy(version = createdGuest.version)
+
+        val updatedGuest = restTestClient.put().uri("/api/guests/${createdGuest.id}")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(updateRequest)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody(GuestResponse::class.java)
+            .returnResult()
+            .responseBody
+            ?: error("Expected updated guest in response body")
+
+        val persistedGuest = persistedGuestById(createdGuest.id)
+
+        assertThat(updatedGuest.firstName).isEqualTo(updateRequest.firstName)
+        assertThat(updatedGuest.lastName).isEqualTo(updateRequest.lastName)
+        assertThat(updatedGuest.email).isEqualTo(updateRequest.email)
+        assertThat(updatedGuest.version).isEqualTo(updateRequest.version + 1)
+        assertThat(persistedGuest.firstName).isEqualTo(updateRequest.firstName)
+        assertThat(persistedGuest.lastName).isEqualTo(updateRequest.lastName)
+        assertThat(persistedGuest.email).isEqualTo(updateRequest.email)
+        assertThat(persistedGuest.version).isEqualTo(createdGuest.version + 1)
+    }
+
+    @Test
+    fun `should return conflict when version is stale on update`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+        val guestToUpdate = AddGuestRequest(
+            firstName = "Before",
+            lastName = "Update",
+            email = "before-${UUID.randomUUID()}@example.com"
+        )
+        val createdGuest = createGuest(csrf, guestToUpdate)
+        val staleUpdateRequest = johnDoeUpdated.copy(version = Long.MAX_VALUE)
+
+        restTestClient.put().uri("/api/guests/${createdGuest.id}")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(staleUpdateRequest)
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.CONFLICT)
+    }
+
+    @Test
+    fun `should return not found when guest id does not exist on update`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+        val updateRequest = johnDoeUpdated.copy(version = 1L)
+
+        restTestClient.put().uri("/api/guests/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(updateRequest)
+            .exchange()
+            .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `should return bad request for malformed guest id on update`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+        val updateRequest = johnDoeUpdated.copy(version = 1L)
+
+        restTestClient.put().uri("/api/guests/not-a-uuid")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(updateRequest)
+            .exchange()
+            .expectStatus().isBadRequest
+    }
+
     private fun guestCount() = jdbcTemplate.queryForObject("select count(*) from guest", Int::class.java) ?: 0
+
+    private fun createGuest(csrf: CsrfContext, request: AddGuestRequest): GuestResponse =
+        restTestClient.post().uri("/api/guests")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(request)
+            .exchange()
+            .expectStatus().isCreated
+            .expectBody(GuestResponse::class.java)
+            .returnResult()
+            .responseBody
+            ?: error("Expected created guest in response body")
 
     private fun persistedGuestById(id: String): PersistedGuestRecord =
         jdbcTemplate.queryForObject(

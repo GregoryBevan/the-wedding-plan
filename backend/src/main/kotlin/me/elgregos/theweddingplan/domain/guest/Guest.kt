@@ -13,5 +13,18 @@ data class Guest(
     val firstName: String,
     val lastName: String,
     val email: String,
-)
+) {
+    fun updateDetails(
+        firstName: String,
+        lastName: String,
+        email: String,
+        now: LocalDateTime = Dates.nowUtcMillis(),
+    ) = copy(
+        version = version + 1,
+        updateDate = now,
+        firstName = firstName,
+        lastName = lastName,
+        email = email,
+    )
+}
 

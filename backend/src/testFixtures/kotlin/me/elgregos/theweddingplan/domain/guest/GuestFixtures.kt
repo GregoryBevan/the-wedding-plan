@@ -24,6 +24,14 @@ object GuestFixtures {
         email = "john.doe@example.com"
     )
 
+    val johnDoeUpdated = johnDoe.copy(
+        version = 2L,
+        updateDate = fixedDate.plusDays(1),
+        firstName = "Johnny",
+        lastName = "Doe-Smith",
+        email = "johnny.doe@example.com"
+    )
+
     val janeDoe = Guest(
         id = GuestId.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12"),
         version = 1L,
@@ -38,11 +46,5 @@ object GuestFixtures {
         firstName = "Emma",
         lastName = "Wilson",
         email = "emma.wilson@example.com"
-    )
-
-    val liamMiller = guest(
-        firstName = "Liam",
-        lastName = "Miller",
-        email = "liam.miller@example.com"
     )
 }
