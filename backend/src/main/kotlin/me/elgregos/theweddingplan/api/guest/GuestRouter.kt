@@ -12,6 +12,8 @@ class GuestRouter(private val guestEndpoint: GuestEndpoint) {
         "/api/guests".nest {
             GET("", guestEndpoint::listGuests)
             POST("", guestEndpoint::addGuest)
+            GET("/{id}", guestEndpoint::getGuest)
+            PUT("/{id}", guestEndpoint::updateGuest)
         }
     }
 }

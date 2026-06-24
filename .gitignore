@@ -15,6 +15,7 @@
 build/
 out/
 \*.gradle*
+plan-*.md
 
 # Node / Frontend (Vue)
 node_modules/

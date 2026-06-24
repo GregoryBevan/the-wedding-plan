@@ -8,11 +8,12 @@ This is a fullstack project.
   starting with guest management. Note: This goal is evolving as we work iteratively.
 - **Workflow**: After any code modification, ensure you stage the affected files using `git add`. When starting to work on a new issue you should update the main branch and create a new branch for your work. You should never commit or push work.
 - **Branch naming convention**: Use the format `feat/#<issue-number><short-description>` for new features and `fix/#<issue-number><short-description>` for bug fixes.
-- 
 
 
 ## Backend
-
+- If java is not found
+  - `export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home"`
+  - `export PATH="$JAVA_HOME/bin:/opt/homebrew/bin:$PATH"`
 - All backend code is located in the `backend` directory.
 - **Architecture**: Follows a DDD/Clean Architecture pattern with `api`, `application`, `domain`, and `infrastructure`
   packages. The `api` layer uses functional routing (Kotlin DSL).
@@ -32,9 +33,7 @@ This is a fullstack project.
   - Integration tests should extend `AbstractIntegrationTest` or `AbstractEndpointIntegrationTest` (located in `backend/src/integrationTest/kotlin/me/elgregos/theweddingplan/`) to inherit Testcontainers PostgreSQL setup with reusable containers.
 - **Coding Style**: For Kotlin development, adopt idiomatic Kotlin best practices: use concise syntax, favor functional
   style, and avoid verbose Java-like patterns. Specifically, use one-line functions with `=` whenever possible. The build enforces strict null-safety with the `-Xjsr305=strict` compiler option.
-- If java is not found
-  - `export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home"`
-  - `export PATH="$JAVA_HOME/bin:/opt/homebrew/bin:$PATH"`
+
 
 ## Frontend
 

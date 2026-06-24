@@ -4,30 +4,40 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
-import me.elgregos.theweddingplan.application.guest.AddGuestCommandFixtures.charlieDavis
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures
 import me.elgregos.theweddingplan.domain.guest.Guests
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class GuestAdderTest {
+class GuestGetterTest {
 
     private lateinit var guests: Guests
-    private lateinit var guestAdder: GuestAdder
+    private lateinit var guestGetter: GuestGetter
 
     @BeforeTest
     fun setUp() {
         guests = mockk()
-        guestAdder = GuestAdder(guests)
+        guestGetter = GuestGetter(guests)
     }
 
     @Test
-    fun `should add a new guest`() {
+    fun `should get existing guest by id`() {
         val guest = GuestFixtures.johnDoe
-        every { guests.add(any()) } returns guest
+        every { guests.findById(guest.id) } returns guest
 
-        val result = guestAdder.add(charlieDavis)
+        val result = guestGetter.get(guest.id)
 
         assertThat(result).isEqualTo(guest)
     }
+
+    @Test
+    fun `should return null when guest does not exist`() {
+        val guestId = GuestFixtures.johnDoe.id
+        every { guests.findById(guestId) } returns null
+
+        val result = guestGetter.get(guestId)
+
+        assertThat(result).isEqualTo(null)
+    }
 }
+
