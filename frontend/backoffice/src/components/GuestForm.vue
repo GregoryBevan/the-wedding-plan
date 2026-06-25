@@ -28,38 +28,65 @@
       placeholder="e.g. john.doe@email.com"
       required
     />
-    <BaseButton type="submit" :disabled="props.isSubmitting">
-      {{ props.isSubmitting ? 'Adding guest...' : 'Add Guest' }}
+    <div v-if="props.showCancelButton" class="flex gap-3 pt-2">
+      <button
+        type="button"
+        @click="handleCancel"
+        class="flex-1 rounded border border-secondary px-4 py-3 text-sm hover:bg-secondary/20 transition"
+      >
+        Cancel
+      </button>
+      <BaseButton type="submit" :disabled="props.isSubmitting" class="flex-1">
+        {{ props.isSubmitting ? props.submittingLabel : props.submitLabel }}
+      </BaseButton>
+    </div>
+    <BaseButton v-else type="submit" :disabled="props.isSubmitting">
+      {{ props.isSubmitting ? props.submittingLabel : props.submitLabel }}
     </BaseButton>
   </form>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { toRef, watch } from 'vue';
 import BaseInput from './ui/BaseInput.vue';
 import BaseButton from './ui/BaseButton.vue';
+import { useGuestForm, type GuestFormData } from '../composables/useGuestForm';
 
-interface GuestFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-}
+defineOptions({
+  name: 'GuestForm'
+});
 
 const props = withDefaults(defineProps<{
   isSubmitting?: boolean;
+  initialValues?: Partial<GuestFormData>;
+  submitLabel?: string;
+  submittingLabel?: string;
+  resetOnSubmit?: boolean;
+  showCancelButton?: boolean;
 }>(), {
-  isSubmitting: false
+  isSubmitting: false,
+  initialValues: () => ({
+    firstName: '',
+    lastName: '',
+    email: ''
+  }),
+  submitLabel: 'Add Guest',
+  submittingLabel: 'Adding guest...',
+  resetOnSubmit: true,
+  showCancelButton: false
 });
 
 const emit = defineEmits<{
   (e: 'submit', payload: GuestFormData): void;
+  (e: 'dirty-change', isDirty: boolean): void;
+  (e: 'cancel'): void;
 }>();
 
-const form = ref({
-  firstName: '',
-  lastName: '',
-  email: ''
-});
+const { form, isDirty, reset } = useGuestForm(toRef(props, 'initialValues'));
+
+watch(isDirty, (nextValue) => {
+  emit('dirty-change', nextValue);
+}, { immediate: true });
 
 const handleSubmit = () => {
   if (props.isSubmitting) {
@@ -67,9 +94,13 @@ const handleSubmit = () => {
   }
 
   emit('submit', { ...form.value });
-  // Reset form after submit for now, or keep it depending on UX
-  form.value.firstName = '';
-  form.value.lastName = '';
-  form.value.email = '';
+
+  if (props.resetOnSubmit) {
+    reset();
+  }
+};
+
+const handleCancel = () => {
+  emit('cancel');
 };
 </script>

@@ -26,6 +26,9 @@ dist/
 .pnpm/
 yarn.lock
 package-lock.json
+frontend/playwright-report/
+frontend/test-results/
+frontend/.playwright/
 
 # Database persistence
 /postgres_data/

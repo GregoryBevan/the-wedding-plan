@@ -1,56 +1,40 @@
 <template>
-  <div ref="containerRef">
-    <div class="mb-6 flex items-center justify-between">
-      <RouterLink
-        :to="guestListTarget"
-        data-test="back-to-list"
-        aria-label="Back to guest list"
-        class="flex h-10 w-10 items-center justify-center rounded-full border border-primary bg-primary text-2xl leading-none text-white hover:opacity-90"
-      >
-        <span aria-hidden="true" class="font-black">&larr;</span>
-      </RouterLink>
-
+  <div>
+    <div class="mb-6 flex items-center justify-center">
       <h2 class="text-3xl font-light tracking-wide">Add a New Guest</h2>
-
-      <span class="h-10 w-10" aria-hidden="true"></span>
     </div>
-    <GuestForm :is-submitting="isSubmitting" @submit="handleAddGuest" />
-    <p v-if="successMessage" class="mt-4 text-center text-sm text-green-700">{{ successMessage }}</p>
-    <p v-if="errorMessage" class="mt-4 text-center text-sm text-red-700">{{ errorMessage }}</p>
-
-    <div v-if="successMessage" class="mt-4 flex justify-center gap-3">
-      <button
-        class="rounded-md border border-secondary px-4 py-2 hover:bg-secondary/20"
-        @click="clearMessages"
-      >
-        Add another guest
-      </button>
-      <RouterLink
-        :to="guestListTarget"
-        class="rounded-md bg-primary px-4 py-2 text-white hover:opacity-90"
-      >
-        Back to guest list
-      </RouterLink>
-    </div>
+    <GuestForm
+      :is-submitting="isSubmitting"
+      submit-label="Add Guest"
+      submitting-label="Adding guest..."
+      :show-cancel-button="true"
+      :reset-on-submit="true"
+      @cancel="handleCancel"
+      @submit="handleAddGuest"
+      @dirty-change="hasUnsavedChanges = $event"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { onBeforeRouteLeave, RouterLink, useRoute } from 'vue-router';
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import GuestForm from '../components/GuestForm.vue';
 import { useAddRequest } from '../composables/useAddRequest';
+import { useConfirmDialog } from '../composables/useConfirmDialog';
+import { useToast } from '../composables/useToast';
 import { addGuest, type CreateGuestPayload } from '../services/guestApi';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 
-const containerRef = ref<HTMLElement | null>(null);
+const hasUnsavedChanges = ref(false);
 const route = useRoute();
+const router = useRouter();
+const { openConfirm } = useConfirmDialog();
+const { showToast } = useToast();
 
 const {
   isSubmitting,
-  successMessage,
   errorMessage,
-  clearMessages,
   submit
 } = useAddRequest(addGuest);
 
@@ -62,26 +46,35 @@ const guestListTarget = computed(() => ({
   }
 }));
 
-const hasUnsavedFormData = (): boolean => {
-  if (!containerRef.value) {
-    return false;
+const handleAddGuest = async (guestData: CreateGuestPayload) => {
+  const createdGuest = await submit(guestData);
+
+  if (!createdGuest) {
+    showToast(errorMessage.value || 'Unable to create guest at the moment.', 'error');
+    return;
   }
 
-  const inputs = Array.from(containerRef.value.querySelectorAll('input')) as HTMLInputElement[];
-
-  return inputs.some((input) => input.value.trim().length > 0);
+  hasUnsavedChanges.value = false;
+  showToast('Guest added successfully.', 'success');
+  await router.push(guestListTarget.value);
 };
 
-const handleAddGuest = async (guestData: CreateGuestPayload) => {
-  await submit(guestData, { successMessage: 'Guest added successfully.' });
+const handleCancel = async () => {
+  // Let onBeforeRouteLeave own confirmation to avoid duplicate dialogs.
+  await router.push(guestListTarget.value);
 };
 
-onBeforeRouteLeave(() => {
-  if (!hasUnsavedFormData()) {
+onBeforeRouteLeave(async () => {
+  if (!hasUnsavedChanges.value) {
     return true;
   }
 
-  return window.confirm('You have unsaved guest details. Do you want to leave this page?');
+  return await openConfirm({
+    title: 'Unsaved Changes',
+    message: 'You have unsaved guest details. Do you want to leave this page?',
+    confirmLabel: 'Leave',
+    cancelLabel: 'Continue editing'
+  });
 });
 </script>
 

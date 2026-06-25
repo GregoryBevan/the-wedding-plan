@@ -186,44 +186,7 @@ describe('App auth states', () => {
     expect(wrapper.text()).toContain('Please sign in with Google to access the backoffice.');
   });
 
-  it('shows add guest success message after submit in add guest route', async () => {
-    authApiMock.getAuthStatus.mockResolvedValue({
-      isAuthenticated: true,
-      email: 'allowed@example.com',
-      isAuthorized: true
-    });
-    guestApiMock.addGuest.mockResolvedValue({ id: '1' });
-
-    const { wrapper } = await mountApp({
-      route: '/guests/new',
-      stubs: {
-        ...globalStubs,
-        GuestForm: guestFormSubmitStub
-      }
-    });
-
-    await wrapper.get('[data-test="guest-form-submit"]').trigger('click');
-    await flushPromises();
-
-    expect(wrapper.text()).toContain('Guest added successfully.');
-    expect(wrapper.text()).toContain('Back to guest list');
-  });
-
-  it('renders not found view for unknown routes', async () => {
-    authApiMock.getAuthStatus.mockResolvedValue({
-      isAuthenticated: true,
-      email: 'allowed@example.com',
-      isAuthorized: true
-    });
-
-    const { wrapper, router } = await mountApp({ route: '/unknown-page' });
-
-    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.notFound);
-    expect(wrapper.text()).toContain('Page not found');
-    expect(wrapper.text()).toContain('Go to guest list');
-  });
-
-  it('keeps add-guest success message isolated per route instance', async () => {
+  it('redirects to guest list after submit in add guest route', async () => {
     authApiMock.getAuthStatus.mockResolvedValue({
       isAuthenticated: true,
       email: 'allowed@example.com',
@@ -242,7 +205,43 @@ describe('App auth states', () => {
     await wrapper.get('[data-test="guest-form-submit"]').trigger('click');
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Guest added successfully.');
+    expect(router.currentRoute.value.path).toBe('/guests');
+  });
+
+  it('renders not found view for unknown routes', async () => {
+    authApiMock.getAuthStatus.mockResolvedValue({
+      isAuthenticated: true,
+      email: 'allowed@example.com',
+      isAuthorized: true
+    });
+
+    const { wrapper, router } = await mountApp({ route: '/unknown-page' });
+
+    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.notFound);
+    expect(wrapper.text()).toContain('Page not found');
+    expect(wrapper.text()).toContain('Go to guest list');
+  });
+
+  it('can return to add route after successful submit', async () => {
+    authApiMock.getAuthStatus.mockResolvedValue({
+      isAuthenticated: true,
+      email: 'allowed@example.com',
+      isAuthorized: true
+    });
+    guestApiMock.addGuest.mockResolvedValue({ id: '1' });
+
+    const { wrapper, router } = await mountApp({
+      route: '/guests/new',
+      stubs: {
+        ...globalStubs,
+        GuestForm: guestFormSubmitStub
+      }
+    });
+
+    await wrapper.get('[data-test="guest-form-submit"]').trigger('click');
+    await flushPromises();
+
+    expect(router.currentRoute.value.path).toBe('/guests');
 
     await router.push({ name: BACKOFFICE_ROUTE_NAMES.guestList });
     await flushPromises();
@@ -251,6 +250,6 @@ describe('App auth states', () => {
     await router.push({ name: BACKOFFICE_ROUTE_NAMES.guestAdd });
     await flushPromises();
 
-    expect(wrapper.text()).not.toContain('Guest added successfully.');
+    expect(router.currentRoute.value.path).toBe('/guests/new');
   });
 });

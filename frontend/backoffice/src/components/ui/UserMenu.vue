@@ -22,7 +22,7 @@
         type="button"
         role="menuitem"
         data-test="user-menu-logout"
-        class="mt-4 w-full rounded-md bg-primary px-4 py-2 text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        class="mt-4 w-full rounded-md bg-primary px-4 py-2 text-sm font-normal text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         :disabled="props.isLoggingOut"
         @click="handleLogout"
       >

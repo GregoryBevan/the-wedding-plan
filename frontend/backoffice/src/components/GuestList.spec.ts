@@ -31,6 +31,13 @@ describe('GuestList', () => {
           component: defineComponent({
             template: '<div />'
           })
+        },
+        {
+          path: '/guests/:id/edit',
+          name: BACKOFFICE_ROUTE_NAMES.guestEdit,
+          component: defineComponent({
+            template: '<div />'
+          })
         }
       ]
     });
@@ -62,6 +69,26 @@ describe('GuestList', () => {
     expect(listGuestsMock).toHaveBeenCalledWith({ page: 0, size: 10 });
     expect(wrapper.text()).toContain('John Doe');
     expect(wrapper.text()).toContain('john.doe@email.com');
+  });
+
+  it('navigates to edit route and keeps pagination query', async () => {
+    listGuestsMock.mockResolvedValue(createGuestPage({
+      items: [createGuestResponse({ id: 'guest-42' })],
+      totalItems: 1,
+      totalPages: 1,
+      size: 10,
+      page: 2
+    }));
+
+    const { wrapper, router } = await mountGuestList('/?page=2&size=10');
+
+    await wrapper.get('[data-test="edit-guest-guest-42"]').trigger('click');
+    await flushPromises();
+
+    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.guestEdit);
+    expect(router.currentRoute.value.params.id).toBe('guest-42');
+    expect(router.currentRoute.value.query.page).toBe('2');
+    expect(router.currentRoute.value.query.size).toBe('10');
   });
 
   it('requests next page when clicking next button', async () => {

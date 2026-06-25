@@ -19,12 +19,16 @@
 
       <RouterView />
     </main>
+    <ConfirmDialog />
+    <ToastContainer />
   </div>
 </template>
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import UserMenu from './components/ui/UserMenu.vue';
+import ConfirmDialog from './components/ui/ConfirmDialog.vue';
+import ToastContainer from './components/ui/ToastContainer.vue';
 import { logout } from './services/authApi';
 import { clearSessionAuthStatus, getSessionAuthStatus } from './services/authStatusCache';
 import { BACKOFFICE_ROUTE_NAMES } from './router/routeNames';

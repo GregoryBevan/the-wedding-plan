@@ -7,6 +7,8 @@ import GuestListView from './GuestListView.vue';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 
 const addGuestMock = vi.hoisted(() => vi.fn());
+const openConfirmMock = vi.hoisted(() => vi.fn());
+const showToastMock = vi.hoisted(() => vi.fn());
 
 vi.mock('../services/guestApi', async (importOriginal) => {
   const module = await importOriginal<typeof import('../services/guestApi')>();
@@ -16,6 +18,18 @@ vi.mock('../services/guestApi', async (importOriginal) => {
     addGuest: addGuestMock
   };
 });
+
+vi.mock('../composables/useConfirmDialog', () => ({
+  useConfirmDialog: () => ({
+    openConfirm: openConfirmMock
+  })
+}));
+
+vi.mock('../composables/useToast', () => ({
+  useToast: () => ({
+    showToast: showToastMock
+  })
+}));
 
 describe('AddGuestView', () => {
   beforeEach(() => {
@@ -57,7 +71,7 @@ describe('AddGuestView', () => {
 
   it('prompts before leaving when form has unsaved changes', async () => {
     addGuestMock.mockResolvedValue({ id: '1' });
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    openConfirmMock.mockResolvedValue(false);
 
     const { wrapper, router } = await mountView();
 
@@ -65,31 +79,32 @@ describe('AddGuestView', () => {
     const result = await router.push('/guests');
     await flushPromises();
 
-    expect(confirmSpy).toHaveBeenCalledWith('You have unsaved guest details. Do you want to leave this page?');
+    expect(openConfirmMock).toHaveBeenCalledWith({
+      title: 'Unsaved Changes',
+      message: 'You have unsaved guest details. Do you want to leave this page?',
+      confirmLabel: 'Leave',
+      cancelLabel: 'Continue editing'
+    });
     expect(result).toBeDefined();
     expect(router.currentRoute.value.path).toBe('/guests/new');
-
-    confirmSpy.mockRestore();
   });
 
   it('allows leaving without confirmation when form is pristine', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
 
     const { router } = await mountView();
 
     await router.push('/guests');
     await flushPromises();
 
-    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(openConfirmMock).not.toHaveBeenCalled();
     expect(router.currentRoute.value.path).toBe('/guests');
-
-    confirmSpy.mockRestore();
   });
 
-  it('navigates back to guest list when clicking the back icon', async () => {
+  it('navigates back to guest list when clicking cancel', async () => {
     const { wrapper, router } = await mountView();
 
-    await wrapper.get('[data-test="back-to-list"]').trigger('click');
+    const cancelButton = wrapper.findAll('button').find((btn) => btn.text().includes('Cancel'));
+    await cancelButton?.trigger('click');
     await flushPromises();
 
     expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.guestList);
@@ -98,12 +113,43 @@ describe('AddGuestView', () => {
   it('keeps pagination query when navigating back to guest list', async () => {
     const { wrapper, router } = await mountView('/guests/new?page=2&size=10');
 
-    await wrapper.get('[data-test="back-to-list"]').trigger('click');
+    const cancelButton = wrapper.findAll('button').find((btn) => btn.text().includes('Cancel'));
+    await cancelButton?.trigger('click');
     await flushPromises();
 
     expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.guestList);
     expect(router.currentRoute.value.query.page).toBe('2');
     expect(router.currentRoute.value.query.size).toBe('10');
+  });
+
+  it('shows success toast and navigates to guest list after submit', async () => {
+    addGuestMock.mockResolvedValue({ id: '1' });
+    const { wrapper, router } = await mountView('/guests/new?page=2&size=10');
+
+    await wrapper.get('#firstName').setValue('John');
+    await wrapper.get('#lastName').setValue('Doe');
+    await wrapper.get('#email').setValue('john.doe@email.com');
+    await wrapper.get('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(showToastMock).toHaveBeenCalledWith('Guest added successfully.', 'success');
+    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.guestList);
+    expect(router.currentRoute.value.query.page).toBe('2');
+    expect(router.currentRoute.value.query.size).toBe('10');
+  });
+
+  it('shows error toast and stays on add view when submit fails', async () => {
+    addGuestMock.mockRejectedValue(new Error('Unable to create guest at the moment.'));
+    const { wrapper, router } = await mountView();
+
+    await wrapper.get('#firstName').setValue('John');
+    await wrapper.get('#lastName').setValue('Doe');
+    await wrapper.get('#email').setValue('john.doe@email.com');
+    await wrapper.get('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(showToastMock).toHaveBeenCalledWith('Unable to create guest at the moment.', 'error');
+    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.guestAdd);
   });
 });
 

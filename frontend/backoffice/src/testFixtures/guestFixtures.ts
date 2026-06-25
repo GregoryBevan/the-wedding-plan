@@ -1,6 +1,6 @@
-import type { CreateGuestPayload, GuestPageResponse, GuestResponse } from '../services/guestApi';
+import type { AddGuestPayload, GuestPageResponse, GuestResponse } from '../services/guestApi';
 
-export const createGuestPayload = (overrides: Partial<CreateGuestPayload> = {}): CreateGuestPayload => ({
+export const createGuestPayload = (overrides: Partial<AddGuestPayload> = {}): AddGuestPayload => ({
   firstName: 'John',
   lastName: 'Doe',
   email: 'john.doe@email.com',
