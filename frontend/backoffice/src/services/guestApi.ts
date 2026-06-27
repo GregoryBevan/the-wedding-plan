@@ -1,7 +1,11 @@
-export interface CreateGuestPayload {
+export interface AddGuestPayload {
   firstName: string;
   lastName: string;
   email: string;
+}
+
+export interface EditGuestPayload extends AddGuestPayload {
+  version: number;
 }
 
 export interface GuestResponse {
@@ -64,7 +68,7 @@ export const listGuests = async ({ page = 0, size = 20 }: { page?: number; size?
   return response.json() as Promise<GuestPageResponse>;
 };
 
-export const addGuest = async (payload: CreateGuestPayload) => {
+export const addGuest = async (payload: AddGuestPayload): Promise<GuestResponse> => {
   const apiBaseUrl = getApiBaseUrl();
   const csrfToken = readCookie('XSRF-TOKEN');
 
@@ -87,5 +91,57 @@ export const addGuest = async (payload: CreateGuestPayload) => {
     throw new Error('Unable to create guest at the moment.');
   }
 
-  return response.json();
+  return await response.json() as Promise<GuestResponse>;
+};
+
+export const getGuestById = async (id: string): Promise<GuestResponse> => {
+  const apiBaseUrl = getApiBaseUrl();
+  const response = await fetch(`${apiBaseUrl}/guests/${id}`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+
+  if (response.status === 404) {
+    throw new Error('Guest not found.');
+  }
+
+  if (!response.ok) {
+    throw new Error('Unable to retrieve guest at the moment.');
+  }
+
+  return await response.json() as Promise<GuestResponse>;
+};
+
+export const updateGuest = async (id: string, payload: EditGuestPayload): Promise<GuestResponse> => {
+  const apiBaseUrl = getApiBaseUrl();
+  const csrfToken = readCookie('XSRF-TOKEN');
+
+  const headers = new Headers({
+    'Content-Type': 'application/json'
+  });
+
+  if (csrfToken) {
+    headers.set('X-XSRF-TOKEN', csrfToken);
+  }
+
+  const response = await fetch(`${apiBaseUrl}/guests/${id}`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers,
+    body: JSON.stringify(payload)
+  });
+
+  if (response.status === 404) {
+    throw new Error('Guest not found.');
+  }
+
+  if (response.status === 409) {
+    throw new Error('This guest has been modified elsewhere. Please reload and try again.');
+  }
+
+  if (!response.ok) {
+    throw new Error('Unable to update guest at the moment.');
+  }
+
+  return await response.json() as Promise<GuestResponse>;
 };

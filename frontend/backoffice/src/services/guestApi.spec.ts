@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { addGuest, listGuests } from './guestApi';
-import { createGuestPage, createGuestPayload } from '../testFixtures/guestFixtures';
+import { addGuest, getGuestById, listGuests, updateGuest } from './guestApi';
+import { createGuestPage, createGuestPayload, createGuestResponse } from '../testFixtures/guestFixtures';
 
 describe('guestApi', () => {
   afterEach(() => {
@@ -75,5 +75,75 @@ describe('guestApi', () => {
     } as Response);
 
     await expect(addGuest(createGuestPayload())).rejects.toThrow('Unable to create guest at the moment.');
+  });
+
+  it('calls backend detail endpoint by guest id', async () => {
+    const guest = createGuestResponse({ id: 'abc-123' });
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => guest
+    } as Response);
+
+    const result = await getGuestById('abc-123');
+
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:8080/api/guests/abc-123', {
+      method: 'GET',
+      credentials: 'include'
+    });
+    expect(result).toEqual(guest);
+  });
+
+  it('throws not found error when detail endpoint returns 404', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({})
+    } as Response);
+
+    await expect(getGuestById('missing')).rejects.toThrow('Guest not found.');
+  });
+
+  it('calls backend update endpoint with expected payload', async () => {
+    document.cookie = 'XSRF-TOKEN=test-csrf-token';
+
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => createGuestResponse({ id: 'guest-1', version: 2 })
+    } as Response);
+
+    const payload = {
+      ...createGuestPayload(),
+      version: 1
+    };
+
+    await updateGuest('guest-1', payload);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://localhost:8080/api/guests/guest-1');
+    expect(options).toMatchObject({
+      method: 'PUT',
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+
+    const headers = options?.headers as Headers;
+    expect(headers.get('Content-Type')).toBe('application/json');
+    expect(headers.get('X-XSRF-TOKEN')).toBe('test-csrf-token');
+  });
+
+  it('throws conflict error when update endpoint returns 409', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => ({})
+    } as Response);
+
+    await expect(updateGuest('guest-1', {
+      ...createGuestPayload(),
+      version: 3
+    })).rejects.toThrow('This guest has been modified elsewhere. Please reload and try again.');
   });
 });

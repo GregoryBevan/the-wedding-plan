@@ -48,6 +48,7 @@
             <th class="px-3 py-2 font-semibold">Name</th>
             <th class="px-3 py-2 font-semibold">Email</th>
             <th class="px-3 py-2 font-semibold">Created</th>
+            <th class="px-3 py-2 text-right font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -59,6 +60,23 @@
             <td class="px-3 py-2">{{ guest.firstName }} {{ guest.lastName }}</td>
             <td class="px-3 py-2">{{ guest.email }}</td>
             <td class="px-3 py-2">{{ formatDate(guest.creationDate) }}</td>
+            <td class="px-3 py-2 text-right">
+              <RouterLink
+                :to="{
+                  name: BACKOFFICE_ROUTE_NAMES.guestEdit,
+                  params: { id: guest.id },
+                  query: {
+                    page: route.query.page,
+                    size: route.query.size
+                  }
+                }"
+                :data-test="`edit-guest-${guest.id}`"
+                aria-label="Edit guest"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-lg leading-none text-white hover:opacity-90"
+              >
+                <span aria-hidden="true">&#9998;</span>
+              </RouterLink>
+            </td>
           </tr>
         </tbody>
       </table>
