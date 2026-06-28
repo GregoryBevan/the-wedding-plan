@@ -1,13 +1,18 @@
 package me.elgregos.theweddingplan.infrastructure.guest
 
 import me.elgregos.theweddingplan.domain.guest.Guest
+import me.elgregos.theweddingplan.domain.guest.GuestActiveFilter
+import me.elgregos.theweddingplan.domain.guest.GuestListCriteria
 import me.elgregos.theweddingplan.domain.guest.GuestId
 import me.elgregos.theweddingplan.domain.guest.GuestPage
 import me.elgregos.theweddingplan.domain.guest.Guests
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
@@ -26,53 +31,59 @@ class GuestsExposedRepository : Guests {
             it[version] = guest.version
             it[creationDate] = guest.creationDate
             it[updateDate] = guest.updateDate
+            it[deletionDate] = guest.deletionDate
             it[firstName] = guest.firstName
             it[lastName] = guest.lastName
             it[email] = guest.email
         }.let { guest }
 
     @Transactional
-    override fun update(guest: Guest, expectedVersion: Long): Guest? {
-        val updatedRows = GuestTable.update({ (GuestTable.id eq guest.id.value) and (GuestTable.version eq expectedVersion) }) {
+    override fun update(guest: Guest, expectedVersion: Long): Guest? =
+        GuestTable.update({ (GuestTable.id eq guest.id.value) and (GuestTable.version eq expectedVersion) and GuestTable.deletionDate.isNull() }) {
             it[version] = guest.version
             it[updateDate] = guest.updateDate
+            it[deletionDate] = guest.deletionDate
             it[firstName] = guest.firstName
             it[lastName] = guest.lastName
             it[email] = guest.email
-        }
+        }.let { if (it == 1) guest else null }
 
-        return if (updatedRows == 1) guest else null
-    }
 
     @Transactional(readOnly = true)
     override fun findById(id: GuestId): Guest? =
         GuestTable.selectAll()
-            .where { GuestTable.id eq id.value }
+            .where { (GuestTable.id eq id.value) and GuestTable.deletionDate.isNull() }
             .firstOrNull()
             ?.toGuest()
 
     @Transactional(readOnly = true)
-    override fun list(): List<Guest> =
+    override fun findDeletedById(id: GuestId): Guest? =
         GuestTable.selectAll()
-            .orderBy(*listOrder)
-            .map { it.toGuest() }
+            .where { (GuestTable.id eq id.value) and GuestTable.deletionDate.isNotNull() }
+            .firstOrNull()
+            ?.toGuest()
+
+    @Transactional
+    override fun restore(guest: Guest, expectedVersion: Long): Guest? =
+        GuestTable.update({ (GuestTable.id eq guest.id.value) and (GuestTable.version eq expectedVersion) and GuestTable.deletionDate.isNotNull() }) {
+            it[version] = guest.version
+            it[updateDate] = guest.updateDate
+            it[deletionDate] = guest.deletionDate
+            it[firstName] = guest.firstName
+            it[lastName] = guest.lastName
+            it[email] = guest.email
+        }.let { if (it == 1) guest else null }
 
     @Transactional(readOnly = true)
-    override fun list(page: Int, size: Int): GuestPage {
-        val totalItems = GuestTable.selectAll().count()
-        val totalPages = if (totalItems == 0L) 0 else ((totalItems - 1) / size + 1).toInt()
-        val offset = page.toLong() * size
-
-        val items = GuestTable.selectAll()
-            .orderBy(*listOrder)
-            .limit(size)
-            .offset(offset)
-            .map { it.toGuest() }
+    override fun list(criteria: GuestListCriteria): GuestPage {
+        val totalItems = GuestTable.selectAll().applyActiveFilter(criteria.activeFilter).count()
+        val totalPages = if (totalItems == 0L) 0 else ((totalItems - 1) / criteria.size + 1).toInt()
+        val offset = criteria.page.toLong() * criteria.size
 
         return GuestPage(
-            items = items,
-            page = page,
-            size = size,
+            items = selectGuests(criteria, offset),
+            page = criteria.page,
+            size = criteria.size,
             totalItems = totalItems,
             totalPages = totalPages,
         )
@@ -83,8 +94,26 @@ class GuestsExposedRepository : Guests {
         version = this[GuestTable.version],
         creationDate = this[GuestTable.creationDate],
         updateDate = this[GuestTable.updateDate],
+        deletionDate = this[GuestTable.deletionDate],
         firstName = this[GuestTable.firstName],
         lastName = this[GuestTable.lastName],
         email = this[GuestTable.email],
     )
+
+    private fun selectGuests(
+        criteria: GuestListCriteria,
+        offset: Long
+    ): List<Guest> = GuestTable.selectAll()
+        .applyActiveFilter(criteria.activeFilter)
+        .orderBy(*listOrder)
+        .limit(criteria.size)
+        .offset(offset)
+        .map { it.toGuest() }
+
+    private fun Query.applyActiveFilter(activeFilter: GuestActiveFilter) =
+        when (activeFilter) {
+            GuestActiveFilter.ACTIVE -> where { GuestTable.deletionDate.isNull() }
+            GuestActiveFilter.DELETED -> where { GuestTable.deletionDate.isNotNull() }
+            GuestActiveFilter.ALL -> this
+        }
 }

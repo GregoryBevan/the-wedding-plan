@@ -3,12 +3,21 @@ package me.elgregos.theweddingplan.infrastructure.guest
 import assertk.assertThat
 import assertk.assertions.containsAtLeast
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
+import assertk.assertions.isNotNull
 import assertk.assertions.isNull
+import assertk.assertions.isTrue
 import me.elgregos.theweddingplan.AbstractIntegrationTest
 import me.elgregos.theweddingplan.domain.guest.Guest
+import me.elgregos.theweddingplan.domain.guest.GuestActiveFilter
+import me.elgregos.theweddingplan.domain.guest.GuestListCriteria
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.liamMiller
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.liamMillerUpdated
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.noahAnderson
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.noahAndersonUpdated
 import me.elgregos.theweddingplan.domain.guest.GuestId
 import me.elgregos.theweddingplan.domain.guest.GuestPage
 import me.elgregos.theweddingplan.domain.shared.Dates
@@ -42,64 +51,84 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
 
     @Test
     fun `should update an existing guest`() {
-        val guest = GuestFixtures.guest(email = "${UUID.randomUUID()}-liam.miller@example.com")
-        guestsRepository.add(guest)
-        
-        val updatedGuest = guest.copy(
-            version = 2L,
-            firstName = "Noah",
-            lastName = "Anderson",
-            email = "noah.anderson@example.com",
-            updateDate = Dates.nowUtcMillis()
-        )
+        guestsRepository.add(liamMiller)
 
-        guestsRepository.update(updatedGuest, expectedVersion = guest.version)
+        guestsRepository.update(liamMillerUpdated, expectedVersion = liamMiller.version)
 
-        val persistedGuest = guestById(updatedGuest.id)
+        val persistedGuest = guestById(liamMillerUpdated.id)
 
-        assertThat(persistedGuest).isEqualTo(updatedGuest)
+        assertThat(persistedGuest).isEqualTo(liamMillerUpdated)
     }
 
     @Test
     fun `should return null when expected version does not match`() {
-        val guest = GuestFixtures.guest(email = "${UUID.randomUUID()}-liam.miller@example.com")
-        guestsRepository.add(guest)
+        guestsRepository.add(noahAnderson)
 
-        val updatedGuest = guest.copy(
-            version = guest.version + 1,
-            firstName = "Noah",
-            lastName = "Anderson",
-            email = "noah.anderson@example.com",
-            updateDate = Dates.nowUtcMillis()
-        )
-
-        val result = guestsRepository.update(updatedGuest, expectedVersion = guest.version + 5)
-        val persistedGuest = guestById(guest.id)
+        val result = guestsRepository.update(noahAndersonUpdated, expectedVersion = noahAndersonUpdated.version + 5)
+        val persistedGuest = guestById(noahAndersonUpdated.id)
 
         assertThat(result).isNull()
-        assertThat(persistedGuest).isEqualTo(guest)
+        assertThat(persistedGuest).isEqualTo(noahAnderson)
+    }
+
+    @Test
+    fun `should return null when trying to update a soft-deleted guest`() {
+        val guest = Guest(firstName = "Ryan", lastName = "Evans", email = "ryanevans@teleworm.us")
+        guestsRepository.add(guest)
+        markAsDeleted(guest)
+
+        val result = guestsRepository.update(
+            guest.copy(firstName = "Updated"),
+            expectedVersion = guest.version,
+        )
+
+        assertThat(result).isNull()
     }
 
     @Test
     fun `should list all guests`() {
+        val guests = guestsRepository.list(GuestListCriteria(page = 0, size = 5, activeFilter = GuestActiveFilter.ACTIVE))
 
-        val guests = guestsRepository.list()
+        assertThat(guests.items).containsAtLeast(johnDoe, janeDoe)
+    }
 
-        assertThat(guests).containsAtLeast(johnDoe, janeDoe)
+    @Test
+    fun `should list only active guests`() {
+        val deletedGuest = Guest(firstName = "Joyce", lastName = "Clement", email = "joyceclement@example.com")
+        guestsRepository.add(deletedGuest)
+        markAsDeleted(deletedGuest)
+
+        val guests = guestsRepository.list(GuestListCriteria(activeFilter = GuestActiveFilter.ACTIVE))
+
+        assertThat(guests.items.any { it.id == deletedGuest.id }).isFalse()
+    }
+
+    @Test
+    fun `should list only deleted guests from trash query`() {
+        val activeGuest = Guest(firstName = "Ryan", lastName = "Evans", email = "ryanevans@teleworm.us")
+        guestsRepository.add(activeGuest)
+        val deletedGuest =Guest(firstName = "Julianne", lastName = "Whitaker", email = "juliannewhitaker@jourrapide.com")
+        guestsRepository.add(deletedGuest)
+        markAsDeleted(deletedGuest)
+
+        val deletedGuests = guestsRepository.list(GuestListCriteria(activeFilter = GuestActiveFilter.DELETED))
+
+        assertThat(deletedGuests.items.any { it.id == deletedGuest.id }).isTrue()
+        assertThat(deletedGuests.items.any { it.id == activeGuest.id }).isFalse()
     }
 
     @Test
     fun `should list guests with pagination`() {
         val totalGuests = guestCount()
 
-        val firstPage = guestsRepository.list(page = 0, size = 1)
-        val secondPage = guestsRepository.list(page = 1, size = 1)
+        val firstPage = guestsRepository.list(GuestListCriteria(page = 0, size = 1))
+        val secondPage = guestsRepository.list(GuestListCriteria(page = 1, size = 1))
 
         assertThat(firstPage.items).isEqualTo(listOf(johnDoe))
-        assertPageMetadata(page = 0, size = 1, totalGuests = totalGuests, result = firstPage)
+        assertPageMetadata(page = 0, totalGuests = totalGuests, result = firstPage)
 
         assertThat(secondPage.items).isEqualTo(listOf(janeDoe))
-        assertPageMetadata(page = 1, size = 1, totalGuests = totalGuests, result = secondPage)
+        assertPageMetadata(page = 1, totalGuests = totalGuests, result = secondPage)
     }
 
     @Test
@@ -110,18 +139,59 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `should return null for a soft-deleted guest`() {
+        val guest = Guest(firstName = "Joyce", lastName = "Clement", email = "joyceclement@example.com")
+        guestsRepository.add(guest)
+        markAsDeleted(guest)
+
+        val found = guestsRepository.findById(guest.id)
+
+        assertThat(found).isNull()
+    }
+
+    @Test
+    fun `should restore a soft-deleted guest`() {
+        val guest = Guest(firstName = "Restore", lastName = "Candidate", email = "restore.candidate@example.com")
+        guestsRepository.add(guest)
+        markAsDeleted(guest)
+
+        val deletedGuest = guestById(guest.id)
+        val restoredGuest = guestsRepository.restore(deletedGuest.restore(now = Dates.nowUtcMillis()), expectedVersion = deletedGuest.version)
+        val found = guestsRepository.findById(guest.id)
+
+        assertThat(restoredGuest).isNotNull()
+        assertThat(found).isNotNull()
+        assertThat(found?.deletionDate).isNull()
+    }
+
+    @Test
     fun `should return null when guest id does not exist`() {
         val missingGuest = guestsRepository.findById(GuestId.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99"))
 
         assertThat(missingGuest).isNull()
     }
 
-    private fun guestCount() = jdbcTemplate.queryForObject("select count(*) from guest", Int::class.java) ?: 0
+    @Test
+    fun `should persist deletion date when guest is marked as deleted`() {
+        val guest = Guest(firstName = "Sarah", lastName = "Mills", email = "sarahmills@example.com")
+        guestsRepository.add(guest)
+
+        markAsDeleted(guest)
+        val deletedGuest = guestById(guest.id)
+
+        assertThat(deletedGuest.deletionDate).isNotNull()
+    }
+
+    private fun guestCount() =
+        jdbcTemplate.queryForObject(
+            "select count(*) from guest where deletion_date is null",
+            Int::class.java
+        ) ?: 0
 
     private fun guestById(guestId: GuestId): Guest =
         jdbcTemplate.queryForObject(
             """
-            select id, version, creation_date, update_date, first_name, last_name, email
+            select id, version, creation_date, update_date, deletion_date, first_name, last_name, email
             from guest
             where id = ?
             """.trimIndent(),
@@ -131,6 +201,7 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
                     version = rs.getLong("version"),
                     creationDate = rs.getTimestamp("creation_date").toLocalDateTime(),
                     updateDate = rs.getTimestamp("update_date").toLocalDateTime(),
+                    deletionDate = rs.getTimestamp("deletion_date")?.toLocalDateTime(),
                     firstName = rs.getString("first_name"),
                     lastName = rs.getString("last_name"),
                     email = rs.getString("email")
@@ -139,7 +210,14 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
             guestId.value.toJavaUuid()
         )
 
-    private fun assertPageMetadata(page: Int, size: Int, totalGuests: Int, result: GuestPage) {
+    private fun markAsDeleted(guest: Guest) {
+        guestsRepository.update(
+            guest.markAsDeleted(now = Dates.nowUtcMillis()),
+            expectedVersion = guest.version,
+        )
+    }
+
+    private fun assertPageMetadata(page: Int, size: Int = 1, totalGuests: Int, result: GuestPage) {
         assertThat(result.page).isEqualTo(page)
         assertThat(result.size).isEqualTo(size)
         assertThat(result.totalItems).isEqualTo(totalGuests.toLong())

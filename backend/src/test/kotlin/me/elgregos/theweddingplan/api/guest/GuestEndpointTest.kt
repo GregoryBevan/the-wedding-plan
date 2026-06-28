@@ -9,6 +9,8 @@ import me.elgregos.theweddingplan.application.guest.UpdateGuestResult
 import me.elgregos.theweddingplan.application.guest.GuestUpdater
 import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.charlieDavis
 import me.elgregos.theweddingplan.api.guest.UpdateGuestRequestFixtures.johnDoeUpdated as johnDoeUpdatedRequest
+import me.elgregos.theweddingplan.domain.guest.GuestActiveFilter
+import me.elgregos.theweddingplan.domain.guest.GuestListCriteria
 import me.elgregos.theweddingplan.domain.guest.GuestId
 import me.elgregos.theweddingplan.domain.guest.GuestPage
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
@@ -89,7 +91,7 @@ class GuestEndpointTest {
         )
 
         stubPaginationParams(request)
-        every { guestLister.list(0, 20) } returns guestPage
+        every { guestLister.list(GuestListCriteria(page = 0, size = 20, activeFilter = GuestActiveFilter.ACTIVE)) } returns guestPage
 
         val response = guestEndpoint.listGuests(request)
 

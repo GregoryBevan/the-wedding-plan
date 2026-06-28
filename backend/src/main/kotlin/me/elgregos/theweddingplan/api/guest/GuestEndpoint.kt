@@ -7,6 +7,8 @@ import me.elgregos.theweddingplan.application.guest.GuestLister
 import me.elgregos.theweddingplan.application.guest.UpdateGuestResult
 import me.elgregos.theweddingplan.application.guest.GuestUpdater
 import me.elgregos.theweddingplan.application.guest.UpdateGuestCommand
+import me.elgregos.theweddingplan.domain.guest.GuestActiveFilter
+import me.elgregos.theweddingplan.domain.guest.GuestListCriteria
 import me.elgregos.theweddingplan.domain.guest.Guest
 import me.elgregos.theweddingplan.domain.guest.GuestId
 import me.elgregos.theweddingplan.domain.guest.GuestPage
@@ -30,7 +32,7 @@ class GuestEndpoint(
         return if (page < 0 || size <= 0) {
             ServerResponse.badRequest().build()
         } else {
-            ServerResponse.ok().body(guestLister.list(page = page, size = size).toResponse())
+            ServerResponse.ok().body(guestLister.list(GuestListCriteria(page = page, size = size, activeFilter = GuestActiveFilter.ACTIVE)).toResponse())
         }
     }
 
