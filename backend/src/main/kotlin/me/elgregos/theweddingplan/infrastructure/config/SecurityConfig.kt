@@ -74,7 +74,18 @@ class SecurityConfig(
 
                         AuthorizationDecision(authProperties.isAllowed(email))
                     }
-                    .requestMatchers("/oauth2/**", "/login/**", "/auth/me", "/auth/logout", "/error").permitAll()
+                    .requestMatchers(
+                        "/assets/**",
+                        "/backoffice/**",
+                        "/public/**",
+                        "/*.html",
+                        "/favicon.ico",
+                        "/oauth2/**",
+                        "/login/**",
+                        "/auth/me",
+                        "/auth/logout",
+                        "/error"
+                    ).permitAll()
                     .anyRequest().authenticated()
             }
             .oauth2Login { oauth2 ->

@@ -1,10 +1,3 @@
-app:
-  auth:
-    allowed-emails: ${APP_AUTH_ALLOWED_EMAILS:}
-    success-redirect-url: ${APP_AUTH_SUCCESS_REDIRECT_URL:}
-  cors:
-    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:https://app.example.com}
-
 server:
   servlet:
     session:
@@ -14,10 +7,5 @@ server:
         same-site: lax
 
 spring:
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID}
-            client-secret: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET}
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=require
