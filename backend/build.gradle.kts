@@ -1,5 +1,8 @@
+import org.gradle.testing.jacoco.tasks.JacocoReport
+
 plugins {
     `java-test-fixtures`
+    jacoco
     kotlin("jvm") version "2.4.0"
     kotlin("plugin.spring") version "2.4.0"
     id("idea")
@@ -105,6 +108,28 @@ tasks.register<Test>("integrationTest") {
     environment("LIQUIBASE_DUPLICATE_FILE_MODE", "SILENT")
 }
 
+tasks.register<JacocoReport>("jacocoAllTestReport") {
+    description = "Generates an aggregate JaCoCo coverage report for unit and integration tests."
+    group = "verification"
+    dependsOn(tasks.test, tasks.named("integrationTest"))
+
+    executionData.setFrom(
+        fileTree(layout.buildDirectory).include(
+            "jacoco/test.exec",
+            "jacoco/integrationTest.exec",
+        )
+    )
+    sourceDirectories.setFrom(sourceSets.main.get().allSource.srcDirs)
+    classDirectories.setFrom(sourceSets.main.get().output)
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(true)
+    }
+}
+
 tasks.named("check") {
     dependsOn(tasks.named("integrationTest"))
+    dependsOn(tasks.named("jacocoAllTestReport"))
 }
