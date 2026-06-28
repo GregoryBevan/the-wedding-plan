@@ -13,7 +13,9 @@ class GuestRouter(private val guestEndpoint: GuestEndpoint) {
             GET("", guestEndpoint::listGuests)
             POST("", guestEndpoint::addGuest)
             GET("/{id}", guestEndpoint::getGuest)
+            DELETE("/{id}", guestEndpoint::archiveGuest)
             PUT("/{id}", guestEndpoint::updateGuest)
+            POST("/{id}/restoration", guestEndpoint::restoreGuest)
         }
     }
 }
