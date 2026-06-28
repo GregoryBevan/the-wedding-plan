@@ -10,6 +10,7 @@ data class Guest(
     val version: Long = 1L,
     val creationDate: LocalDateTime = Dates.nowUtcMillis(),
     val updateDate: LocalDateTime = Dates.nowUtcMillis(),
+    val deletionDate: LocalDateTime? = null,
     val firstName: String,
     val lastName: String,
     val email: String,
@@ -26,5 +27,21 @@ data class Guest(
         lastName = lastName,
         email = email,
     )
+
+    fun markAsDeleted(now: LocalDateTime = Dates.nowUtcMillis()) =
+        if (deletionDate != null) this
+        else copy(
+            version = version + 1,
+            updateDate = now,
+            deletionDate = now,
+        )
+
+    fun restore(now: LocalDateTime = Dates.nowUtcMillis()) =
+        if (deletionDate == null) this
+        else copy(
+            version = version + 1,
+            updateDate = now,
+            deletionDate = null,
+        )
 }
 

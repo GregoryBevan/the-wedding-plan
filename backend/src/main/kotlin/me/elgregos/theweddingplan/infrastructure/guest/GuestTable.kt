@@ -8,6 +8,7 @@ object GuestTable : Table("guest") {
     val version = long("version")
     val creationDate = datetime("creation_date")
     val updateDate = datetime("update_date")
+    val deletionDate = datetime("deletion_date").nullable()
     val firstName = text("first_name")
     val lastName = text("last_name")
     val email = text("email")
