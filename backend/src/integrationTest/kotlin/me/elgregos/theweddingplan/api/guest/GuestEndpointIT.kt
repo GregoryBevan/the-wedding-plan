@@ -2,6 +2,7 @@ package me.elgregos.theweddingplan.api.guest
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNotNull
 import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
 import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.charlieDavis
 import me.elgregos.theweddingplan.api.guest.UpdateGuestRequestFixtures.johnDoeUpdated
@@ -258,6 +259,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
         val persistedGuest = deletedGuestById(createdGuest.id)
 
         assertThat(persistedGuest.version).isEqualTo(createdGuest.version + 1)
+        assertThat(persistedGuest.deletionDate).isNotNull()
     }
 
     @Test
@@ -282,6 +284,35 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus().isBadRequest
+    }
+
+    @Test
+    fun `should return not found when archiving an already archived guest`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+        val guestToArchive = AddGuestRequest(
+            firstName = "Already",
+            lastName = "Archived",
+            email = "already-archived-${UUID.randomUUID()}@example.com"
+        )
+        val createdGuest = createGuest(csrf, guestToArchive)
+
+        restTestClient.delete().uri("/api/guests/${createdGuest.id}")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isOk
+
+        restTestClient.delete().uri("/api/guests/${createdGuest.id}")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isNotFound
+
+        val persistedGuest = deletedGuestById(createdGuest.id)
+
+        assertThat(persistedGuest.version).isEqualTo(createdGuest.version + 1)
     }
 
     @Test
@@ -365,7 +396,43 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
         assertThat(persistedGuest.deletionDate).isEqualTo(null)
     }
 
-    private fun guestCount() = jdbcTemplate.queryForObject("select count(*) from guest", Int::class.java) ?: 0
+    @Test
+    fun `should return not found when guest id does not exist on restore`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+
+        restTestClient.post().uri("/api/guests/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99/restoration")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `should return not found when restoring an active guest`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+        val activeGuest = AddGuestRequest(
+            firstName = "Already",
+            lastName = "Active",
+            email = "active-${UUID.randomUUID()}@example.com"
+        )
+        val createdGuest = createGuest(csrf, activeGuest)
+
+        restTestClient.post().uri("/api/guests/${createdGuest.id}/restoration")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isNotFound
+
+        val persistedGuest = persistedGuestById(createdGuest.id)
+
+        assertThat(persistedGuest.deletionDate).isEqualTo(null)
+        assertThat(persistedGuest.version).isEqualTo(createdGuest.version)
+    }
+
+    private fun guestCount() =
+        jdbcTemplate.queryForObject("select count(*) from guest where deletion_date is null", Int::class.java) ?: 0
 
     private fun createGuest(csrf: CsrfContext, request: AddGuestRequest): GuestResponse =
         restTestClient.post().uri("/api/guests")
