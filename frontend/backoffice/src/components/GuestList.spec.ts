@@ -7,14 +7,33 @@ import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 import { createGuestPage, createGuestResponse } from '../testFixtures/guestFixtures';
 
 const listGuestsMock = vi.hoisted(() => vi.fn());
+const archiveGuestMock = vi.hoisted(() => vi.fn());
+const restoreGuestMock = vi.hoisted(() => vi.fn());
+const openConfirmMock = vi.hoisted(() => vi.fn());
+const showToastMock = vi.hoisted(() => vi.fn());
 
 vi.mock('../services/guestApi', () => ({
-  listGuests: listGuestsMock
+  listGuests: listGuestsMock,
+  archiveGuest: archiveGuestMock,
+  restoreGuest: restoreGuestMock
+}));
+
+vi.mock('../composables/useConfirmDialog', () => ({
+  useConfirmDialog: () => ({
+    openConfirm: openConfirmMock
+  })
+}));
+
+vi.mock('../composables/useToast', () => ({
+  useToast: () => ({
+    showToast: showToastMock
+  })
 }));
 
 describe('GuestList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    openConfirmMock.mockResolvedValue(true);
   });
 
   const mountGuestList = async (route = '/?page=0&size=10') => {
@@ -28,6 +47,13 @@ describe('GuestList', () => {
         {
           path: '/guests/new',
           name: BACKOFFICE_ROUTE_NAMES.guestAdd,
+          component: defineComponent({
+            template: '<div />'
+          })
+        },
+        {
+          path: '/guests/archive',
+          name: BACKOFFICE_ROUTE_NAMES.guestArchive,
           component: defineComponent({
             template: '<div />'
           })
@@ -66,7 +92,7 @@ describe('GuestList', () => {
 
     const { wrapper } = await mountGuestList();
 
-    expect(listGuestsMock).toHaveBeenCalledWith({ page: 0, size: 10 });
+    expect(listGuestsMock).toHaveBeenCalledWith({ page: 0, size: 10, status: 'active' });
     expect(wrapper.text()).toContain('John Doe');
     expect(wrapper.text()).toContain('john.doe@email.com');
   });
@@ -121,7 +147,7 @@ describe('GuestList', () => {
     await nextButton!.trigger('click');
     await flushPromises();
 
-    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 1, size: 10 });
+    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 1, size: 10, status: 'active' });
     expect(wrapper.text()).toContain('Jane Doe');
   });
 
@@ -155,7 +181,7 @@ describe('GuestList', () => {
     await previousButton!.trigger('click');
     await flushPromises();
 
-    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10 });
+    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10, status: 'active' });
     expect(wrapper.text()).toContain('John Doe');
   });
 
@@ -227,7 +253,7 @@ describe('GuestList', () => {
     await flushPromises();
 
     expect(listGuestsMock).toHaveBeenCalledTimes(2);
-    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10 });
+    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10, status: 'active' });
     expect(wrapper.text()).not.toContain('Network error');
     expect(wrapper.text()).toContain('John Doe');
   });
@@ -281,5 +307,79 @@ describe('GuestList', () => {
 
     expect(wrapper.text()).toContain('Page1');
     expect(wrapper.text()).not.toContain('Page0');
+  });
+
+  it('archives a guest after confirmation and refreshes list', async () => {
+    listGuestsMock
+      .mockResolvedValueOnce(createGuestPage({
+        items: [createGuestResponse({ id: 'guest-1' })],
+        page: 0,
+        size: 10,
+        totalItems: 1,
+        totalPages: 1
+      }))
+      .mockResolvedValueOnce(createGuestPage({
+        items: [],
+        page: 0,
+        size: 10,
+        totalItems: 0,
+        totalPages: 1
+      }));
+    archiveGuestMock.mockResolvedValue(createGuestResponse({ id: 'guest-1', version: 2 }));
+
+    const { wrapper } = await mountGuestList('/?page=0&size=10');
+
+    await wrapper.get('[data-test="archive-guest-guest-1"]').trigger('click');
+    await flushPromises();
+
+    expect(openConfirmMock).toHaveBeenCalledTimes(1);
+    expect(archiveGuestMock).toHaveBeenCalledWith('guest-1');
+    expect(showToastMock).toHaveBeenCalledWith('Guest archived successfully.');
+    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10, status: 'active' });
+  });
+
+  it('restores a guest from archive and refreshes list', async () => {
+    listGuestsMock
+      .mockResolvedValueOnce(createGuestPage({
+        items: [createGuestResponse({ id: 'guest-2', firstName: 'Deleted' })],
+        page: 0,
+        size: 10,
+        totalItems: 1,
+        totalPages: 1
+      }))
+      .mockResolvedValueOnce(createGuestPage({
+        items: [],
+        page: 0,
+        size: 10,
+        totalItems: 0,
+        totalPages: 1
+      }));
+    restoreGuestMock.mockResolvedValue(createGuestResponse({ id: 'guest-2', version: 3 }));
+
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: '/archive',
+          component: GuestList,
+          props: { status: 'archived' }
+        }
+      ]
+    });
+    await router.push('/archive?page=0&size=10');
+    await router.isReady();
+
+    const wrapper = mount(GuestList, {
+      props: { status: 'archived' },
+      global: { plugins: [router] }
+    });
+    await flushPromises();
+
+    await wrapper.get('[data-test="restore-guest-guest-2"]').trigger('click');
+    await flushPromises();
+
+    expect(restoreGuestMock).toHaveBeenCalledWith('guest-2');
+    expect(showToastMock).toHaveBeenCalledWith('Guest restored successfully.');
+    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10, status: 'archived' });
   });
 });

@@ -156,7 +156,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
     }
 
     @Test
-    fun `should list deleted guests when status is deleted`() {
+    fun `should list archived guests when status is archived`() {
         val csrf = authenticatedCsrfContext("gregory@example.com")
         val guestToArchive = AddGuestRequest(
             firstName = "Trash",
@@ -172,7 +172,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             .exchange()
             .expectStatus().isOk
 
-        val deletedGuests = restTestClient.get().uri("/api/guests?status=deleted&page=0&size=200")
+        val deletedGuests = restTestClient.get().uri("/api/guests?status=archived&page=0&size=200")
             .header(HttpHeaders.COOKIE, csrf.cookies)
             .accept(MediaType.APPLICATION_JSON)
             .exchange()

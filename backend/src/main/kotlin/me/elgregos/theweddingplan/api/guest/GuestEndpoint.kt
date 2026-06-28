@@ -117,7 +117,10 @@ private fun ServerRequest.activeFilterQueryParam(): GuestActiveFilter? =
         }
 
 private fun String.toGuestActiveFilter() =
-    GuestActiveFilter.entries.firstOrNull { it.name.equals(this, ignoreCase = true) }
+    when {
+        equals("archived", ignoreCase = true) -> GuestActiveFilter.DELETED
+        else -> GuestActiveFilter.entries.firstOrNull { it.name.equals(this, ignoreCase = true) }
+    }
 
 private fun ServerRequest.guestIdPathParam() =
     pathVariable("id")

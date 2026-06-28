@@ -107,7 +107,7 @@ class GuestEndpointTest {
     }
 
     @Test
-    fun `should list deleted guests when status query param is deleted`() {
+    fun `should list archived guests when status query param is archived`() {
         val request = mockk<ServerRequest>()
         val guestPage = GuestPage(
             items = listOf(johnDoe),
@@ -117,7 +117,7 @@ class GuestEndpointTest {
             totalPages = 1,
         )
 
-        stubPaginationParams(request, status = "deleted")
+        stubPaginationParams(request, status = "archived")
         every { guestLister.list(GuestListCriteria(page = 0, size = 20, activeFilter = GuestActiveFilter.DELETED)) } returns guestPage
 
         val response = guestEndpoint.listGuests(request)
