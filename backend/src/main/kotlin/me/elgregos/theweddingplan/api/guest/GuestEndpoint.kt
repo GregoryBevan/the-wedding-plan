@@ -34,11 +34,12 @@ class GuestEndpoint(
     fun listGuests(request: ServerRequest): ServerResponse {
         val page = request.intQueryParam("page", default = 0) ?: return ServerResponse.badRequest().build()
         val size = request.intQueryParam("size", default = 20) ?: return ServerResponse.badRequest().build()
+        val activeFilter = request.activeFilterQueryParam() ?: return ServerResponse.badRequest().build()
 
         return if (page < 0 || size <= 0) {
             ServerResponse.badRequest().build()
         } else {
-            ServerResponse.ok().body(guestLister.list(GuestListCriteria(page = page, size = size, activeFilter = GuestActiveFilter.ACTIVE)).toResponse())
+            ServerResponse.ok().body(guestLister.list(GuestListCriteria(page = page, size = size, activeFilter = activeFilter)).toResponse())
         }
     }
 
@@ -101,6 +102,22 @@ private fun ServerRequest.intQueryParam(name: String, default: Int): Int? =
                 else -> value.toIntOrNull()
             }
         }
+
+private fun ServerRequest.activeFilterQueryParam(): GuestActiveFilter? =
+    listOf("status", "activeFilter")
+        .asSequence()
+        .mapNotNull { param(it).orElse(null)?.trim()?.takeIf(String::isNotEmpty) }
+        .firstOrNull()
+        ?.toGuestActiveFilter()
+        ?: run {
+            val hasExplicitFilter = listOf("status", "activeFilter")
+                .any { param(it).orElse(null)?.trim().isNullOrEmpty().not() }
+
+            if (hasExplicitFilter) null else GuestActiveFilter.ACTIVE
+        }
+
+private fun String.toGuestActiveFilter() =
+    GuestActiveFilter.entries.firstOrNull { it.name.equals(this, ignoreCase = true) }
 
 private fun ServerRequest.guestIdPathParam() =
     pathVariable("id")

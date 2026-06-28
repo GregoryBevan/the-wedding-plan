@@ -107,6 +107,55 @@ class GuestEndpointTest {
     }
 
     @Test
+    fun `should list deleted guests when status query param is deleted`() {
+        val request = mockk<ServerRequest>()
+        val guestPage = GuestPage(
+            items = listOf(johnDoe),
+            page = 0,
+            size = 20,
+            totalItems = 1,
+            totalPages = 1,
+        )
+
+        stubPaginationParams(request, status = "deleted")
+        every { guestLister.list(GuestListCriteria(page = 0, size = 20, activeFilter = GuestActiveFilter.DELETED)) } returns guestPage
+
+        val response = guestEndpoint.listGuests(request)
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK)
+    }
+
+    @Test
+    fun `should list all guests when activeFilter query param is all`() {
+        val request = mockk<ServerRequest>()
+        val guestPage = GuestPage(
+            items = listOf(johnDoe),
+            page = 0,
+            size = 20,
+            totalItems = 1,
+            totalPages = 1,
+        )
+
+        stubPaginationParams(request, activeFilter = "all")
+        every { guestLister.list(GuestListCriteria(page = 0, size = 20, activeFilter = GuestActiveFilter.ALL)) } returns guestPage
+
+        val response = guestEndpoint.listGuests(request)
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK)
+    }
+
+    @Test
+    fun `should return bad request when status query param is invalid`() {
+        val request = mockk<ServerRequest>()
+
+        stubPaginationParams(request, status = "unknown")
+
+        val response = guestEndpoint.listGuests(request)
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
     fun `should return bad request when size is invalid`() {
         val request = mockk<ServerRequest>()
 
@@ -314,9 +363,17 @@ class GuestEndpointTest {
         assertThat(response.statusCode()).isEqualTo(HttpStatus.CONFLICT)
     }
 
-    private fun stubPaginationParams(request: ServerRequest, page: String? = null, size: String? = null) {
+    private fun stubPaginationParams(
+        request: ServerRequest,
+        page: String? = null,
+        size: String? = null,
+        status: String? = null,
+        activeFilter: String? = null,
+    ) {
         every { request.param("page") } returns Optional.ofNullable(page)
         every { request.param("size") } returns Optional.ofNullable(size)
+        every { request.param("status") } returns Optional.ofNullable(status)
+        every { request.param("activeFilter") } returns Optional.ofNullable(activeFilter)
     }
 
 }

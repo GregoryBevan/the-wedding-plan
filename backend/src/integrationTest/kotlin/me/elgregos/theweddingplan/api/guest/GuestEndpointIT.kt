@@ -156,6 +156,36 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
     }
 
     @Test
+    fun `should list deleted guests when status is deleted`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+        val guestToArchive = AddGuestRequest(
+            firstName = "Trash",
+            lastName = "Candidate",
+            email = "trash-${UUID.randomUUID()}@example.com"
+        )
+        val createdGuest = createGuest(csrf, guestToArchive)
+
+        restTestClient.delete().uri("/api/guests/${createdGuest.id}")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isOk
+
+        val deletedGuests = restTestClient.get().uri("/api/guests?status=deleted&page=0&size=200")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody(GuestPageResponse::class.java)
+            .returnResult()
+            .responseBody
+            ?: error("Expected deleted guest page in response body")
+
+        assertThat(deletedGuests.items.any { it.id == createdGuest.id }).isEqualTo(true)
+    }
+
+    @Test
     fun `should get guest by id`() {
         val csrf = authenticatedCsrfContext("gregory@example.com")
         val uniqueGuest = AddGuestRequest(
