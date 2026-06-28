@@ -26,6 +26,8 @@ export interface GuestPageResponse {
   totalPages: number;
 }
 
+export type GuestStatus = 'active' | 'archived' | 'all';
+
 const readCookie = (name: string): string | undefined => {
   if (typeof document === 'undefined') {
     return undefined;
@@ -49,11 +51,14 @@ const getApiBaseUrl = (): string => {
   return envBaseUrl + "/api";
 };
 
-export const listGuests = async ({ page = 0, size = 20 }: { page?: number; size?: number } = {}): Promise<GuestPageResponse> => {
+export const listGuests = async (
+  { page = 0, size = 20, status = 'active' }: { page?: number; size?: number; status?: GuestStatus } = {}
+): Promise<GuestPageResponse> => {
   const apiBaseUrl = getApiBaseUrl();
   const queryParams = new URLSearchParams({
     page: String(page),
-    size: String(size)
+    size: String(size),
+    status
   });
 
   const response = await fetch(`${apiBaseUrl}/guests?${queryParams}`, {
@@ -141,6 +146,58 @@ export const updateGuest = async (id: string, payload: EditGuestPayload): Promis
 
   if (!response.ok) {
     throw new Error('Unable to update guest at the moment.');
+  }
+
+  return await response.json() as Promise<GuestResponse>;
+};
+
+export const archiveGuest = async (id: string): Promise<GuestResponse> => {
+  const apiBaseUrl = getApiBaseUrl();
+  const csrfToken = readCookie('XSRF-TOKEN');
+
+  const headers = new Headers();
+  if (csrfToken) {
+    headers.set('X-XSRF-TOKEN', csrfToken);
+  }
+
+  const response = await fetch(`${apiBaseUrl}/guests/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+    headers
+  });
+
+  if (response.status === 404) {
+    throw new Error('Guest not found.');
+  }
+
+  if (!response.ok) {
+    throw new Error('Unable to archive guest at the moment.');
+  }
+
+  return await response.json() as Promise<GuestResponse>;
+};
+
+export const restoreGuest = async (id: string): Promise<GuestResponse> => {
+  const apiBaseUrl = getApiBaseUrl();
+  const csrfToken = readCookie('XSRF-TOKEN');
+
+  const headers = new Headers();
+  if (csrfToken) {
+    headers.set('X-XSRF-TOKEN', csrfToken);
+  }
+
+  const response = await fetch(`${apiBaseUrl}/guests/${id}/restoration`, {
+    method: 'POST',
+    credentials: 'include',
+    headers
+  });
+
+  if (response.status === 404) {
+    throw new Error('Guest not found.');
+  }
+
+  if (!response.ok) {
+    throw new Error('Unable to restore guest at the moment.');
   }
 
   return await response.json() as Promise<GuestResponse>;

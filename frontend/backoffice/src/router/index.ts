@@ -17,6 +17,14 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/guests/archive',
+    name: BACKOFFICE_ROUTE_NAMES.guestArchive,
+    component: () => import('../views/ArchiveGuestListView.vue'),
+    meta: {
+      requiresAuthorized: true
+    }
+  },
+  {
     path: '/guests/new',
     name: BACKOFFICE_ROUTE_NAMES.guestAdd,
     component: () => import('../views/AddGuestView.vue'),
