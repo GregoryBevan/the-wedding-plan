@@ -3,8 +3,12 @@ package me.elgregos.theweddingplan.api.guest
 import io.mockk.every
 import io.mockk.mockk
 import me.elgregos.theweddingplan.application.guest.GuestAdder
+import me.elgregos.theweddingplan.application.guest.GuestArchiver
 import me.elgregos.theweddingplan.application.guest.GuestGetter
 import me.elgregos.theweddingplan.application.guest.GuestLister
+import me.elgregos.theweddingplan.application.guest.GuestRestorer
+import me.elgregos.theweddingplan.application.guest.ArchiveGuestResult
+import me.elgregos.theweddingplan.application.guest.RestoreGuestResult
 import me.elgregos.theweddingplan.application.guest.UpdateGuestResult
 import me.elgregos.theweddingplan.application.guest.GuestUpdater
 import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.charlieDavis
@@ -28,6 +32,8 @@ class GuestEndpointTest {
     private lateinit var guestAdder: GuestAdder
     private lateinit var guestLister: GuestLister
     private lateinit var guestGetter: GuestGetter
+    private lateinit var guestArchiver: GuestArchiver
+    private lateinit var guestRestorer: GuestRestorer
     private lateinit var guestUpdater: GuestUpdater
     private lateinit var guestEndpoint: GuestEndpoint
 
@@ -36,8 +42,10 @@ class GuestEndpointTest {
         guestAdder = mockk()
         guestLister = mockk()
         guestGetter = mockk()
+        guestArchiver = mockk()
+        guestRestorer = mockk()
         guestUpdater = mockk()
-        guestEndpoint = GuestEndpoint(guestAdder, guestLister, guestGetter, guestUpdater)
+        guestEndpoint = GuestEndpoint(guestAdder, guestLister, guestGetter, guestArchiver, guestRestorer, guestUpdater)
     }
 
     @Test
@@ -134,6 +142,56 @@ class GuestEndpointTest {
     }
 
     @Test
+    fun `should archive guest by id`() {
+        val request = mockk<ServerRequest>()
+        val guest = johnDoe
+
+        every { request.pathVariable("id") } returns guest.id.toString()
+        every { guestArchiver.archive(guest.id) } returns ArchiveGuestResult.Archived(guest)
+
+        val response = guestEndpoint.archiveGuest(request)
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK)
+    }
+
+    @Test
+    fun `should return not found for missing guest on archive`() {
+        val request = mockk<ServerRequest>()
+        val guestId = GuestId.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a98")
+
+        every { request.pathVariable("id") } returns guestId.toString()
+        every { guestArchiver.archive(guestId) } returns ArchiveGuestResult.NotFound
+
+        val response = guestEndpoint.archiveGuest(request)
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND)
+    }
+
+    @Test
+    fun `should return conflict when archive version does not match`() {
+        val request = mockk<ServerRequest>()
+        val guestId = GuestId.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a98")
+
+        every { request.pathVariable("id") } returns guestId.toString()
+        every { guestArchiver.archive(guestId) } returns ArchiveGuestResult.VersionConflict
+
+        val response = guestEndpoint.archiveGuest(request)
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.CONFLICT)
+    }
+
+    @Test
+    fun `should return bad request for malformed guest id on archive`() {
+        val request = mockk<ServerRequest>()
+
+        every { request.pathVariable("id") } returns "not-an-id"
+
+        val response = guestEndpoint.archiveGuest(request)
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
     fun `should return not found for missing guest on get`() {
         val request = mockk<ServerRequest>()
         val guestId = GuestId.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99")
@@ -169,6 +227,56 @@ class GuestEndpointTest {
         every { request.pathVariable("id") } returns "not-an-id"
 
         val response = guestEndpoint.updateGuest(request)
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    fun `should restore guest by id`() {
+        val request = mockk<ServerRequest>()
+        val guest = johnDoe
+
+        every { request.pathVariable("id") } returns guest.id.toString()
+        every { guestRestorer.restore(guest.id) } returns RestoreGuestResult.Restored(guest)
+
+        val response = guestEndpoint.restoreGuest(request)
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK)
+    }
+
+    @Test
+    fun `should return not found for missing guest on restore`() {
+        val request = mockk<ServerRequest>()
+        val guestId = GuestId.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a98")
+
+        every { request.pathVariable("id") } returns guestId.toString()
+        every { guestRestorer.restore(guestId) } returns RestoreGuestResult.NotFound
+
+        val response = guestEndpoint.restoreGuest(request)
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND)
+    }
+
+    @Test
+    fun `should return conflict when restore version does not match`() {
+        val request = mockk<ServerRequest>()
+        val guestId = GuestId.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a98")
+
+        every { request.pathVariable("id") } returns guestId.toString()
+        every { guestRestorer.restore(guestId) } returns RestoreGuestResult.VersionConflict
+
+        val response = guestEndpoint.restoreGuest(request)
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.CONFLICT)
+    }
+
+    @Test
+    fun `should return bad request for malformed guest id on restore`() {
+        val request = mockk<ServerRequest>()
+
+        every { request.pathVariable("id") } returns "not-an-id"
+
+        val response = guestEndpoint.restoreGuest(request)
 
         assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST)
     }

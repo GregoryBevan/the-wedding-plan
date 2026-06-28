@@ -2,8 +2,12 @@ package me.elgregos.theweddingplan.api.guest
 
 import me.elgregos.theweddingplan.application.guest.GuestAdder
 import me.elgregos.theweddingplan.application.guest.AddGuestCommand
+import me.elgregos.theweddingplan.application.guest.GuestArchiver
 import me.elgregos.theweddingplan.application.guest.GuestGetter
 import me.elgregos.theweddingplan.application.guest.GuestLister
+import me.elgregos.theweddingplan.application.guest.GuestRestorer
+import me.elgregos.theweddingplan.application.guest.ArchiveGuestResult
+import me.elgregos.theweddingplan.application.guest.RestoreGuestResult
 import me.elgregos.theweddingplan.application.guest.UpdateGuestResult
 import me.elgregos.theweddingplan.application.guest.GuestUpdater
 import me.elgregos.theweddingplan.application.guest.UpdateGuestCommand
@@ -22,6 +26,8 @@ class GuestEndpoint(
     private val guestAdder: GuestAdder,
     private val guestLister: GuestLister,
     private val guestGetter: GuestGetter,
+    private val guestArchiver: GuestArchiver,
+    private val guestRestorer: GuestRestorer,
     private val guestUpdater: GuestUpdater,
 ) {
 
@@ -62,6 +68,26 @@ class GuestEndpoint(
                 is UpdateGuestResult.NotFound -> ServerResponse.notFound().build()
                 is UpdateGuestResult.VersionConflict -> ServerResponse.status(HttpStatus.CONFLICT).build()
             }
+        }
+    }
+
+    fun archiveGuest(request: ServerRequest): ServerResponse {
+        val id = request.guestIdPathParam() ?: return ServerResponse.badRequest().build()
+
+        return when (val result = guestArchiver.archive(id)) {
+            is ArchiveGuestResult.Archived -> ServerResponse.ok().body(result.guest.toResponse())
+            is ArchiveGuestResult.NotFound -> ServerResponse.notFound().build()
+            is ArchiveGuestResult.VersionConflict -> ServerResponse.status(HttpStatus.CONFLICT).build()
+        }
+    }
+
+    fun restoreGuest(request: ServerRequest): ServerResponse {
+        val id = request.guestIdPathParam() ?: return ServerResponse.badRequest().build()
+
+        return when (val result = guestRestorer.restore(id)) {
+            is RestoreGuestResult.Restored -> ServerResponse.ok().body(result.guest.toResponse())
+            is RestoreGuestResult.NotFound -> ServerResponse.notFound().build()
+            is RestoreGuestResult.VersionConflict -> ServerResponse.status(HttpStatus.CONFLICT).build()
         }
     }
 }
