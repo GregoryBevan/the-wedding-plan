@@ -42,13 +42,17 @@ const readCookie = (name: string): string | undefined => {
 };
 
 const getApiBaseUrl = (): string => {
-  const envBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  const envBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
 
-  if (!envBaseUrl) {
-    throw new Error('Missing VITE_API_BASE_URL environment variable.');
+  if (envBaseUrl) {
+    return envBaseUrl + '/api';
   }
 
-  return envBaseUrl + "/api";
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return window.location.origin + '/api';
+  }
+
+  throw new Error('Missing API base URL configuration.');
 };
 
 export const listGuests = async (

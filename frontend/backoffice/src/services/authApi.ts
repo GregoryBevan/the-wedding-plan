@@ -1,11 +1,15 @@
 const getApiBaseUrl = (): string => {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
 
-  if (!apiBaseUrl) {
-    throw new Error('Missing VITE_API_BASE_URL environment variable.');
+  if (apiBaseUrl) {
+    return apiBaseUrl;
   }
 
-  return apiBaseUrl;
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return window.location.origin;
+  }
+
+  throw new Error('Missing API base URL configuration.');
 };
 
 const readCookie = (name: string): string | undefined => {

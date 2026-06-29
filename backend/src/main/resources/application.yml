@@ -16,8 +16,8 @@ spring:
             client-secret: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET:}
 app:
   auth:
-    allowed-emails: ${APP_AUTH_ALLOWED_EMAILS}
-    success-redirect-url: ${APP_AUTH_SUCCESS_REDIRECT_URL}
+    allowed-emails: ${APP_AUTH_ALLOWED_EMAILS:}
+    success-redirect-url: ${APP_AUTH_SUCCESS_REDIRECT_URL:}
     rate-limit:
       enabled: ${APP_AUTH_RATE_LIMIT_ENABLED:true}
       max-requests-per-window: ${APP_AUTH_RATE_LIMIT_MAX_REQUESTS_PER_WINDOW:60}
