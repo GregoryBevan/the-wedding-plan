@@ -2,9 +2,10 @@
 --changeset elgregos:3
 create table if not exists invitation (
     id uuid primary key,
+    version bigint not null,
     creation_date timestamp without time zone not null,
     update_date timestamp without time zone not null,
-    title text not null,
+    label text not null,
     event_date date
 );
 
