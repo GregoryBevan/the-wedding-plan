@@ -1,12 +1,12 @@
 <template>
   <div class="min-h-screen bg-background p-8 font-serif">
-    <header class="relative mb-5 flex items-center justify-center border-b border-secondary pb-3">
+    <header class="relative z-30 mb-5 flex items-center justify-center border-b border-secondary pb-3">
       <div class="flex items-center space-x-3">
         <img src="./assets/logo.svg" alt="Wedding Logo" class="w-14 h-14" />
         <h1 class="text-3xl font-light tracking-wide text-text">Wedding Plan</h1>
       </div>
 
-      <div v-if="isProtectedRoute" class="absolute right-1 top-1/2 -translate-y-[70%]">
+      <div v-if="isProtectedRoute" class="absolute right-1 top-1/2 z-40 -translate-y-[70%]">
         <UserMenu
           :user-email="connectedUserEmail"
           :is-logging-out="isLoggingOut"
@@ -15,7 +15,7 @@
         />
       </div>
     </header>
-    <main class="mx-auto max-w-2xl bg-white p-8 rounded-xl shadow-lg border border-secondary/20 text-text">
+    <main class="relative z-0 mx-auto max-w-2xl rounded-xl border border-secondary/20 bg-white p-8 text-text shadow-lg">
 
       <RouterView />
     </main>
