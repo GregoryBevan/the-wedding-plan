@@ -3,4 +3,6 @@ databaseChangeLog:
       file: classpath:db/changelog/001-create-guest-table.sql
   - include:
       file: classpath:db/changelog/002-add-guest-deletion-date.sql
+  - include:
+      file: classpath:db/changelog/003-create-invitation-tables.sql
 
