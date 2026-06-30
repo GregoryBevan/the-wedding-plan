@@ -23,8 +23,7 @@ Render will build with Docker and run a single web service.
 
 This repository includes `.github/workflows/deploy.yml`.
 
-- It triggers automatically when `The Wedding Plan CI` workflow succeeds on `main`.
-- It can also be triggered manually with `workflow_dispatch`.
+- It triggers only when `The Wedding Plan CI` workflow succeeds on `main`.
 
 Add this GitHub Actions secret in repository settings:
 
@@ -34,21 +33,16 @@ Add this GitHub Actions secret in repository settings:
 
 Set these variables in Render dashboard (or through Blueprint secrets), never in git:
 
-- `SPRING_PROFILES_ACTIVE=prod`
-- `SPRING_DATASOURCE_URL` (Aiven JDBC URL, with SSL)
-- `SPRING_DATASOURCE_USERNAME`
-- `SPRING_DATASOURCE_PASSWORD`
 - `SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID`
 - `SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET`
 - `APP_AUTH_ALLOWED_EMAILS`
-- `APP_AUTH_SUCCESS_REDIRECT_URL`
 - `APP_CORS_ALLOWED_ORIGINS`
-
-Example JDBC URL format (do not commit real values):
-
-`jdbc:postgresql://<aiven-host>:<aiven-port>/<aiven-db>?sslmode=require`
-
-If you enforce certificate validation with Aiven CA, use a stricter `sslmode` and certificate settings.
+- `APP_AUTH_SUCCESS_REDIRECT_URL`
+- `POSTGRES_HOST`
+- `POSTGRES_PORT`
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
 
 ### 3) OAuth callback
 

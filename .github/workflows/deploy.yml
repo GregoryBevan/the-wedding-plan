@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: ["The Wedding Plan CI"]
     types: [completed]
-  workflow_dispatch:
+    branches: [main]
 
 concurrency:
   group: deploy-main
@@ -13,12 +13,13 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: >
-      github.event_name == 'workflow_dispatch' ||
-      (
-        github.event.workflow_run.conclusion == 'success' &&
-        github.event.workflow_run.head_branch == 'main'
-      )
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_branch == 'main'
     steps:
       - name: Validate deploy hook configuration
         env:
@@ -29,20 +30,33 @@ jobs:
             exit 1
           fi
 
-      - name: Trigger Render deploy hook
+      - name: Verify tested commit is still main head and trigger deploy
         env:
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
+          GH_API_URL: ${{ github.api_url }}
+          GITHUB_TOKEN: ${{ github.token }}
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
+          CURRENT_MAIN_SHA="$(
+            curl --fail --show-error --silent \
+              --header "Authorization: Bearer $GITHUB_TOKEN" \
+              --header "Accept: application/vnd.github+json" \
+              "$GH_API_URL/repos/${{ github.repository }}/git/ref/heads/main" \
+              | python3 -c 'import json,sys; print(json.load(sys.stdin)["object"]["sha"])'
+          )"
+
+          if [ -z "$CURRENT_MAIN_SHA" ]; then
+            echo "Unable to resolve refs/heads/main from origin"
+            exit 1
+          fi
+
+          if [ "$CURRENT_MAIN_SHA" != "$EXPECTED_SHA" ]; then
+            echo "Skipping deploy: tested SHA ($EXPECTED_SHA) is not current main SHA ($CURRENT_MAIN_SHA)."
+            exit 0
+          fi
+
           curl --fail --show-error --silent \
             --request POST \
             "$RENDER_DEPLOY_HOOK_URL"
 
-      - name: Publish deployment summary
-        run: |
-          {
-            echo "## Deployment triggered"
-            echo ""
-            echo "- Render deploy hook was called successfully."
-            echo "- Check Render dashboard for build/runtime logs."
-          } >> "$GITHUB_STEP_SUMMARY"
 
