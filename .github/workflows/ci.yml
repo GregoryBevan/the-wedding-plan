@@ -74,6 +74,7 @@ jobs:
           frontend/coverage/cobertura-coverage.xml
           frontend/coverage/coverage-summary.json
     - name: Upload coverage to Codecov
+      id: codecov_upload
       if: ${{ always() && env.CODECOV_TOKEN != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) }}
       uses: codecov/codecov-action@v5
       continue-on-error: true
@@ -82,16 +83,21 @@ jobs:
         files: backend/build/reports/jacoco/jacocoAllTestReport/jacocoAllTestReport.xml,frontend/coverage/cobertura-coverage.xml
         fail_ci_if_error: false
         verbose: true
-    - name: Skip Codecov upload (no token configured)
-      if: ${{ always() && env.CODECOV_TOKEN == '' }}
-      run: |
-        echo "- Codecov upload skipped: CODECOV_TOKEN is not configured." >> "$GITHUB_STEP_SUMMARY"
     - name: Publish coverage links
-      if: ${{ always() }}
+      if: ${{ always() && steps.codecov_upload.outcome == 'success' }}
       run: |
         {
           echo "## Coverage summary"
           echo ""
           echo "- Coverage artifacts are attached to this workflow run (artifact: \`coverage-reports\`)."
           echo "- Coverage is also published through Codecov (check details in the Codecov action/logs)."
+        } >> "$GITHUB_STEP_SUMMARY"
+    - name: Publish coverage links (Codecov skipped or failed)
+      if: ${{ always() && steps.codecov_upload.outcome != 'success' }}
+      run: |
+        {
+          echo "## Coverage summary"
+          echo ""
+          echo "- Coverage artifacts are attached to this workflow run (artifact: \`coverage-reports\`)."
+          echo "- Codecov upload was skipped or failed for this run; check the Codecov step logs."
         } >> "$GITHUB_STEP_SUMMARY"
