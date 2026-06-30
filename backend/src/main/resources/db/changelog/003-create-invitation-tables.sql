@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset copilot:003-create-invitation-tables
+--changeset elgregos:3
 create table if not exists invitation (
     id uuid primary key,
     creation_date timestamp without time zone not null,
