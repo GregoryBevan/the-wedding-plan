@@ -78,6 +78,8 @@ describe('App auth states', () => {
     expect(authApiMock.getAuthStatus).toHaveBeenCalled();
     expect(wrapper.text()).toContain('Please sign in with Google to access the backoffice.');
     expect(wrapper.find('a').attributes('href')).toBe('http://localhost:8080/oauth2/authorization/google');
+    expect(wrapper.get('[data-test="backoffice-version"]').text())
+      .toContain(`Backoffice version ${__APP_VERSION__}`);
   });
 
   it('shows blocked message for unauthorized authenticated users', async () => {

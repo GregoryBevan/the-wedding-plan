@@ -19,6 +19,9 @@
 
       <RouterView />
     </main>
+    <footer class="mx-auto mt-3 max-w-2xl text-right text-xs text-text/60" data-test="backoffice-version">
+      Backoffice version {{ appVersion }}
+    </footer>
     <ConfirmDialog />
     <ToastContainer />
   </div>
@@ -38,6 +41,7 @@ const logoutErrorMessage = ref('');
 const connectedUserEmail = ref<string | null>(null);
 const route = useRoute();
 const router = useRouter();
+const appVersion = __APP_VERSION__;
 
 const isProtectedRoute = computed(() => route.matched.some((record) => record.meta.requiresAuthorized));
 
