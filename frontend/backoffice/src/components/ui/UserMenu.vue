@@ -13,7 +13,7 @@
     <div
       v-if="isOpen"
       role="menu"
-      class="absolute right-0 top-full z-10 mt-1 w-72 rounded-lg border border-secondary/40 bg-white p-4 shadow-lg"
+      class="absolute right-0 top-full z-50 mt-1 w-72 rounded-lg border border-secondary/40 bg-white p-4 shadow-lg"
     >
       <p class="text-xs uppercase tracking-wide text-text/70">Signed in as</p>
       <p class="mt-1 truncate text-sm font-medium">{{ userLabel }}</p>
