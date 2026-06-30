@@ -80,6 +80,7 @@ class SecurityConfig(
                         "/public/**",
                         "/*.html",
                         "/favicon.ico",
+                        "/favicon.svg",
                         "/oauth2/**",
                         "/login/**",
                         "/auth/me",
