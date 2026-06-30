@@ -44,6 +44,7 @@ This is a fullstack project.
   - Install dependencies: `/opt/homebrew/bin/pnpm install`
   - Run public app in development: `/opt/homebrew/bin/pnpm run dev:public`
   - Run backoffice app in development: `/opt/homebrew/bin/pnpm run dev:backoffice`
+  - For each frontend issue, bump the app version before staging changes: `/opt/homebrew/bin/pnpm run version:issue`
   - Run tests: `/opt/homebrew/bin/pnpm run test`
   - Run tests in watch mode: `/opt/homebrew/bin/pnpm run test:watch`
   - Run tests with coverage: `/opt/homebrew/bin/pnpm run test:coverage`
