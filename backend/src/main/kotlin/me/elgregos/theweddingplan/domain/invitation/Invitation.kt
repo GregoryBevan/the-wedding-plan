@@ -11,7 +11,7 @@ data class Invitation(
     val id: InvitationId = InvitationId.generate(),
     val creationDate: LocalDateTime = Dates.nowUtcMillis(),
     val updateDate: LocalDateTime = Dates.nowUtcMillis(),
-    val title: String,
+    val label: String,
     val eventDate: LocalDate? = null,
     val guestIds: Set<GuestId>,
 ) {

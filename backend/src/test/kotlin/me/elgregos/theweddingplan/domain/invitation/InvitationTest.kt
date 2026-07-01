@@ -1,27 +1,25 @@
 package me.elgregos.theweddingplan.domain.invitation
 
+import assertk.assertFailure
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isInstanceOf
 import assertk.assertions.messageContains
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
+import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.ceremonyInvitation
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
 
 class InvitationTest {
 
     @Test
-    fun `should require at least one guest`() {
-        val exception = assertFailsWith<IllegalArgumentException> {
-            Invitation(title = "Empty invitation", guestIds = emptySet())
-        }
-
-        assertThat(exception).messageContains("at least one guest")
+    fun `should create invitation with guest ids`() {
+        assertThat(ceremonyInvitation.guestIds).isEqualTo(setOf(johnDoe.id))
     }
 
     @Test
-    fun `should create invitation with guest ids`() {
-        val invitation = Invitation(title = "Ceremony", guestIds = setOf(johnDoe.id))
-
-        assertThat(invitation.guestIds).isEqualTo(setOf(johnDoe.id))
+    fun `should require at least one guest`() {
+        assertFailure {     Invitation(label = "Empty invitation", guestIds = emptySet()) }
+            .isInstanceOf(IllegalArgumentException::class)
+            .messageContains("at least one guest")
     }
 }
