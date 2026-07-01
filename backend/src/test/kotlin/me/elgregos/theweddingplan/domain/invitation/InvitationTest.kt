@@ -25,6 +25,3 @@ class InvitationTest {
         assertThat(invitation.guestIds).isEqualTo(setOf(johnDoe.id))
     }
 }
-
-
-
