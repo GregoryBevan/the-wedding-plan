@@ -2,7 +2,6 @@ package me.elgregos.theweddingplan.domain.invitation
 
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 object InvitationFixtures {
@@ -14,7 +13,6 @@ object InvitationFixtures {
         creationDate = creationDate,
         updateDate = creationDate,
         label = "Ceremony",
-        eventDate = LocalDate.of(2027, 6, 12),
         guestIds = setOf(johnDoe.id),
     )
 
@@ -23,7 +21,6 @@ object InvitationFixtures {
         creationDate = creationDate,
         updateDate = creationDate,
         label = "Family table",
-        eventDate = LocalDate.of(2027, 6, 12),
         guestIds = setOf(johnDoe.id, janeDoe.id),
     )
 }
