@@ -6,8 +6,8 @@ object GuestResponseFixtures {
     val johnDoe = GuestResponse(
         id = "${GuestFixtures.johnDoe.id}",
         version = GuestFixtures.johnDoe.version,
-        creationDate = "${GuestFixtures.fixedDate}",
-        updateDate = "${GuestFixtures.fixedDate}",
+        creationDate = "${GuestFixtures.creationDate}",
+        updateDate = "${GuestFixtures.creationDate}",
         firstName = GuestFixtures.johnDoe.firstName,
         lastName = GuestFixtures.johnDoe.lastName,
         email = GuestFixtures.johnDoe.email

@@ -3,13 +3,13 @@ package me.elgregos.theweddingplan.domain.guest
 import java.time.LocalDateTime
 
 object GuestFixtures {
-    val fixedDate: LocalDateTime = LocalDateTime.of(2026, 6, 13, 10, 0, 0)
+    val creationDate: LocalDateTime = LocalDateTime.of(2026, 6, 13, 10, 0, 0)
 
     val johnDoe = Guest(
         id = GuestId.fromString("019f0e7e-8f4d-7378-a18d-d9ce21a7dd15"),
         version = 1L,
-        creationDate = fixedDate,
-        updateDate = fixedDate,
+        creationDate = creationDate,
+        updateDate = creationDate,
         firstName = "John",
         lastName = "Doe",
         email = "john.doe@example.com"
@@ -21,8 +21,8 @@ object GuestFixtures {
         firstName = "Johnny",
         lastName = "Doe",
         email = "johnny.doe@example.com",
-        creationDate = fixedDate,
-        updateDate = fixedDate.plusDays(1),
+        creationDate = creationDate,
+        updateDate = creationDate.plusDays(1),
     )
 
     val johnDoeDeleted = Guest(
@@ -31,9 +31,9 @@ object GuestFixtures {
         firstName = "John",
         lastName = "Doe",
         email = "john.doe@example.com",
-        creationDate = fixedDate,
-        updateDate = fixedDate.plusDays(2),
-        deletionDate = fixedDate.plusDays(2),
+        creationDate = creationDate,
+        updateDate = creationDate.plusDays(2),
+        deletionDate = creationDate.plusDays(2),
     )
 
     val johnDoeRestored = Guest(
@@ -42,16 +42,16 @@ object GuestFixtures {
         firstName = "John",
         lastName = "Doe",
         email = "john.doe@example.com",
-        creationDate = fixedDate,
-        updateDate = fixedDate.plusDays(3),
+        creationDate = creationDate,
+        updateDate = creationDate.plusDays(3),
         deletionDate = null,
     )
 
     val janeDoe = Guest(
         id = GuestId.fromString("019f0e7e-8f4d-7efd-a833-3fd432e4d5c0"),
         version = 1L,
-        creationDate = fixedDate,
-        updateDate = fixedDate,
+        creationDate = creationDate,
+        updateDate = creationDate,
         firstName = "Jane",
         lastName = "Doe",
         email = "jane.doe@example.com"
@@ -62,8 +62,8 @@ object GuestFixtures {
         version = 2L,
         firstName = "Emma",
         lastName = "Wilson",
-        creationDate = fixedDate,
-        updateDate = fixedDate.plusDays(1),
+        creationDate = creationDate,
+        updateDate = creationDate.plusDays(1),
         email = "emma.wilson@example.com"
     )
 
@@ -72,8 +72,8 @@ object GuestFixtures {
         firstName = "Liam",
         lastName = "Miller",
         email = "liam.miller@example.com",
-        creationDate = fixedDate.plusDays(3),
-        updateDate = fixedDate.plusDays(3),
+        creationDate = creationDate.plusDays(3),
+        updateDate = creationDate.plusDays(3),
     )
 
     val liamMillerUpdated = Guest(
@@ -81,8 +81,8 @@ object GuestFixtures {
         version = 2L,
         firstName = "Liam",
         lastName = "Miller",
-        creationDate = fixedDate.plusDays(3),
-        updateDate = fixedDate.plusDays(4),
+        creationDate = creationDate.plusDays(3),
+        updateDate = creationDate.plusDays(4),
         email = "liam.miller-bis@example.com"
     )
 
@@ -91,8 +91,8 @@ object GuestFixtures {
         firstName = "Noah",
         lastName = "Anderson",
         email = "noah.anderson@example.com",
-        creationDate = fixedDate,
-        updateDate = fixedDate,
+        creationDate = creationDate,
+        updateDate = creationDate,
     )
 
     val noahAndersonUpdated = Guest(
@@ -101,7 +101,7 @@ object GuestFixtures {
         firstName = "Noah",
         lastName = "Anderson",
         email = "noah.anderson@example.com",
-        creationDate = fixedDate,
-        updateDate = fixedDate.plusDays(3)
+        creationDate = creationDate,
+        updateDate = creationDate.plusDays(3)
     )
 }
