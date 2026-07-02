@@ -43,4 +43,3 @@ object InvitationFixtures {
         guestIds = setOf(emmaWilson.id, liamMiller.id),
     )
 }
-
