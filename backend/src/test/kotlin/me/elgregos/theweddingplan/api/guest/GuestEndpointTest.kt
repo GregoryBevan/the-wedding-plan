@@ -13,7 +13,7 @@ import me.elgregos.theweddingplan.application.guest.UpdateGuestResult
 import me.elgregos.theweddingplan.application.guest.GuestUpdater
 import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.charlieDavis
 import me.elgregos.theweddingplan.api.guest.UpdateGuestRequestFixtures.johnDoeUpdated as johnDoeUpdatedRequest
-import me.elgregos.theweddingplan.domain.guest.GuestActiveFilter
+import me.elgregos.theweddingplan.domain.guest.GuestStatus
 import me.elgregos.theweddingplan.domain.guest.GuestListCriteria
 import me.elgregos.theweddingplan.domain.guest.GuestId
 import me.elgregos.theweddingplan.domain.guest.GuestPage
@@ -99,7 +99,7 @@ class GuestEndpointTest {
         )
 
         stubPaginationParams(request)
-        every { guestLister.list(GuestListCriteria(page = 0, size = 20, activeFilter = GuestActiveFilter.ACTIVE)) } returns guestPage
+        every { guestLister.list(GuestListCriteria(page = 0, size = 20, status = GuestStatus.ACTIVE)) } returns guestPage
 
         val response = guestEndpoint.listGuests(request)
 
@@ -118,7 +118,7 @@ class GuestEndpointTest {
         )
 
         stubPaginationParams(request, status = "archived")
-        every { guestLister.list(GuestListCriteria(page = 0, size = 20, activeFilter = GuestActiveFilter.DELETED)) } returns guestPage
+        every { guestLister.list(GuestListCriteria(page = 0, size = 20, status = GuestStatus.ARCHIVED)) } returns guestPage
 
         val response = guestEndpoint.listGuests(request)
 
@@ -126,7 +126,7 @@ class GuestEndpointTest {
     }
 
     @Test
-    fun `should list all guests when activeFilter query param is all`() {
+    fun `should list all guests when status query param is all`() {
         val request = mockk<ServerRequest>()
         val guestPage = GuestPage(
             items = listOf(johnDoe),
@@ -136,8 +136,8 @@ class GuestEndpointTest {
             totalPages = 1,
         )
 
-        stubPaginationParams(request, activeFilter = "all")
-        every { guestLister.list(GuestListCriteria(page = 0, size = 20, activeFilter = GuestActiveFilter.ALL)) } returns guestPage
+        stubPaginationParams(request, status = "all")
+        every { guestLister.list(GuestListCriteria(page = 0, size = 20, status = GuestStatus.ALL)) } returns guestPage
 
         val response = guestEndpoint.listGuests(request)
 
@@ -368,12 +368,10 @@ class GuestEndpointTest {
         page: String? = null,
         size: String? = null,
         status: String? = null,
-        activeFilter: String? = null,
     ) {
         every { request.param("page") } returns Optional.ofNullable(page)
         every { request.param("size") } returns Optional.ofNullable(size)
         every { request.param("status") } returns Optional.ofNullable(status)
-        every { request.param("activeFilter") } returns Optional.ofNullable(activeFilter)
     }
 
 }

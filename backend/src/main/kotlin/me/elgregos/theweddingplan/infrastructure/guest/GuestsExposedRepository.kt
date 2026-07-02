@@ -1,7 +1,7 @@
 package me.elgregos.theweddingplan.infrastructure.guest
 
 import me.elgregos.theweddingplan.domain.guest.Guest
-import me.elgregos.theweddingplan.domain.guest.GuestActiveFilter
+import me.elgregos.theweddingplan.domain.guest.GuestStatus
 import me.elgregos.theweddingplan.domain.guest.GuestListCriteria
 import me.elgregos.theweddingplan.domain.guest.GuestId
 import me.elgregos.theweddingplan.domain.guest.GuestPage
@@ -57,7 +57,7 @@ class GuestsExposedRepository : Guests {
             ?.toGuest()
 
     @Transactional(readOnly = true)
-    override fun findDeletedById(id: GuestId): Guest? =
+    override fun findArchivedById(id: GuestId): Guest? =
         GuestTable.selectAll()
             .where { (GuestTable.id eq id.value) and GuestTable.deletionDate.isNotNull() }
             .firstOrNull()
@@ -76,7 +76,7 @@ class GuestsExposedRepository : Guests {
 
     @Transactional(readOnly = true)
     override fun list(criteria: GuestListCriteria): GuestPage {
-        val totalItems = GuestTable.selectAll().applyActiveFilter(criteria.activeFilter).count()
+        val totalItems = GuestTable.selectAll().applyStatusFilter(criteria.status).count()
         val totalPages = if (totalItems == 0L) 0 else ((totalItems - 1) / criteria.size + 1).toInt()
         val offset = criteria.page.toLong() * criteria.size
 
@@ -104,16 +104,16 @@ class GuestsExposedRepository : Guests {
         criteria: GuestListCriteria,
         offset: Long
     ): List<Guest> = GuestTable.selectAll()
-        .applyActiveFilter(criteria.activeFilter)
+        .applyStatusFilter(criteria.status)
         .orderBy(*listOrder)
         .limit(criteria.size)
         .offset(offset)
         .map { it.toGuest() }
 
-    private fun Query.applyActiveFilter(activeFilter: GuestActiveFilter) =
-        when (activeFilter) {
-            GuestActiveFilter.ACTIVE -> where { GuestTable.deletionDate.isNull() }
-            GuestActiveFilter.DELETED -> where { GuestTable.deletionDate.isNotNull() }
-            GuestActiveFilter.ALL -> this
+    private fun Query.applyStatusFilter(status: GuestStatus) =
+        when (status) {
+            GuestStatus.ACTIVE -> where { GuestTable.deletionDate.isNull() }
+            GuestStatus.ARCHIVED -> where { GuestTable.deletionDate.isNotNull() }
+            GuestStatus.ALL -> this
         }
 }

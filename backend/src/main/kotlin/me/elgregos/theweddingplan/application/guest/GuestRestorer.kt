@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service
 class GuestRestorer(private val guests: Guests) {
 
     fun restore(id: GuestId): RestoreGuestResult =
-        guests.findDeletedById(id)
+        guests.findArchivedById(id)
             ?.let { existingGuest ->
                 existingGuest.restore()
                     .let { guests.restore(it, expectedVersion = existingGuest.version) }

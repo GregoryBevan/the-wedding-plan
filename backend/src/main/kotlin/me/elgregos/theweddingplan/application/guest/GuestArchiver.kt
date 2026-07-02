@@ -10,7 +10,7 @@ class GuestArchiver(private val guests: Guests) {
     fun archive(id: GuestId): ArchiveGuestResult =
         guests.findById(id)
             ?.let { existingGuest ->
-                existingGuest.markAsDeleted()
+                existingGuest.markAsArchived()
                     .let { guests.update(it, expectedVersion = existingGuest.version) }
                     ?.let(ArchiveGuestResult::Archived)
                     ?: ArchiveGuestResult.VersionConflict

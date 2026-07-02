@@ -8,7 +8,7 @@ import io.mockk.every
 import io.mockk.mockk
 import me.elgregos.theweddingplan.application.guest.UpdateGuestCommandFixtures.johnDoeUpdated as johnDoeUpdatedCommand
 import me.elgregos.theweddingplan.domain.guest.Guest
-import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoeDeleted
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoeArchived
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
 import me.elgregos.theweddingplan.domain.guest.Guests
 import kotlin.test.BeforeTest
@@ -81,11 +81,11 @@ class GuestUpdaterTest {
     }
 
     @Test
-    fun `should return not found when updating soft deleted guest`() {
-        val command = johnDoeUpdatedCommand.copy(version = johnDoeDeleted.version)
-        every { guests.findById(johnDoeDeleted.id) } returns null
+    fun `should return not found when updating archived guest`() {
+        val command = johnDoeUpdatedCommand.copy(version = johnDoeArchived.version)
+        every { guests.findById(johnDoeArchived.id) } returns null
 
-        val result = guestUpdater.update(johnDoeDeleted.id, command)
+        val result = guestUpdater.update(johnDoeArchived.id, command)
 
         assertThat(result).isEqualTo(UpdateGuestResult.NotFound)
     }

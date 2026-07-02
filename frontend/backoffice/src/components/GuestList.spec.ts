@@ -341,7 +341,7 @@ describe('GuestList', () => {
   it('restores a guest from archive and refreshes list', async () => {
     listGuestsMock
       .mockResolvedValueOnce(createGuestPage({
-        items: [createGuestResponse({ id: 'guest-2', firstName: 'Deleted' })],
+        items: [createGuestResponse({ id: 'guest-2', firstName: 'Archived' })],
         page: 0,
         size: 10,
         totalItems: 1,

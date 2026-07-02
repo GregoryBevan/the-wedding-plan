@@ -1,20 +1,11 @@
 package me.elgregos.theweddingplan.api.guest
 
-import me.elgregos.theweddingplan.application.guest.GuestAdder
-import me.elgregos.theweddingplan.application.guest.AddGuestCommand
-import me.elgregos.theweddingplan.application.guest.GuestArchiver
-import me.elgregos.theweddingplan.application.guest.GuestGetter
-import me.elgregos.theweddingplan.application.guest.GuestLister
-import me.elgregos.theweddingplan.application.guest.GuestRestorer
-import me.elgregos.theweddingplan.application.guest.ArchiveGuestResult
-import me.elgregos.theweddingplan.application.guest.RestoreGuestResult
-import me.elgregos.theweddingplan.application.guest.UpdateGuestResult
-import me.elgregos.theweddingplan.application.guest.GuestUpdater
-import me.elgregos.theweddingplan.application.guest.UpdateGuestCommand
-import me.elgregos.theweddingplan.domain.guest.GuestActiveFilter
-import me.elgregos.theweddingplan.domain.guest.GuestListCriteria
+import me.elgregos.theweddingplan.api.common.statusQueryParam
+import me.elgregos.theweddingplan.api.common.guestIdPathParam
+import me.elgregos.theweddingplan.api.common.intQueryParam
+import me.elgregos.theweddingplan.application.guest.*
 import me.elgregos.theweddingplan.domain.guest.Guest
-import me.elgregos.theweddingplan.domain.guest.GuestId
+import me.elgregos.theweddingplan.domain.guest.GuestListCriteria
 import me.elgregos.theweddingplan.domain.guest.GuestPage
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -32,14 +23,14 @@ class GuestEndpoint(
 ) {
 
     fun listGuests(request: ServerRequest): ServerResponse {
-        val page = request.intQueryParam("page", default = 0) ?: return ServerResponse.badRequest().build()
-        val size = request.intQueryParam("size", default = 20) ?: return ServerResponse.badRequest().build()
-        val activeFilter = request.activeFilterQueryParam() ?: return ServerResponse.badRequest().build()
+        val page = request.intQueryParam("page", 0) ?: return ServerResponse.badRequest().build()
+        val size = request.intQueryParam("size", 20) ?: return ServerResponse.badRequest().build()
+        val status = request.statusQueryParam() ?: return ServerResponse.badRequest().build()
 
         return if (page < 0 || size <= 0) {
             ServerResponse.badRequest().build()
         } else {
-            ServerResponse.ok().body(guestLister.list(GuestListCriteria(page = page, size = size, activeFilter = activeFilter)).toResponse())
+            ServerResponse.ok().body(guestLister.list(GuestListCriteria(page = page, size = size, status = status)).toResponse())
         }
     }
 
@@ -93,40 +84,6 @@ class GuestEndpoint(
     }
 }
 
-private fun ServerRequest.intQueryParam(name: String, default: Int): Int? =
-    param(name).orElse(null)
-        ?.trim()
-        .let { value ->
-            when {
-                value.isNullOrEmpty() -> default
-                else -> value.toIntOrNull()
-            }
-        }
-
-private fun ServerRequest.activeFilterQueryParam(): GuestActiveFilter? =
-    listOf("status", "activeFilter")
-        .asSequence()
-        .mapNotNull { param(it).orElse(null)?.trim()?.takeIf(String::isNotEmpty) }
-        .firstOrNull()
-        ?.toGuestActiveFilter()
-        ?: run {
-            val hasExplicitFilter = listOf("status", "activeFilter")
-                .any { param(it).orElse(null)?.trim().isNullOrEmpty().not() }
-
-            if (hasExplicitFilter) null else GuestActiveFilter.ACTIVE
-        }
-
-private fun String.toGuestActiveFilter() =
-    when {
-        equals("archived", ignoreCase = true) -> GuestActiveFilter.DELETED
-        else -> GuestActiveFilter.entries.firstOrNull { it.name.equals(this, ignoreCase = true) }
-    }
-
-private fun ServerRequest.guestIdPathParam() =
-    pathVariable("id")
-        .trim()
-        .takeIf(String::isNotEmpty)
-        ?.let { runCatching { GuestId.fromString(it) }.getOrNull() }
 
 data class GuestResponse(
     val id: String,
