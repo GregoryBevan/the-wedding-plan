@@ -6,7 +6,7 @@ object GuestFixtures {
     val creationDate: LocalDateTime = LocalDateTime.of(2026, 6, 13, 10, 0, 0)
 
     val johnDoe = Guest(
-        id = GuestId.fromString("019f0e7e-8f4d-7378-a18d-d9ce21a7dd15"),
+        id = GuestId.fromString("019e82e0-0cc1-727e-a483-947fea529ef3"),
         version = 1L,
         creationDate = creationDate,
         updateDate = creationDate,
@@ -16,7 +16,7 @@ object GuestFixtures {
     )
 
     val johnDoeUpdated = Guest(
-        id = GuestId.fromString("019f0e7e-8f4d-7378-a18d-d9ce21a7dd15"),
+        id = GuestId.fromString("019e82e0-0cc1-727e-a483-947fea529ef3"),
         version = 2L,
         firstName = "Johnny",
         lastName = "Doe",
@@ -26,7 +26,7 @@ object GuestFixtures {
     )
 
     val johnDoeDeleted = Guest(
-        id = GuestId.fromString("019f0e7e-8f4d-7378-a18d-d9ce21a7dd15"),
+        id = GuestId.fromString("019e82e0-0cc1-727e-a483-947fea529ef3"),
         version = 2L,
         firstName = "John",
         lastName = "Doe",
@@ -37,7 +37,7 @@ object GuestFixtures {
     )
 
     val johnDoeRestored = Guest(
-        id = GuestId.fromString("019f0e7e-8f4d-7378-a18d-d9ce21a7dd15"),
+        id = GuestId.fromString("019e82e0-0cc1-727e-a483-947fea529ef3"),
         version = 3L,
         firstName = "John",
         lastName = "Doe",
@@ -48,7 +48,7 @@ object GuestFixtures {
     )
 
     val janeDoe = Guest(
-        id = GuestId.fromString("019f0e7e-8f4d-7efd-a833-3fd432e4d5c0"),
+        id = GuestId.fromString("019e8807-5321-75ed-8a40-99a73529e50f"),
         version = 1L,
         creationDate = creationDate,
         updateDate = creationDate,
@@ -87,7 +87,7 @@ object GuestFixtures {
     )
 
     val noahAnderson = Guest(
-        id = GuestId.fromString("019f0e7e-8f4d-7f68-91a6-c23cdf606233"),
+        id = GuestId.fromString("019f2285-30c1-7323-9fc1-69f6cc44b487"),
         firstName = "Noah",
         lastName = "Anderson",
         email = "noah.anderson@example.com",
@@ -96,12 +96,22 @@ object GuestFixtures {
     )
 
     val noahAndersonUpdated = Guest(
-        id = GuestId.fromString("019f0e7e-8f4d-7f68-91a6-c23cdf606233"),
+        id = GuestId.fromString("019f2285-30c1-7323-9fc1-69f6cc44b487"),
         version = 2L,
         firstName = "Noah",
         lastName = "Anderson",
         email = "noah.anderson@example.com",
         creationDate = creationDate,
         updateDate = creationDate.plusDays(3)
+    )
+
+    val mickaelKael = Guest(
+        id = GuestId.fromString("019f2287-efe1-748b-a7f6-e20962d062cf"),
+        version = 1L,
+        firstName = "Mickael",
+        lastName = "Kael",
+        email = "mickael.kael@example.com",
+        creationDate = creationDate,
+        updateDate = creationDate
     )
 }
