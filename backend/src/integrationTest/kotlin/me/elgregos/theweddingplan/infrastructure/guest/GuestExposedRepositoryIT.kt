@@ -105,7 +105,7 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
     fun `should list only archived guests from trash query`() {
         val activeGuest = Guest(firstName = "Ryan", lastName = "Evans", email = "ryanevans@teleworm.us")
         guestsRepository.add(activeGuest)
-        val archivedGuest =Guest(firstName = "Julianne", lastName = "Whitaker", email = "juliannewhitaker@jourrapide.com")
+        val archivedGuest = Guest(firstName = "Julianne", lastName = "Whitaker", email = "juliannewhitaker@jourrapide.com")
         guestsRepository.add(archivedGuest)
         markAsArchived(archivedGuest)
 
