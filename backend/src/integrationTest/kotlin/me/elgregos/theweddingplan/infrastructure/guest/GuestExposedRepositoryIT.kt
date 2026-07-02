@@ -55,9 +55,7 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
 
         guestsRepository.update(liamMillerUpdated, expectedVersion = liamMiller.version)
 
-        val persistedGuest = guestById(liamMillerUpdated.id)
-
-        assertThat(persistedGuest).isEqualTo(liamMillerUpdated)
+        assertThat(guestById(liamMillerUpdated.id)).isEqualTo(liamMillerUpdated)
     }
 
     @Test

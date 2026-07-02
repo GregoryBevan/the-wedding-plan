@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional
 @Repository
 class GuestsExposedRepository : Guests {
 
-    private val listOrder = arrayOf(GuestTable.creationDate to SortOrder.ASC, GuestTable.id to SortOrder.ASC)
+    private val listOrder = arrayOf(GuestTable.id to SortOrder.ASC)
 
     @Transactional
     override fun add(guest: Guest): Guest =

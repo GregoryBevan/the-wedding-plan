@@ -1,27 +1,46 @@
 package me.elgregos.theweddingplan.domain.invitation
 
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.emmaWilson
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.liamMiller
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.mickaelKael
 import java.time.LocalDateTime
 
 object InvitationFixtures {
 
     val creationDate: LocalDateTime = LocalDateTime.of(2026, 7, 1, 10, 45, 28)
 
-    val ceremonyInvitation = Invitation(
-        id = InvitationId.fromString("019f5f7d-258c-7638-9f26-0f0ab53e8dcb"),
+    val bridesMaidInvitation = Invitation(
+        id = InvitationId.fromString("019f2282-6db9-72a3-8d9d-2f6dc80cb89d"),
         creationDate = creationDate,
         updateDate = creationDate,
-        label = "Ceremony",
+        label = "Bridesmaid",
+        guestIds = setOf(janeDoe.id),
+    )
+
+    val bestManInvitation = Invitation(
+        id = InvitationId.fromString("019f2282-71a1-7276-87f9-f80375e2570e"),
+        creationDate = creationDate,
+        updateDate = creationDate,
+        label = "Bestman",
+        guestIds = setOf(mickaelKael.id),
+    )
+
+    val brideFamilyInvitation = Invitation(
+        id = InvitationId.fromString("019f2282-7971-77e6-8d25-7568739fca0f"),
+        creationDate = creationDate,
+        updateDate = creationDate,
+        label = "Bride Family",
         guestIds = setOf(johnDoe.id),
     )
 
-    val familyInvitation = Invitation(
-        id = InvitationId.fromString("019f5f72-cbb3-7a52-aebb-5d2fbba19b3a"),
+    val friendsInvitation = Invitation(
+        id = InvitationId.fromString("019f2284-4e31-7a24-be81-1e3affe8b95f"),
         creationDate = creationDate,
         updateDate = creationDate,
-        label = "Family table",
-        guestIds = setOf(johnDoe.id, janeDoe.id),
+        label = "Friends",
+        guestIds = setOf(emmaWilson.id, liamMiller.id),
     )
 }
 

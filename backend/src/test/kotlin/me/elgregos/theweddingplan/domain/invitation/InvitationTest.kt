@@ -5,15 +5,15 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import assertk.assertions.messageContains
-import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
-import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.ceremonyInvitation
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
+import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.bridesMaidInvitation
 import kotlin.test.Test
 
 class InvitationTest {
 
     @Test
     fun `should create invitation with guest ids`() {
-        assertThat(ceremonyInvitation.guestIds).isEqualTo(setOf(johnDoe.id))
+        assertThat(bridesMaidInvitation.guestIds).isEqualTo(setOf(janeDoe.id))
     }
 
     @Test
