@@ -1,4 +1,5 @@
 [![The Wedding Plan CI](https://github.com/GregoryBevan/the-wedding-plan/actions/workflows/ci.yml/badge.svg)](https://github.com/GregoryBevan/the-wedding-plan/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/GregoryBevan/the-wedding-plan/branch/main/graph/badge.svg?token=GTPKWW4VSO)](https://codecov.io/gh/GregoryBevan/the-wedding-plan)
 
 # The Wedding Plan
 
