@@ -15,11 +15,21 @@
         />
       </div>
     </header>
-    <main class="relative z-0 mx-auto max-w-2xl rounded-xl border border-secondary/20 bg-white p-8 text-text shadow-lg">
+    <div class="mx-auto flex w-full max-w-6xl gap-6">
+      <aside
+        v-if="isProtectedRoute"
+        class="w-64 shrink-0 rounded-xl border border-secondary/20 bg-white p-5 text-text shadow-lg"
+        data-test="backoffice-sidebar"
+      >
+        <nav aria-label="Backoffice navigation" class="space-y-3">
+        </nav>
+      </aside>
 
-      <RouterView />
-    </main>
-    <footer class="mx-auto mt-3 max-w-2xl text-right text-xs text-text/60" data-test="backoffice-version">
+      <main class="relative z-0 min-w-0 flex-1 rounded-xl border border-secondary/20 bg-white p-8 text-text shadow-lg">
+        <RouterView />
+      </main>
+    </div>
+    <footer class="mx-auto mt-3 max-w-6xl text-right text-xs text-text/60" data-test="backoffice-version">
       Backoffice version {{ appVersion }}
     </footer>
     <ConfirmDialog />

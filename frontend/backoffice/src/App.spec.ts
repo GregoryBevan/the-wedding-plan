@@ -114,6 +114,27 @@ describe('App auth states', () => {
     expect(wrapper.text()).toContain('Logout');
   });
 
+  it('renders left sidebar shell on protected routes while keeping routed content visible', async () => {
+    authApiMock.getAuthStatus.mockResolvedValue({
+      isAuthenticated: true,
+      email: 'allowed@example.com',
+      isAuthorized: true
+    });
+
+    const { wrapper } = await mountApp({ route: '/guests' });
+
+    expect(wrapper.find('[data-test="backoffice-sidebar"]').exists()).toBe(true);
+    expect(wrapper.find('nav[aria-label="Backoffice navigation"]').exists()).toBe(true);
+    expect(wrapper.findComponent({ name: 'GuestList' }).exists()).toBe(true);
+  });
+
+  it('does not render left sidebar shell on public routes', async () => {
+    const { wrapper } = await mountApp({ route: '/login-required' });
+
+    expect(wrapper.find('[data-test="backoffice-sidebar"]').exists()).toBe(false);
+    expect(wrapper.text()).toContain('Please sign in with Google to access the backoffice.');
+  });
+
   it('navigates to add guest route for authorized users', async () => {
     authApiMock.getAuthStatus.mockResolvedValue({
       isAuthenticated: true,
