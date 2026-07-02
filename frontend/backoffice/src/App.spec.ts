@@ -164,6 +164,13 @@ describe('App auth states', () => {
       history: createMemoryHistory(),
       routes: [
         {
+          path: '/invitations',
+          component: defineComponent(() => () => h('div', 'Invitation list')),
+          meta: {
+            requiresAuthorized: true
+          }
+        },
+        {
           path: '/guests',
           component: defineComponent(() => () => h('div', 'Guest list')),
           meta: {
