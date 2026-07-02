@@ -172,7 +172,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             .exchange()
             .expectStatus().isOk
 
-        val deletedGuests = restTestClient.get().uri("/api/guests?status=archived&page=0&size=200")
+        val archivedGuests = restTestClient.get().uri("/api/guests?status=archived&page=0&size=200")
             .header(HttpHeaders.COOKIE, csrf.cookies)
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
@@ -180,9 +180,9 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             .expectBody(GuestPageResponse::class.java)
             .returnResult()
             .responseBody
-            ?: error("Expected deleted guest page in response body")
+            ?: error("Expected archived guest page in response body")
 
-        assertThat(deletedGuests.items.any { it.id == createdGuest.id }).isEqualTo(true)
+        assertThat(archivedGuests.items.any { it.id == createdGuest.id }).isEqualTo(true)
     }
 
     @Test
@@ -286,7 +286,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             .responseBody
             ?: error("Expected archived guest in response body")
 
-        val persistedGuest = deletedGuestById(createdGuest.id)
+        val persistedGuest = archivedGuestById(createdGuest.id)
 
         assertThat(persistedGuest.version).isEqualTo(createdGuest.version + 1)
         assertThat(persistedGuest.deletionDate).isNotNull()
@@ -340,7 +340,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             .exchange()
             .expectStatus().isNotFound
 
-        val persistedGuest = deletedGuestById(createdGuest.id)
+        val persistedGuest = archivedGuestById(createdGuest.id)
 
         assertThat(persistedGuest.version).isEqualTo(createdGuest.version + 1)
     }
@@ -406,7 +406,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
         )
         val createdGuest = createGuest(csrf, guestToRestore)
 
-        markGuestAsDeleted(createdGuest.id)
+        markGuestAsArchived(createdGuest.id)
 
         val restoredGuest = restTestClient.post().uri("/api/guests/${createdGuest.id}/restoration")
             .header(HttpHeaders.COOKIE, csrf.cookies)
@@ -500,7 +500,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             UUID.fromString(id)
         )
 
-    private fun deletedGuestById(id: String): PersistedGuestRecord =
+    private fun archivedGuestById(id: String): PersistedGuestRecord =
         jdbcTemplate.queryForObject(
             """
             select id, version, creation_date, update_date, deletion_date, first_name, last_name, email
@@ -534,7 +534,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             email = email,
         )
 
-    private fun markGuestAsDeleted(id: String) {
+    private fun markGuestAsArchived(id: String) {
         jdbcTemplate.update(
             """
             update guest

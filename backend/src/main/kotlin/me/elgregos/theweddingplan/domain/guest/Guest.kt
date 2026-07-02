@@ -28,7 +28,7 @@ data class Guest(
         email = email,
     )
 
-    fun markAsDeleted(now: LocalDateTime = Dates.nowUtcMillis()) =
+    fun markAsArchived(now: LocalDateTime = Dates.nowUtcMillis()) =
         if (deletionDate != null) this
         else copy(
             version = version + 1,

@@ -25,7 +25,7 @@ object GuestFixtures {
         updateDate = creationDate.plusDays(1),
     )
 
-    val johnDoeDeleted = Guest(
+    val johnDoeArchived = Guest(
         id = GuestId.fromString("019e82e0-0cc1-727e-a483-947fea529ef3"),
         version = 2L,
         firstName = "John",

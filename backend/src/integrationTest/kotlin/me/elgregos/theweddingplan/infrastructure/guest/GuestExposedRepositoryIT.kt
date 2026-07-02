@@ -9,7 +9,7 @@ import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import me.elgregos.theweddingplan.AbstractIntegrationTest
 import me.elgregos.theweddingplan.domain.guest.Guest
-import me.elgregos.theweddingplan.domain.guest.GuestActiveFilter
+import me.elgregos.theweddingplan.domain.guest.GuestStatus
 import me.elgregos.theweddingplan.domain.guest.GuestListCriteria
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
@@ -70,10 +70,10 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `should return null when trying to update a soft-deleted guest`() {
+    fun `should return null when trying to update an archived guest`() {
         val guest = Guest(firstName = "Ryan", lastName = "Evans", email = "ryanevans@teleworm.us")
         guestsRepository.add(guest)
-        markAsDeleted(guest)
+        markAsArchived(guest)
 
         val result = guestsRepository.update(
             guest.copy(firstName = "Updated"),
@@ -85,34 +85,34 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
 
     @Test
     fun `should list all guests`() {
-        val guests = guestsRepository.list(GuestListCriteria(page = 0, size = 5, activeFilter = GuestActiveFilter.ACTIVE))
+        val guests = guestsRepository.list(GuestListCriteria(page = 0, size = 5, status = GuestStatus.ACTIVE))
 
         assertThat(guests.items).containsAtLeast(johnDoe, janeDoe)
     }
 
     @Test
     fun `should list only active guests`() {
-        val deletedGuest = Guest(firstName = "Joyce", lastName = "Clement", email = "joyceclement@example.com")
-        guestsRepository.add(deletedGuest)
-        markAsDeleted(deletedGuest)
+        val archivedGuest = Guest(firstName = "Joyce", lastName = "Clement", email = "joyceclement@example.com")
+        guestsRepository.add(archivedGuest)
+        markAsArchived(archivedGuest)
 
-        val guests = guestsRepository.list(GuestListCriteria(activeFilter = GuestActiveFilter.ACTIVE))
+        val guests = guestsRepository.list(GuestListCriteria(status = GuestStatus.ACTIVE))
 
-        assertThat(guests.items.any { it.id == deletedGuest.id }).isFalse()
+        assertThat(guests.items.any { it.id == archivedGuest.id }).isFalse()
     }
 
     @Test
-    fun `should list only deleted guests from trash query`() {
+    fun `should list only archived guests from trash query`() {
         val activeGuest = Guest(firstName = "Ryan", lastName = "Evans", email = "ryanevans@teleworm.us")
         guestsRepository.add(activeGuest)
-        val deletedGuest =Guest(firstName = "Julianne", lastName = "Whitaker", email = "juliannewhitaker@jourrapide.com")
-        guestsRepository.add(deletedGuest)
-        markAsDeleted(deletedGuest)
+        val archivedGuest = Guest(firstName = "Julianne", lastName = "Whitaker", email = "juliannewhitaker@jourrapide.com")
+        guestsRepository.add(archivedGuest)
+        markAsArchived(archivedGuest)
 
-        val deletedGuests = guestsRepository.list(GuestListCriteria(activeFilter = GuestActiveFilter.DELETED))
+        val archivedGuests = guestsRepository.list(GuestListCriteria(status = GuestStatus.ARCHIVED))
 
-        assertThat(deletedGuests.items.any { it.id == deletedGuest.id }).isTrue()
-        assertThat(deletedGuests.items.any { it.id == activeGuest.id }).isFalse()
+        assertThat(archivedGuests.items.any { it.id == archivedGuest.id }).isTrue()
+        assertThat(archivedGuests.items.any { it.id == activeGuest.id }).isFalse()
     }
 
     @Test
@@ -137,10 +137,10 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `should return null for a soft-deleted guest`() {
+    fun `should return null for an archived guest`() {
         val guest = Guest(firstName = "Joyce", lastName = "Clement", email = "joyceclement@example.com")
         guestsRepository.add(guest)
-        markAsDeleted(guest)
+        markAsArchived(guest)
 
         val found = guestsRepository.findById(guest.id)
 
@@ -148,13 +148,13 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `should restore a soft-deleted guest`() {
+    fun `should restore an archived guest`() {
         val guest = Guest(firstName = "Restore", lastName = "Candidate", email = "restore.candidate@example.com")
         guestsRepository.add(guest)
-        markAsDeleted(guest)
+        markAsArchived(guest)
 
-        val deletedGuest = guestById(guest.id)
-        val restoredGuest = guestsRepository.restore(deletedGuest.restore(now = Dates.nowUtcMillis()), expectedVersion = deletedGuest.version)
+        val archivedGuest = guestById(guest.id)
+        val restoredGuest = guestsRepository.restore(archivedGuest.restore(now = Dates.nowUtcMillis()), expectedVersion = archivedGuest.version)
         val found = guestsRepository.findById(guest.id)
 
         assertThat(restoredGuest).isNotNull()
@@ -170,14 +170,14 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `should persist deletion date when guest is marked as deleted`() {
+    fun `should persist deletion date when guest is marked as archived`() {
         val guest = Guest(firstName = "Sarah", lastName = "Mills", email = "sarahmills@example.com")
         guestsRepository.add(guest)
 
-        markAsDeleted(guest)
-        val deletedGuest = guestById(guest.id)
+        markAsArchived(guest)
+        val archivedGuest = guestById(guest.id)
 
-        assertThat(deletedGuest.deletionDate).isNotNull()
+        assertThat(archivedGuest.deletionDate).isNotNull()
     }
 
     private fun guestCount() =
@@ -208,9 +208,9 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
             guestId.value.toJavaUuid()
         )
 
-    private fun markAsDeleted(guest: Guest) {
+    private fun markAsArchived(guest: Guest) {
         guestsRepository.update(
-            guest.markAsDeleted(now = Dates.nowUtcMillis()),
+            guest.markAsArchived(now = Dates.nowUtcMillis()),
             expectedVersion = guest.version,
         )
     }

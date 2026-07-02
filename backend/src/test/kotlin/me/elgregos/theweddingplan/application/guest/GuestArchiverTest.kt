@@ -5,7 +5,7 @@ import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
-import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoeDeleted
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoeArchived
 import me.elgregos.theweddingplan.domain.guest.Guests
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -24,11 +24,11 @@ class GuestArchiverTest {
     @Test
     fun `should archive existing guest`() {
         every { guests.findById(johnDoe.id) } returns johnDoe
-        every { guests.update(any(), johnDoe.version) } returns johnDoeDeleted
+        every { guests.update(any(), johnDoe.version) } returns johnDoeArchived
 
         val result = guestArchiver.archive(johnDoe.id)
 
-        assertThat(result).isEqualTo(ArchiveGuestResult.Archived(johnDoeDeleted))
+        assertThat(result).isEqualTo(ArchiveGuestResult.Archived(johnDoeArchived))
     }
 
     @Test
