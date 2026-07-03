@@ -5,7 +5,8 @@ create table if not exists invitation (
     version bigint not null,
     creation_date timestamp without time zone not null,
     update_date timestamp without time zone not null,
-    label text not null
+    label text not null,
+    event_date date
 );
 
 create table if not exists invitation_guest (
@@ -24,7 +25,5 @@ create table if not exists invitation_guest (
 
 create index if not exists idx_invitation_guest_guest_id on invitation_guest (guest_id);
 
---rollback drop index if exists idx_invitation_guest_invitation_id;
---rollback drop index if exists idx_invitation_guest_guest_id;
---rollback drop table if exists invitation_guest;
+--rollback drop index if exists idx_invitation_guest_guest_id; drop table if exists invitation_guest; drop table if exists invitation;
 
