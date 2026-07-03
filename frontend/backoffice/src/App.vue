@@ -21,8 +21,7 @@
         class="w-64 shrink-0 rounded-xl border border-secondary/20 bg-white p-5 text-text shadow-lg"
         data-test="backoffice-sidebar"
       >
-        <nav aria-label="Backoffice navigation" class="space-y-3">
-        </nav>
+        <BackofficeSidebar />
       </aside>
 
       <main class="relative z-0 min-w-0 flex-1 rounded-xl border border-secondary/20 bg-white p-8 text-text shadow-lg">
@@ -39,6 +38,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import BackofficeSidebar from './components/BackofficeSidebar.vue';
 import UserMenu from './components/ui/UserMenu.vue';
 import ConfirmDialog from './components/ui/ConfirmDialog.vue';
 import ToastContainer from './components/ui/ToastContainer.vue';
