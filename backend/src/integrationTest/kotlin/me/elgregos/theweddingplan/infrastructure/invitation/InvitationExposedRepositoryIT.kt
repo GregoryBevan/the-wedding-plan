@@ -84,7 +84,7 @@ class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
     private fun invitationById(invitationId: InvitationId): Invitation =
         jdbcTemplate.queryForObject(
             """
-            select i.id, i.version, i.creation_date, i.update_date, i.label, array_agg(ig.guest_id) as guests   
+            select i.id, i.version, i.creation_date, i.update_date, i.label, i.description, array_agg(ig.guest_id) as guests
             from invitation i
             inner join invitation_guest ig on ig.invitation_id = i.id
             where i.id = ?
@@ -97,6 +97,7 @@ class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
                     creationDate = rs.getTimestamp("creation_date").toLocalDateTime(),
                     updateDate = rs.getTimestamp("update_date").toLocalDateTime(),
                     label = rs.getString("label"),
+                    description = rs.getString("description"),
                     guestIds = rs.getUuidSet("guests")
                 )
             },

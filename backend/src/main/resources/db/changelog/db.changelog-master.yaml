@@ -7,4 +7,6 @@ databaseChangeLog:
       file: classpath:db/changelog/003-create-invitation-tables.sql
   - include:
       file: classpath:db/changelog/004-drop-event-date-column-in-invitation-table.sql
+  - include:
+      file: classpath:db/changelog/005-add-description-column-to-invitation-table.sql
 

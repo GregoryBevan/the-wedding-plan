@@ -38,6 +38,7 @@ class InvitationEndpointTest {
         val response = brideFamilyInvitation.toResponse()
 
         assertThat(response.label).isEqualTo(brideFamilyInvitation.label)
+        assertThat(response.description).isEqualTo(brideFamilyInvitation.description)
         assertThat(response.guestIds).isEqualTo(brideFamilyInvitation.guestIds.map { "$it" }.sorted())
         assertThat(response.guestCount).isEqualTo(brideFamilyInvitation.guestIds.size)
     }
@@ -47,7 +48,8 @@ class InvitationEndpointTest {
         val request = mockk<ServerRequest>()
         val payload = AddInvitationRequest(
             label = brideFamilyInvitation.label,
-            guestIds = brideFamilyInvitation.guestIds.map { it.toString() }
+            guestIds = brideFamilyInvitation.guestIds.map { it.toString() },
+            description = brideFamilyInvitation.description
         )
 
         every { request.body(AddInvitationRequest::class.java) } returns payload
@@ -62,6 +64,7 @@ class InvitationEndpointTest {
         val payload = AddInvitationRequest(
             label = "No guests",
             guestIds = emptyList(),
+            description =   "An invitation with no guests"
         )
 
         every { request.body(AddInvitationRequest::class.java) } returns payload
@@ -76,6 +79,7 @@ class InvitationEndpointTest {
         val payload = AddInvitationRequest(
             label = "   ",
             guestIds = listOf(brideFamilyInvitation.guestIds.first().toString()),
+            description =   "An invitation with no guests"
         )
 
         every { request.body(AddInvitationRequest::class.java) } returns payload
@@ -89,6 +93,7 @@ class InvitationEndpointTest {
         val payload = AddInvitationRequest(
             label = "Family table",
             guestIds = listOf("not-a-uuid"),
+            description =   "An invitation with invalid guest id"
         )
 
         every { request.body(AddInvitationRequest::class.java) } returns payload
@@ -102,6 +107,7 @@ class InvitationEndpointTest {
         val payload = AddInvitationRequest(
             label = brideFamilyInvitation.label,
             guestIds = brideFamilyInvitation.guestIds.map { it.toString() },
+            description = brideFamilyInvitation.description
         )
 
         every { request.body(AddInvitationRequest::class.java) } returns payload

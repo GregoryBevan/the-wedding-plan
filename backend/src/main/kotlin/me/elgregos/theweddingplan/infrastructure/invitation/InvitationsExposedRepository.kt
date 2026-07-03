@@ -26,6 +26,7 @@ class InvitationsExposedRepository : Invitations {
             it[creationDate] = invitation.creationDate
             it[updateDate] = invitation.updateDate
             it[label] = invitation.label
+            it[description] = invitation.description
         }
 
         InvitationGuestTable.batchInsert(invitation.guestIds) { guestId ->
@@ -83,6 +84,7 @@ class InvitationsExposedRepository : Invitations {
         creationDate = this[InvitationTable.creationDate],
         updateDate = this[InvitationTable.updateDate],
         label = this[InvitationTable.label],
+        description = this[InvitationTable.description],
         guestIds = guestIds,
     )
 }

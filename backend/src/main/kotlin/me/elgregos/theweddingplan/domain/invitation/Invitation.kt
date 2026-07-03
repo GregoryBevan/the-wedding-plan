@@ -10,6 +10,7 @@ data class Invitation(
     val creationDate: LocalDateTime = Dates.nowUtcMillis(),
     val updateDate: LocalDateTime = Dates.nowUtcMillis(),
     val label: String,
+    val description: String,
     val guestIds: Set<GuestId>,
 ) {
     init {

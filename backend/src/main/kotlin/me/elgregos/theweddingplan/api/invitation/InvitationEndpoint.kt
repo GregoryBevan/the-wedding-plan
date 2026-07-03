@@ -67,6 +67,7 @@ data class InvitationResponse(
     val creationDate: String,
     val updateDate: String,
     val label: String,
+    val description: String,
     val guestIds: List<String>,
     val guestCount: Int,
 )
@@ -81,6 +82,7 @@ data class InvitationPageResponse(
 
 data class AddInvitationRequest(
     val label: String,
+    val description: String,
     val guestIds: List<String>,
 )
 
@@ -104,6 +106,7 @@ internal fun AddInvitationRequest.toCommandOrNull(): AddInvitationCommand? {
 
     return AddInvitationCommand(
         label = normalizedLabel,
+        description = description.trim(),
         guestIds = parsedGuestIds,
     )
 }
@@ -113,6 +116,7 @@ internal fun Invitation.toResponse() = InvitationResponse(
     creationDate = creationDate.toString(),
     updateDate = updateDate.toString(),
     label = label,
+    description = description,
     guestIds = guestIds.map(GuestId::toString).sorted(),
     guestCount = guestIds.size,
 )

@@ -33,6 +33,7 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
             .body(
                 AddInvitationRequest(
                     label = "Family table",
+                    description = "Main family invitation for the front row table.",
                     guestIds = listOf(firstGuest.id, secondGuest.id),
                 )
             )
@@ -44,6 +45,7 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
             ?: error("Expected created invitation in response body")
 
         assertThat(createdInvitation.label).isEqualTo("Family table")
+        assertThat(createdInvitation.description).isEqualTo("Main family invitation for the front row table.")
         assertThat(createdInvitation.guestCount).isEqualTo(2)
         assertThat(invitationCount()).isEqualTo(initialCount + 1)
     }
@@ -65,6 +67,7 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
                 AddInvitationRequest(
                     label = "Invalid invitation",
                     guestIds = listOf(activeGuest.id, archivedGuest.id),
+                    description = "Invitation with an archived guest."
                 )
             )
             .exchange()
@@ -88,6 +91,7 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
                 AddInvitationRequest(
                     label = "No guests",
                     guestIds = emptyList(),
+                    description = "No guests."
                 )
             )
             .exchange()
@@ -106,7 +110,7 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
             .header("X-XSRF-TOKEN", csrf.csrfToken)
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON)
-            .body(AddInvitationRequest(label = "List card", guestIds = listOf(guest.id)))
+            .body(AddInvitationRequest(label = "List card", guestIds = listOf(guest.id), description = "list card"))
             .exchange()
             .expectStatus().isCreated
 
@@ -133,7 +137,7 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
             .header("X-XSRF-TOKEN", csrf.csrfToken)
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON)
-            .body(AddInvitationRequest(label = "Lookup invitation", guestIds = listOf(guest.id)))
+            .body(AddInvitationRequest(label = "Lookup invitation", guestIds = listOf(guest.id), description = "lookup invitation"))
             .exchange()
             .expectStatus().isCreated
             .expectBody(InvitationResponse::class.java)
