@@ -4,6 +4,8 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import me.elgregos.theweddingplan.AbstractIntegrationTest
+import me.elgregos.theweddingplan.domain.guest.Guest
+import me.elgregos.theweddingplan.domain.guest.GuestId
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.emmaWilson
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.liamMiller
 import me.elgregos.theweddingplan.domain.guest.Guests
@@ -14,7 +16,6 @@ import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.friendsIn
 import me.elgregos.theweddingplan.domain.invitation.InvitationId
 import me.elgregos.theweddingplan.domain.invitation.InvitationListCriteria
 import me.elgregos.theweddingplan.domain.invitation.Invitations
-import me.elgregos.theweddingplan.shared.getUuidSet
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 import kotlin.test.Test
@@ -40,11 +41,8 @@ class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
         invitationsRepository.add(friendsInvitation)
 
         assertThat(invitationCount()).isEqualTo(initialCount + 1)
-        val persisted = invitationById(friendsInvitation.id)
-
-        assertThat(persisted).isEqualTo(friendsInvitation)
+        assertThat(invitationById(friendsInvitation.id)).isEqualTo(friendsInvitation)
     }
-
     @Test
     fun `should find invitation by id`() {
         val found = invitationsRepository.findById(bridesMaidInvitation.id)
@@ -78,19 +76,68 @@ class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
         assertThat(secondPage.totalPages).isEqualTo(itemCount)
     }
 
+    @Test
+    fun `should return empty items when page has no invitations`() {
+        val itemCount = invitationCount()
+
+        val outOfRangePage = invitationsRepository.list(InvitationListCriteria(page = itemCount, size = 1))
+
+        assertThat(outOfRangePage.items).isEqualTo(emptyList())
+        assertThat(outOfRangePage.page).isEqualTo(itemCount)
+        assertThat(outOfRangePage.size).isEqualTo(1)
+        assertThat(outOfRangePage.totalItems).isEqualTo(itemCount.toLong())
+        assertThat(outOfRangePage.totalPages).isEqualTo(itemCount)
+    }
+
     private fun invitationCount() =
         jdbcTemplate.queryForObject("select count(*) from invitation", Int::class.java) ?: 0
 
     private fun invitationById(invitationId: InvitationId): Invitation =
         jdbcTemplate.queryForObject(
             """
-            select i.id, i.version, i.creation_date, i.update_date, i.label, i.description, array_agg(ig.guest_id) as guests
+            select i.id,
+                   i.version,
+                   i.creation_date,
+                   i.update_date,
+                   i.label,
+                   i.description,
+                   array_agg(g.id order by g.id) as guest_ids,
+                   array_agg(g.version order by g.id) as guest_versions,
+                   array_agg(g.creation_date order by g.id) as guest_creation_dates,
+                   array_agg(g.update_date order by g.id) as guest_update_dates,
+                   array_agg(g.deletion_date order by g.id) as guest_deletion_dates,
+                   array_agg(g.first_name order by g.id) as guest_first_names,
+                   array_agg(g.last_name order by g.id) as guest_last_names,
+                   array_agg(g.email order by g.id) as guest_emails
             from invitation i
             inner join invitation_guest ig on ig.invitation_id = i.id
+            inner join guest g on g.id = ig.guest_id
             where i.id = ?
-            group by i.id
+            group by i.id, i.version, i.creation_date, i.update_date, i.label, i.description
         """.trimIndent(),
-            { rs, _ ->                          // ← RowMapper lambda, not Class<T>
+            { rs, _ ->
+                val guestIds = (rs.getArray("guest_ids").array as Array<*>).map { GuestId.fromString(it.toString()) }
+                val guestVersions = (rs.getArray("guest_versions").array as Array<*>).map { (it as Number).toLong() }
+                val guestCreationDates = (rs.getArray("guest_creation_dates").array as Array<*>).map { (it as java.sql.Timestamp).toLocalDateTime() }
+                val guestUpdateDates = (rs.getArray("guest_update_dates").array as Array<*>).map { (it as java.sql.Timestamp).toLocalDateTime() }
+                val guestDeletionDates = (rs.getArray("guest_deletion_dates").array as Array<*>).map { (it as java.sql.Timestamp?)?.toLocalDateTime() }
+                val guestFirstNames = (rs.getArray("guest_first_names").array as Array<*>).map { it.toString() }
+                val guestLastNames = (rs.getArray("guest_last_names").array as Array<*>).map { it.toString() }
+                val guestEmails = (rs.getArray("guest_emails").array as Array<*>).map { it.toString() }
+
+                val guests = guestIds.indices.map { index ->
+                    Guest(
+                        id = guestIds[index],
+                        version = guestVersions[index],
+                        creationDate = guestCreationDates[index],
+                        updateDate = guestUpdateDates[index],
+                        deletionDate = guestDeletionDates[index],
+                        firstName = guestFirstNames[index],
+                        lastName = guestLastNames[index],
+                        email = guestEmails[index],
+                    )
+                }.toSet()
+
                 Invitation(
                     id = InvitationId.fromString(rs.getString("id")),
                     version = rs.getLong("version"),
@@ -98,9 +145,10 @@ class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
                     updateDate = rs.getTimestamp("update_date").toLocalDateTime(),
                     label = rs.getString("label"),
                     description = rs.getString("description"),
-                    guestIds = rs.getUuidSet("guests")
+                    guests = guests,
                 )
             },
             invitationId.value.toJavaUuid())
+
 }
 

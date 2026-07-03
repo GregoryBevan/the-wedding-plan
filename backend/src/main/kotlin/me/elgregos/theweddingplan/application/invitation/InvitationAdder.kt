@@ -1,6 +1,6 @@
 package me.elgregos.theweddingplan.application.invitation
 
-import me.elgregos.theweddingplan.domain.guest.GuestId
+import me.elgregos.theweddingplan.domain.guest.Guest
 import me.elgregos.theweddingplan.domain.guest.Guests
 import me.elgregos.theweddingplan.domain.invitation.Invitations
 import org.springframework.stereotype.Service
@@ -12,17 +12,19 @@ class InvitationAdder(
 ) {
 
     fun add(command: AddInvitationCommand): AddInvitationResult =
-        with(command.guestIds) {
-            if (isEmpty()) AddInvitationResult.MissingGuests
-            else filterNot(::isActiveGuest).toSet().let { invalidGuests ->
-                    if (invalidGuests.isNotEmpty()) {
-                        AddInvitationResult.InvalidGuests(invalidGuests)
-                    } else {
-                        AddInvitationResult.Added(invitations.add(command.toInvitation()))
-                    }
-                }
-        }
+        command.guestIds
+            .takeIf { it.isNotEmpty() }
+            ?.let(guests::findByIds)
+            ?.let { activeGuests ->
+                invalidGuestIds(command, activeGuests)
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { AddInvitationResult.InvalidGuests(it) }
+                    ?: AddInvitationResult.Added(invitations.add(command.toInvitation(activeGuests)))
+            }
+            ?: AddInvitationResult.MissingGuests
 
-    private fun isActiveGuest(id: GuestId) = guests.findById(id) != null
+    private fun invalidGuestIds(command: AddInvitationCommand, activeGuests: Set<Guest>) =
+        command.guestIds - activeGuests.map { it.id }.toSet()
+
 }
 

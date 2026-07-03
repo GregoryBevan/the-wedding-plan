@@ -68,8 +68,15 @@ data class InvitationResponse(
     val updateDate: String,
     val label: String,
     val description: String,
-    val guestIds: List<String>,
+    val guests: List<InvitationGuestResponse>,
     val guestCount: Int,
+)
+
+data class InvitationGuestResponse(
+    val id: String,
+    val firstName: String,
+    val lastName: String,
+    val email: String,
 )
 
 data class InvitationPageResponse(
@@ -117,8 +124,17 @@ internal fun Invitation.toResponse() = InvitationResponse(
     updateDate = updateDate.toString(),
     label = label,
     description = description,
-    guestIds = guestIds.map(GuestId::toString).sorted(),
-    guestCount = guestIds.size,
+    guests = guests
+        .sortedBy { it.id.toString() }
+        .map {
+            InvitationGuestResponse(
+                id = it.id.toString(),
+                firstName = it.firstName,
+                lastName = it.lastName,
+                email = it.email,
+            )
+        },
+    guestCount = guests.size,
 )
 
 internal fun InvitationPage.toResponse() = InvitationPageResponse(

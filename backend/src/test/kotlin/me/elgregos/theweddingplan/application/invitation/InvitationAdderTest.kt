@@ -31,7 +31,7 @@ class InvitationAdderTest {
 
     @Test
     fun `should add invitation when all guests are active`() {
-        every { guests.findById(johnDoe.id) } returns johnDoe
+        every { guests.findByIds(brideFamily.guestIds) } returns setOf(johnDoe)
         every { invitations.add(any()) } returns brideFamilyInvitation
 
         assertThat(invitationAdder.add(brideFamily)).isEqualTo(AddInvitationResult.Added(brideFamilyInvitation))
@@ -39,14 +39,14 @@ class InvitationAdderTest {
 
     @Test
     fun `should reject invitation when at least one guest is archived or missing`() {
-        every { guests.findById(johnDoe.id) } returns null
+        every { guests.findByIds(brideFamily.guestIds) } returns emptySet()
 
         assertThat(invitationAdder.add(brideFamily)).isEqualTo(AddInvitationResult.InvalidGuests(brideFamily.guestIds))
     }
 
     @Test
     fun `should reject invitation when at least one guest is missing`() {
-        missingGuests.guestIds.forEach { missingGuestId -> every { guests.findById(missingGuestId) } returns null }
+        every { guests.findByIds(missingGuests.guestIds) } returns emptySet()
 
         assertThat(invitationAdder.add(missingGuests)).isEqualTo(AddInvitationResult.InvalidGuests(missingGuests.guestIds))
     }

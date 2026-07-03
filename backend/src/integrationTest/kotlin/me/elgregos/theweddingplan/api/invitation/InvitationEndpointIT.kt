@@ -5,12 +5,14 @@ import assertk.assertions.isEqualTo
 import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
 import me.elgregos.theweddingplan.api.guest.AddGuestRequest
 import me.elgregos.theweddingplan.api.guest.GuestResponse
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
+import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.bridesMaidInvitation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.jdbc.core.JdbcTemplate
-import java.util.UUID
+import java.util.*
 import kotlin.test.Test
 
 class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
@@ -47,6 +49,7 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
         assertThat(createdInvitation.label).isEqualTo("Family table")
         assertThat(createdInvitation.description).isEqualTo("Main family invitation for the front row table.")
         assertThat(createdInvitation.guestCount).isEqualTo(2)
+        assertThat(createdInvitation.guests.map { it.id }.toSet()).isEqualTo(setOf(firstGuest.id, secondGuest.id))
         assertThat(invitationCount()).isEqualTo(initialCount + 1)
     }
 
@@ -103,16 +106,6 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
     @Test
     fun `should list invitations with pagination`() {
         val csrf = authenticatedCsrfContext("gregory@example.com")
-        val guest = createGuest(csrf, "List")
-
-        restTestClient.post().uri("/api/invitations")
-            .header(HttpHeaders.COOKIE, csrf.cookies)
-            .header("X-XSRF-TOKEN", csrf.csrfToken)
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(AddInvitationRequest(label = "List card", guestIds = listOf(guest.id), description = "list card"))
-            .exchange()
-            .expectStatus().isCreated
 
         restTestClient.get().uri("/api/invitations?page=0&size=10")
             .header(HttpHeaders.COOKIE, csrf.cookies)
@@ -123,6 +116,8 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
             .jsonPath("$.items.length()").value<Int> { assertThat(it > 0).isEqualTo(true) }
             .jsonPath("$.items[0].id").exists()
             .jsonPath("$.items[0].guestCount").exists()
+            .jsonPath("$.items[0].guests.length()").isEqualTo(1)
+            .jsonPath("$.items[0].guests[0].id").isEqualTo("${janeDoe.id}")
             .jsonPath("$.page").isEqualTo(0)
             .jsonPath("$.size").isEqualTo(10)
     }
@@ -130,30 +125,18 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
     @Test
     fun `should get invitation by id`() {
         val csrf = authenticatedCsrfContext("gregory@example.com")
-        val guest = createGuest(csrf, "Lookup")
 
-        val createdInvitation = restTestClient.post().uri("/api/invitations")
-            .header(HttpHeaders.COOKIE, csrf.cookies)
-            .header("X-XSRF-TOKEN", csrf.csrfToken)
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(AddInvitationRequest(label = "Lookup invitation", guestIds = listOf(guest.id), description = "lookup invitation"))
-            .exchange()
-            .expectStatus().isCreated
-            .expectBody(InvitationResponse::class.java)
-            .returnResult()
-            .responseBody
-            ?: error("Expected created invitation in response body")
-
-        restTestClient.get().uri("/api/invitations/${createdInvitation.id}")
+        restTestClient.get().uri("/api/invitations/${bridesMaidInvitation.id}")
             .header(HttpHeaders.COOKIE, csrf.cookies)
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus().isOk
             .expectBody()
-            .jsonPath("$.id").isEqualTo(createdInvitation.id)
-            .jsonPath("$.label").isEqualTo("Lookup invitation")
+            .jsonPath("$.id").isEqualTo("${bridesMaidInvitation.id}")
+            .jsonPath("$.label").isEqualTo("Bridesmaid")
             .jsonPath("$.guestCount").isEqualTo(1)
+            .jsonPath("$.guests.length()").isEqualTo(1)
+            .jsonPath("$.guests[0].id").isEqualTo("${janeDoe.id}")
     }
 
     @Test

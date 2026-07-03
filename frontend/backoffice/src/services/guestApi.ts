@@ -1,3 +1,5 @@
+import { getApiBaseUrl, readCookie } from './http';
+
 export interface AddGuestPayload {
   firstName: string;
   lastName: string;
@@ -28,44 +30,18 @@ export interface GuestPageResponse {
 
 export type GuestStatus = 'active' | 'archived' | 'all';
 
-const readCookie = (name: string): string | undefined => {
-  if (typeof document === 'undefined') {
-    return undefined;
-  }
-
-  const token = document.cookie
-    .split(';')
-    .map((cookie) => cookie.trim())
-    .find((cookie) => cookie.startsWith(`${name}=`));
-
-  return token ? decodeURIComponent(token.substring(name.length + 1)) : undefined;
-};
-
-const getApiBaseUrl = (): string => {
-  const envBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
-
-  if (envBaseUrl) {
-    return envBaseUrl + '/api';
-  }
-
-  if (typeof window !== 'undefined' && window.location.origin) {
-    return window.location.origin + '/api';
-  }
-
-  throw new Error('Missing API base URL configuration.');
-};
+const guestApiBaseUrl = getApiBaseUrl({ includeApiPath: true });
 
 export const listGuests = async (
   { page = 0, size = 20, status = 'active' }: { page?: number; size?: number; status?: GuestStatus } = {}
 ): Promise<GuestPageResponse> => {
-  const apiBaseUrl = getApiBaseUrl();
   const queryParams = new URLSearchParams({
     page: String(page),
     size: String(size),
     status
   });
 
-  const response = await fetch(`${apiBaseUrl}/guests?${queryParams}`, {
+  const response = await fetch(`${guestApiBaseUrl}/guests?${queryParams}`, {
     method: 'GET',
     credentials: 'include'
   });
@@ -78,7 +54,6 @@ export const listGuests = async (
 };
 
 export const addGuest = async (payload: AddGuestPayload): Promise<GuestResponse> => {
-  const apiBaseUrl = getApiBaseUrl();
   const csrfToken = readCookie('XSRF-TOKEN');
 
   const headers = new Headers({
@@ -89,7 +64,7 @@ export const addGuest = async (payload: AddGuestPayload): Promise<GuestResponse>
     headers.set('X-XSRF-TOKEN', csrfToken);
   }
 
-  const response = await fetch(`${apiBaseUrl}/guests`, {
+  const response = await fetch(`${guestApiBaseUrl}/guests`, {
     method: 'POST',
     credentials: 'include',
     headers,
@@ -104,8 +79,7 @@ export const addGuest = async (payload: AddGuestPayload): Promise<GuestResponse>
 };
 
 export const getGuestById = async (id: string): Promise<GuestResponse> => {
-  const apiBaseUrl = getApiBaseUrl();
-  const response = await fetch(`${apiBaseUrl}/guests/${id}`, {
+  const response = await fetch(`${guestApiBaseUrl}/guests/${id}`, {
     method: 'GET',
     credentials: 'include'
   });
@@ -122,7 +96,6 @@ export const getGuestById = async (id: string): Promise<GuestResponse> => {
 };
 
 export const updateGuest = async (id: string, payload: EditGuestPayload): Promise<GuestResponse> => {
-  const apiBaseUrl = getApiBaseUrl();
   const csrfToken = readCookie('XSRF-TOKEN');
 
   const headers = new Headers({
@@ -133,7 +106,7 @@ export const updateGuest = async (id: string, payload: EditGuestPayload): Promis
     headers.set('X-XSRF-TOKEN', csrfToken);
   }
 
-  const response = await fetch(`${apiBaseUrl}/guests/${id}`, {
+  const response = await fetch(`${guestApiBaseUrl}/guests/${id}`, {
     method: 'PUT',
     credentials: 'include',
     headers,
@@ -156,7 +129,6 @@ export const updateGuest = async (id: string, payload: EditGuestPayload): Promis
 };
 
 export const archiveGuest = async (id: string): Promise<GuestResponse> => {
-  const apiBaseUrl = getApiBaseUrl();
   const csrfToken = readCookie('XSRF-TOKEN');
 
   const headers = new Headers();
@@ -164,7 +136,7 @@ export const archiveGuest = async (id: string): Promise<GuestResponse> => {
     headers.set('X-XSRF-TOKEN', csrfToken);
   }
 
-  const response = await fetch(`${apiBaseUrl}/guests/${id}`, {
+  const response = await fetch(`${guestApiBaseUrl}/guests/${id}`, {
     method: 'DELETE',
     credentials: 'include',
     headers
@@ -182,7 +154,6 @@ export const archiveGuest = async (id: string): Promise<GuestResponse> => {
 };
 
 export const restoreGuest = async (id: string): Promise<GuestResponse> => {
-  const apiBaseUrl = getApiBaseUrl();
   const csrfToken = readCookie('XSRF-TOKEN');
 
   const headers = new Headers();
@@ -190,7 +161,7 @@ export const restoreGuest = async (id: string): Promise<GuestResponse> => {
     headers.set('X-XSRF-TOKEN', csrfToken);
   }
 
-  const response = await fetch(`${apiBaseUrl}/guests/${id}/restoration`, {
+  const response = await fetch(`${guestApiBaseUrl}/guests/${id}/restoration`, {
     method: 'POST',
     credentials: 'include',
     headers

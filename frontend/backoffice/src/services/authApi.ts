@@ -1,29 +1,4 @@
-const getApiBaseUrl = (): string => {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
-
-  if (apiBaseUrl) {
-    return apiBaseUrl;
-  }
-
-  if (typeof window !== 'undefined' && window.location.origin) {
-    return window.location.origin;
-  }
-
-  throw new Error('Missing API base URL configuration.');
-};
-
-const readCookie = (name: string): string | undefined => {
-  if (typeof document === 'undefined') {
-    return undefined;
-  }
-
-  const token = document.cookie
-    .split(';')
-    .map((cookie) => cookie.trim())
-    .find((cookie) => cookie.startsWith(`${name}=`));
-
-  return token ? decodeURIComponent(token.substring(name.length + 1)) : undefined;
-};
+import { getApiBaseUrl, readCookie } from './http';
 
 export interface AuthStatus {
   isAuthenticated: boolean;

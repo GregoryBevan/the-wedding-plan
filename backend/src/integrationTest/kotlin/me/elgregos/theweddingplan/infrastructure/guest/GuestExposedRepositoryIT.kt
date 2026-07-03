@@ -30,7 +30,7 @@ import kotlin.uuid.toJavaUuid
 class GuestExposedRepositoryIT : AbstractIntegrationTest() {
 
     @Autowired
-    private lateinit var guestsRepository: GuestsExposedRepository
+    private lateinit var guestsRepository: GuestExposedRepository
 
     @Autowired
     private lateinit var jdbcTemplate: JdbcTemplate
@@ -134,6 +134,13 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
         val guest = guestsRepository.findById(johnDoe.id)
 
         assertThat(guest).isEqualTo(johnDoe)
+    }
+
+    @Test
+    fun `should return empty set when find by ids receives empty input`() {
+        val guests = guestsRepository.findByIds(emptySet())
+
+        assertThat(guests).isEqualTo(emptySet())
     }
 
     @Test
