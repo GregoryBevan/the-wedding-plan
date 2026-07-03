@@ -1,7 +1,14 @@
 package me.elgregos.theweddingplan.infrastructure.invitation
 
+import me.elgregos.theweddingplan.domain.guest.Guest
 import me.elgregos.theweddingplan.domain.guest.GuestId
-import me.elgregos.theweddingplan.domain.invitation.*
+import me.elgregos.theweddingplan.domain.invitation.Invitation
+import me.elgregos.theweddingplan.domain.invitation.InvitationId
+import me.elgregos.theweddingplan.domain.invitation.InvitationListCriteria
+import me.elgregos.theweddingplan.domain.invitation.InvitationPage
+import me.elgregos.theweddingplan.domain.invitation.Invitations
+import me.elgregos.theweddingplan.infrastructure.guest.GuestTable
+import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
@@ -11,6 +18,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
+import kotlin.uuid.Uuid
 
 @Repository
 class InvitationsExposedRepository : Invitations {
@@ -29,9 +37,9 @@ class InvitationsExposedRepository : Invitations {
             it[description] = invitation.description
         }
 
-        InvitationGuestTable.batchInsert(invitation.guestIds) { guestId ->
+        InvitationGuestTable.batchInsert(invitation.guests) { guest ->
             this[InvitationGuestTable.invitationId] = invitation.id.value
-            this[InvitationGuestTable.guestId] = guestId.value
+            this[InvitationGuestTable.guestId] = guest.id.value
         }
 
         return invitation
@@ -42,7 +50,7 @@ class InvitationsExposedRepository : Invitations {
         InvitationTable.selectAll()
             .where { InvitationTable.id eq id.value }
             .firstOrNull()
-            ?.toInvitation(fetchGuestIds(setOf(id.value))[id.value].orEmpty())
+            ?.toInvitation(fetchGuestsByInvitationIds(setOf(id.value))[id.value].orEmpty())
 
     @Transactional(readOnly = true)
     override fun list(criteria: InvitationListCriteria): InvitationPage {
@@ -57,10 +65,10 @@ class InvitationsExposedRepository : Invitations {
             .toList()
 
         val invitationIds = rows.map { it[InvitationTable.id] }.toSet()
-        val guestIdsByInvitation = fetchGuestIds(invitationIds)
+        val guestsByInvitation = fetchGuestsByInvitationIds(invitationIds)
 
         return InvitationPage(
-            items = rows.map { row -> row.toInvitation(guestIdsByInvitation[row[InvitationTable.id]].orEmpty()) },
+            items = rows.map { row -> row.toInvitation(guestsByInvitation[row[InvitationTable.id]].orEmpty()) },
             page = criteria.page,
             size = criteria.size,
             totalItems = totalItems,
@@ -68,24 +76,37 @@ class InvitationsExposedRepository : Invitations {
         )
     }
 
-    private fun fetchGuestIds(invitationIds: Set<kotlin.uuid.Uuid>) =
+    private fun fetchGuestsByInvitationIds(invitationIds: Set<Uuid>) =
         if (invitationIds.isEmpty()) {
             emptyMap()
         } else {
-            InvitationGuestTable.selectAll()
+            InvitationGuestTable
+                .join(GuestTable, JoinType.INNER, InvitationGuestTable.guestId, GuestTable.id)
+                .selectAll()
                 .where { InvitationGuestTable.invitationId inList invitationIds }
-                .groupBy({ it[InvitationGuestTable.invitationId] }) { GuestId(it[InvitationGuestTable.guestId]) }
-                .mapValues { (_, guestIds) -> guestIds.toSet() }
+                .groupBy({ it[InvitationGuestTable.invitationId] }) { row ->
+                    Guest(
+                        id = GuestId(row[GuestTable.id]),
+                        version = row[GuestTable.version],
+                        creationDate = row[GuestTable.creationDate],
+                        updateDate = row[GuestTable.updateDate],
+                        deletionDate = row[GuestTable.deletionDate],
+                        firstName = row[GuestTable.firstName],
+                        lastName = row[GuestTable.lastName],
+                        email = row[GuestTable.email],
+                    )
+                }
+                .mapValues { (_, guests) -> guests.toSet() }
         }
 
-    private fun ResultRow.toInvitation(guestIds: Set<GuestId>) = Invitation(
+    private fun ResultRow.toInvitation(guests: Set<Guest>) = Invitation(
         id = InvitationId(this[InvitationTable.id]),
         version = this[InvitationTable.version],
         creationDate = this[InvitationTable.creationDate],
         updateDate = this[InvitationTable.updateDate],
         label = this[InvitationTable.label],
         description = this[InvitationTable.description],
-        guestIds = guestIds,
+        guests = guests,
     )
 }
 

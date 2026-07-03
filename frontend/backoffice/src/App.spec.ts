@@ -23,7 +23,8 @@ vi.mock('./services/guestApi', () => guestApiMock);
 
 const globalStubs = {
   GuestForm: true,
-  GuestList: true
+  GuestList: true,
+  InvitationsListView: true
 };
 
 const guestFormSubmitStub = defineComponent({
@@ -106,7 +107,8 @@ describe('App auth states', () => {
 
     expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.invitationList);
     expect(router.currentRoute.value.path).toBe('/invitations');
-    expect(wrapper.text()).toContain('Invitations');
+    expect(wrapper.findComponent({ name: 'InvitationsListView' }).exists()).toBe(true);
+    expect(wrapper.findComponent({ name: 'GuestList' }).exists()).toBe(false);
 
     await wrapper.get('[data-test="user-menu-toggle"]').trigger('click');
 

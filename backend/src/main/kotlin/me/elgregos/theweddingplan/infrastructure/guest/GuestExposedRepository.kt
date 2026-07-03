@@ -10,6 +10,7 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.jdbc.Query
@@ -20,7 +21,7 @@ import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 
 @Repository
-class GuestsExposedRepository : Guests {
+class GuestExposedRepository : Guests {
 
     private val listOrder = arrayOf(GuestTable.id to SortOrder.ASC)
 
@@ -55,6 +56,17 @@ class GuestsExposedRepository : Guests {
             .where { (GuestTable.id eq id.value) and GuestTable.deletionDate.isNull() }
             .firstOrNull()
             ?.toGuest()
+
+    @Transactional(readOnly = true)
+    override fun findByIds(ids: Set<GuestId>): Set<Guest> =
+        if (ids.isEmpty()) {
+            emptySet()
+        } else {
+            GuestTable.selectAll()
+                .where { (GuestTable.id inList ids.map(GuestId::value)) and GuestTable.deletionDate.isNull() }
+                .map { it.toGuest() }
+                .toSet()
+        }
 
     @Transactional(readOnly = true)
     override fun findArchivedById(id: GuestId): Guest? =

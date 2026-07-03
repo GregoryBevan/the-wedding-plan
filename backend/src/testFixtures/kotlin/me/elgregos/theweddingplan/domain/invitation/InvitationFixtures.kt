@@ -17,7 +17,7 @@ object InvitationFixtures {
         updateDate = creationDate,
         label = "Bridesmaid",
         description = "Bridesmaid invitation",
-        guestIds = setOf(janeDoe.id),
+        guests = setOf(janeDoe),
     )
 
     val bestManInvitation = Invitation(
@@ -26,7 +26,7 @@ object InvitationFixtures {
         updateDate = creationDate,
         label = "Bestman",
         description = "Best man invitation",
-        guestIds = setOf(mickaelKael.id),
+        guests = setOf(mickaelKael),
     )
 
     val brideFamilyInvitation = Invitation(
@@ -35,7 +35,7 @@ object InvitationFixtures {
         updateDate = creationDate,
         label = "Bride Family",
         description = "Bride family invitation",
-        guestIds = setOf(johnDoe.id),
+        guests = setOf(johnDoe),
     )
 
     val friendsInvitation = Invitation(
@@ -44,6 +44,6 @@ object InvitationFixtures {
         updateDate = creationDate,
         label = "Friends",
         description = "Friends brunch invitation",
-        guestIds = setOf(emmaWilson.id, liamMiller.id),
+        guests = setOf(emmaWilson, liamMiller),
     )
 }

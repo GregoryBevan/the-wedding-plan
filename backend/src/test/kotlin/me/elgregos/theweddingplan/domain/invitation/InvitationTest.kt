@@ -12,13 +12,13 @@ import kotlin.test.Test
 class InvitationTest {
 
     @Test
-    fun `should create invitation with guest ids`() {
-        assertThat(bridesMaidInvitation.guestIds).isEqualTo(setOf(janeDoe.id))
+    fun `should create invitation with guests`() {
+        assertThat(bridesMaidInvitation.guests).isEqualTo(setOf(janeDoe))
     }
 
     @Test
     fun `should require at least one guest`() {
-        assertFailure { Invitation(label = "Empty invitation", guestIds = emptySet(), description = "Empty invitation") }
+        assertFailure { Invitation(label = "Empty invitation", guests = emptySet(), description = "Empty invitation") }
             .isInstanceOf(IllegalArgumentException::class)
             .messageContains("at least one guest")
     }

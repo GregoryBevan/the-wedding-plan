@@ -1,6 +1,6 @@
 package me.elgregos.theweddingplan.domain.invitation
 
-import me.elgregos.theweddingplan.domain.guest.GuestId
+import me.elgregos.theweddingplan.domain.guest.Guest
 import me.elgregos.theweddingplan.domain.shared.Dates
 import java.time.LocalDateTime
 
@@ -11,10 +11,10 @@ data class Invitation(
     val updateDate: LocalDateTime = Dates.nowUtcMillis(),
     val label: String,
     val description: String,
-    val guestIds: Set<GuestId>,
+    val guests: Set<Guest>,
 ) {
     init {
-        require(guestIds.isNotEmpty()) { "An invitation must include at least one guest." }
+        require(guests.isNotEmpty()) { "An invitation must include at least one guest." }
     }
 }
 

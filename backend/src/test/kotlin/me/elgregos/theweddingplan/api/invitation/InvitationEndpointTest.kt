@@ -39,8 +39,8 @@ class InvitationEndpointTest {
 
         assertThat(response.label).isEqualTo(brideFamilyInvitation.label)
         assertThat(response.description).isEqualTo(brideFamilyInvitation.description)
-        assertThat(response.guestIds).isEqualTo(brideFamilyInvitation.guestIds.map { "$it" }.sorted())
-        assertThat(response.guestCount).isEqualTo(brideFamilyInvitation.guestIds.size)
+        assertThat(response.guests.map{it.id}).isEqualTo(brideFamilyInvitation.guests.map { "${it.id}" })
+        assertThat(response.guestCount).isEqualTo(brideFamilyInvitation.guests.size)
     }
 
     @Test
@@ -48,7 +48,7 @@ class InvitationEndpointTest {
         val request = mockk<ServerRequest>()
         val payload = AddInvitationRequest(
             label = brideFamilyInvitation.label,
-            guestIds = brideFamilyInvitation.guestIds.map { it.toString() },
+            guestIds = brideFamilyInvitation.guests.map { it.id.toString() },
             description = brideFamilyInvitation.description
         )
 
@@ -78,7 +78,7 @@ class InvitationEndpointTest {
         val request = mockk<ServerRequest>()
         val payload = AddInvitationRequest(
             label = "   ",
-            guestIds = listOf(brideFamilyInvitation.guestIds.first().toString()),
+            guestIds = listOf(brideFamilyInvitation.guests.first().id.toString()),
             description =   "An invitation with no guests"
         )
 
@@ -106,13 +106,13 @@ class InvitationEndpointTest {
         val request = mockk<ServerRequest>()
         val payload = AddInvitationRequest(
             label = brideFamilyInvitation.label,
-            guestIds = brideFamilyInvitation.guestIds.map { it.toString() },
+            guestIds = brideFamilyInvitation.guests.map { it.id.toString() },
             description = brideFamilyInvitation.description
         )
 
         every { request.body(AddInvitationRequest::class.java) } returns payload
         every { invitationAdder.add(payload.toCommandOrNull()!!) } returns AddInvitationResult.InvalidGuests(
-            brideFamilyInvitation.guestIds,
+            brideFamilyInvitation.guests.map { it.id }.toSet(),
         )
 
         assertThat(invitationEndpoint.addInvitation(request).statusCode()).isEqualTo(HttpStatus.BAD_REQUEST)
