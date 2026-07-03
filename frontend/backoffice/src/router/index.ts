@@ -6,7 +6,15 @@ import { BACKOFFICE_ROUTE_NAMES } from './routeNames';
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: { name: BACKOFFICE_ROUTE_NAMES.guestList }
+    redirect: { name: BACKOFFICE_ROUTE_NAMES.invitationList }
+  },
+  {
+    path: '/invitations',
+    name: BACKOFFICE_ROUTE_NAMES.invitationList,
+    component: () => import('../views/InvitationsListView.vue'),
+    meta: {
+      requiresAuthorized: true
+    }
   },
   {
     path: '/guests',

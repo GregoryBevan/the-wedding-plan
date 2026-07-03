@@ -95,7 +95,7 @@ describe('App auth states', () => {
     expect(wrapper.text()).toContain('Logout');
   });
 
-  it('redirects root route to guest list for authorized users', async () => {
+  it('redirects root route to invitations list for authorized users', async () => {
     authApiMock.getAuthStatus.mockResolvedValue({
       isAuthenticated: true,
       email: 'allowed@example.com',
@@ -104,8 +104,9 @@ describe('App auth states', () => {
 
     const { wrapper, router } = await mountApp({ route: '/' });
 
-    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.guestList);
-    expect(wrapper.findComponent({ name: 'GuestList' }).exists()).toBe(true);
+    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.invitationList);
+    expect(router.currentRoute.value.path).toBe('/invitations');
+    expect(wrapper.text()).toContain('Invitations');
 
     await wrapper.get('[data-test="user-menu-toggle"]').trigger('click');
 

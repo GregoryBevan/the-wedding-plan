@@ -18,7 +18,7 @@ class InvitationTest {
 
     @Test
     fun `should require at least one guest`() {
-        assertFailure {     Invitation(label = "Empty invitation", guestIds = emptySet()) }
+        assertFailure { Invitation(label = "Empty invitation", guestIds = emptySet(), description = "Empty invitation") }
             .isInstanceOf(IllegalArgumentException::class)
             .messageContains("at least one guest")
     }

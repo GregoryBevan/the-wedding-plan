@@ -9,6 +9,7 @@ object InvitationTable : Table("invitation") {
     val creationDate = datetime("creation_date")
     val updateDate = datetime("update_date")
     val label = text("label")
+    val description = text("description")
     override val primaryKey = PrimaryKey(id)
 }
 

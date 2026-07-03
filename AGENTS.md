@@ -8,6 +8,7 @@ This is a fullstack project.
   starting with guest management. Note: This goal is evolving as we work iteratively.
 - **Workflow**: After any code modification, ensure you stage the affected files using `git add`. When starting to work on a new issue you should update the main branch and create a new branch for your work. You should never commit or push work.
 - **Branch naming convention**: Use the format `feat/#<issue-number><short-description>` for new features and `fix/#<issue-number><short-description>` for bug fixes.
+- **Versioning rule**: For every issue (frontend, backend, or fullstack), bump and keep aligned both application versions before staging changes: `frontend/package.json` and `backend/build.gradle.kts`.
 
 
 ## Backend

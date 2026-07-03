@@ -16,6 +16,7 @@ object InvitationFixtures {
         creationDate = creationDate,
         updateDate = creationDate,
         label = "Bridesmaid",
+        description = "Bridesmaid invitation",
         guestIds = setOf(janeDoe.id),
     )
 
@@ -24,6 +25,7 @@ object InvitationFixtures {
         creationDate = creationDate,
         updateDate = creationDate,
         label = "Bestman",
+        description = "Best man invitation",
         guestIds = setOf(mickaelKael.id),
     )
 
@@ -32,6 +34,7 @@ object InvitationFixtures {
         creationDate = creationDate,
         updateDate = creationDate,
         label = "Bride Family",
+        description = "Bride family invitation",
         guestIds = setOf(johnDoe.id),
     )
 
@@ -40,6 +43,7 @@ object InvitationFixtures {
         creationDate = creationDate,
         updateDate = creationDate,
         label = "Friends",
+        description = "Friends brunch invitation",
         guestIds = setOf(emmaWilson.id, liamMiller.id),
     )
 }
