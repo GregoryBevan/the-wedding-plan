@@ -132,7 +132,7 @@ class GuestExposedRepository : Guests {
             statusCondition != null && searchCondition != null -> statusCondition and searchCondition
             statusCondition != null -> statusCondition
             else -> searchCondition
-        }?.let{ where{ it } } ?: this
+        }?.let { where { it } } ?: this
     }
 
     private fun buildStatusCondition(status: GuestStatus): Op<Boolean>? =
