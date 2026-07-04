@@ -8,11 +8,14 @@ import me.elgregos.theweddingplan.domain.guest.GuestPage
 import me.elgregos.theweddingplan.domain.guest.Guests
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -88,7 +91,7 @@ class GuestExposedRepository : Guests {
 
     @Transactional(readOnly = true)
     override fun list(criteria: GuestListCriteria): GuestPage {
-        val totalItems = GuestTable.selectAll().applyStatusFilter(criteria.status).count()
+        val totalItems = GuestTable.selectAll().applyFilters(criteria).count()
         val totalPages = if (totalItems == 0L) 0 else ((totalItems - 1) / criteria.size + 1).toInt()
         val offset = criteria.page.toLong() * criteria.size
 
@@ -116,16 +119,35 @@ class GuestExposedRepository : Guests {
         criteria: GuestListCriteria,
         offset: Long
     ): List<Guest> = GuestTable.selectAll()
-        .applyStatusFilter(criteria.status)
+        .applyFilters(criteria)
         .orderBy(*listOrder)
         .limit(criteria.size)
         .offset(offset)
         .map { it.toGuest() }
 
-    private fun Query.applyStatusFilter(status: GuestStatus) =
+    private fun Query.applyFilters(criteria: GuestListCriteria): Query {
+        val statusCondition = buildStatusCondition(criteria.status)
+        val searchCondition = buildSearchCondition(criteria.search)
+        return when {
+            statusCondition != null && searchCondition != null -> statusCondition and searchCondition
+            statusCondition != null -> statusCondition
+            else -> searchCondition
+        }?.let{ where{ it } } ?: this
+    }
+
+    private fun buildStatusCondition(status: GuestStatus): Op<Boolean>? =
         when (status) {
-            GuestStatus.ACTIVE -> where { GuestTable.deletionDate.isNull() }
-            GuestStatus.ARCHIVED -> where { GuestTable.deletionDate.isNotNull() }
-            GuestStatus.ALL -> this
+            GuestStatus.ACTIVE -> GuestTable.deletionDate.isNull()
+            GuestStatus.ARCHIVED -> GuestTable.deletionDate.isNotNull()
+            GuestStatus.ALL -> null
+        }
+
+    private fun buildSearchCondition(search: String?): Op<Boolean>? =
+        search?.trim()?.takeIf(String::isNotEmpty)?.let { query ->
+            val pattern = "%$query%"
+
+            (GuestTable.firstName like pattern) or
+                (GuestTable.lastName like pattern) or
+                (GuestTable.email like pattern)
         }
 }

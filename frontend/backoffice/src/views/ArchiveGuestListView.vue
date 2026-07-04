@@ -1,9 +1,9 @@
 <template>
-  <GuestList status="archived" />
+  <GuestListView status="archived" />
 </template>
 
 <script setup lang="ts">
-import GuestList from '../components/GuestList.vue';
+import GuestListView from './GuestListView.vue';
 </script>
 
 

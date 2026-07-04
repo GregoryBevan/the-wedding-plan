@@ -1,7 +1,19 @@
 <template>
   <section>
-    <header class="mb-6 text-center">
-      <h2 class="text-3xl font-light tracking-wide text-text">Invitations</h2>
+    <header class="mb-6 grid grid-cols-[1fr_auto_1fr] items-center">
+      <span class="h-6 justify-self-start" aria-hidden="true"></span>
+
+      <h2 class="justify-self-center text-3xl font-light tracking-wide text-text">Invitations</h2>
+
+      <RouterLink
+        :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationAdd }"
+        aria-label="Create invitation"
+        class="justify-self-end inline-flex h-10 w-10 items-center justify-center rounded-full border border-primary bg-primary text-white hover:opacity-90"
+        data-test="create-invitation-cta"
+        title="Create invitation"
+      >
+        <img :src="addInvitationIcon" alt="" aria-hidden="true" class="h-6 w-6 brightness-0 invert" />
+      </RouterLink>
     </header>
 
     <p v-if="isLoading" class="py-8 text-center text-sm">Loading invitations...</p>
@@ -49,7 +61,6 @@
         <h3 class="mb-3 text-lg font-medium text-text" data-test="invitation-card-label">{{ invitation.label }}</h3>
 
         <p class="mb-1 text-xs text-text/60" data-test="invitation-card-guest-count">{{ invitation.guestCount }} guests</p>
-        <p class="mb-3 text-xs text-text/60" data-test="invitation-card-creation-date">Created {{ formatDate(invitation.creationDate) }}</p>
 
         <ul class="mb-3 space-y-1 text-xs text-text/80" data-test="invitation-card-guest-details">
           <li
@@ -57,7 +68,7 @@
             :key="guest.id"
             data-test="invitation-card-guest-item"
           >
-            {{ guest.firstName }} {{ guest.lastName }} - {{ guest.email }}
+            {{ guest.firstName }} {{ guest.lastName }}
           </li>
         </ul>
 
@@ -88,7 +99,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { formatDateInTimeZone } from '../composables/useDateFormatter';
+import addInvitationIcon from '../assets/icons/add-invitation.svg';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 import { listGuests } from '../services/guestApi';
 import { listInvitations, type InvitationPageResponse } from '../services/invitationApi';
@@ -127,7 +138,6 @@ const loadData = async () => {
   }
 };
 
-const formatDate = (value: string) => formatDateInTimeZone(value);
 
 onMounted(() => {
   void loadData();

@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { defineComponent } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import GuestList from './GuestList.vue';
+import GuestList from '../views/GuestListView.vue';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 import { createGuestPage, createGuestResponse } from '../testFixtures/guestFixtures';
 
