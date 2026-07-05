@@ -126,6 +126,9 @@ describe('App auth states', () => {
 
     const { wrapper } = await mountApp({ route: '/guests' });
 
+    expect(wrapper.find('[data-test="backoffice-shell"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="backoffice-content-shell"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="backoffice-main"]').exists()).toBe(true);
     expect(wrapper.find('[data-test="backoffice-sidebar"]').exists()).toBe(true);
     expect(wrapper.find('nav[aria-label="Backoffice navigation"]').exists()).toBe(true);
     expect(wrapper.findComponent({ name: 'GuestListView' }).exists()).toBe(true);
