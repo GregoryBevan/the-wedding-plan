@@ -122,6 +122,15 @@ class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
         }
     }
 
+    @Test
+    fun `should find assigned guest ids in batch`() {
+        val unassignedGuestId = GuestId.fromString("019fa9fa-b235-75f8-a499-2c8ce31e1e6c")
+
+        val assignedGuestIds = invitationsRepository.findAssignedGuestIds(setOf(janeDoe.id, unassignedGuestId))
+
+        assertThat(assignedGuestIds).isEqualTo(setOf(janeDoe.id))
+    }
+
     private fun invitationCount() =
         jdbcTemplate.queryForObject("select count(*) from invitation", Int::class.java) ?: 0
 

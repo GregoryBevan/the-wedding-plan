@@ -104,6 +104,30 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
     }
 
     @Test
+    fun `should return conflict when invitation includes a guest already assigned to another invitation`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+
+        restTestClient.post().uri("/api/invitations")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(
+                AddInvitationRequest(
+                    label = "Duplicate guest invitation",
+                    guestIds = listOf(janeDoe.id.toString()),
+                    description = "Should fail because guest is already assigned."
+                )
+            )
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.CONFLICT)
+            .expectBody()
+            .jsonPath("$.message").isEqualTo("Some guests are already assigned to another invitation.")
+            .jsonPath("$.guestIds.length()").isEqualTo(1)
+            .jsonPath("$.guestIds[0]").isEqualTo("${janeDoe.id}")
+    }
+
+    @Test
     fun `should list invitations with pagination`() {
         val csrf = authenticatedCsrfContext("gregory@example.com")
 

@@ -76,6 +76,19 @@ class InvitationsExposedRepository : Invitations {
         )
     }
 
+    @Transactional(readOnly = true)
+    override fun findAssignedGuestIds(guestIds: Set<GuestId>): Set<GuestId> =
+        guestIds
+            .map(GuestId::value)
+            .takeIf { it.isNotEmpty() }
+            ?.let { candidateIds ->
+                InvitationGuestTable.selectAll()
+                    .where { InvitationGuestTable.guestId inList candidateIds }
+                    .map { GuestId(it[InvitationGuestTable.guestId]) }
+                    .toSet()
+            }
+            ?: emptySet()
+
     private fun fetchGuestsByInvitationIds(invitationIds: Set<Uuid>) =
         if (invitationIds.isEmpty()) {
             emptyMap()
