@@ -7,5 +7,6 @@ sealed interface AddInvitationResult {
     data class Added(val invitation: Invitation) : AddInvitationResult
     data object MissingGuests : AddInvitationResult
     data class InvalidGuests(val guestIds: Set<GuestId>) : AddInvitationResult
+    data class AlreadyAssignedGuests(val guestIds: Set<GuestId>) : AddInvitationResult
 }
 

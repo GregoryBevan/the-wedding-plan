@@ -119,6 +119,23 @@ class InvitationEndpointTest {
     }
 
     @Test
+    fun `should return conflict when invitation service reports already assigned guests`() {
+        val request = mockk<ServerRequest>()
+        val payload = AddInvitationRequest(
+            label = brideFamilyInvitation.label,
+            guestIds = brideFamilyInvitation.guests.map { it.id.toString() },
+            description = brideFamilyInvitation.description
+        )
+
+        every { request.body(AddInvitationRequest::class.java) } returns payload
+        every { invitationAdder.add(payload.toCommandOrNull()!!) } returns AddInvitationResult.AlreadyAssignedGuests(
+            brideFamilyInvitation.guests.map { it.id }.toSet(),
+        )
+
+        assertThat(invitationEndpoint.addInvitation(request).statusCode()).isEqualTo(HttpStatus.CONFLICT)
+    }
+
+    @Test
     fun `should list invitations with default pagination`() {
         val request = mockk<ServerRequest>()
         val invitationPage = InvitationPage(

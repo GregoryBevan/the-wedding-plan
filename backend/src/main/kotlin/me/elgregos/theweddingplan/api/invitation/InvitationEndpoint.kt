@@ -48,6 +48,12 @@ class InvitationEndpoint(
                     guestIds = result.guestIds.map(GuestId::toString).sorted(),
                 )
             )
+            is AddInvitationResult.AlreadyAssignedGuests -> ServerResponse.status(HttpStatus.CONFLICT).body(
+                AlreadyAssignedInvitationGuestsResponse(
+                    message = "Some guests are already assigned to another invitation.",
+                    guestIds = result.guestIds.map(GuestId::toString).sorted(),
+                )
+            )
         }
     }
 
@@ -94,6 +100,11 @@ data class AddInvitationRequest(
 )
 
 data class InvalidInvitationGuestsResponse(
+    val message: String,
+    val guestIds: List<String>,
+)
+
+data class AlreadyAssignedInvitationGuestsResponse(
     val message: String,
     val guestIds: List<String>,
 )

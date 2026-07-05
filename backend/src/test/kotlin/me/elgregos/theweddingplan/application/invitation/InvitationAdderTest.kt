@@ -13,6 +13,7 @@ import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
 import me.elgregos.theweddingplan.domain.guest.Guests
 import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.brideFamilyInvitation
 import me.elgregos.theweddingplan.domain.invitation.Invitations
+import org.springframework.dao.DataIntegrityViolationException
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -32,9 +33,28 @@ class InvitationAdderTest {
     @Test
     fun `should add invitation when all guests are active`() {
         every { guests.findByIds(brideFamily.guestIds) } returns setOf(johnDoe)
+        every { invitations.findAssignedGuestIds(brideFamily.guestIds) } returns emptySet()
         every { invitations.add(any()) } returns brideFamilyInvitation
 
         assertThat(invitationAdder.add(brideFamily)).isEqualTo(AddInvitationResult.Added(brideFamilyInvitation))
+    }
+
+    @Test
+    fun `should reject invitation when at least one guest is already assigned`() {
+        every { guests.findByIds(brideFamily.guestIds) } returns setOf(johnDoe)
+        every { invitations.findAssignedGuestIds(brideFamily.guestIds) } returns brideFamily.guestIds
+
+        assertThat(invitationAdder.add(brideFamily)).isEqualTo(AddInvitationResult.AlreadyAssignedGuests(brideFamily.guestIds))
+        verify(exactly = 0) { invitations.add(any()) }
+    }
+
+    @Test
+    fun `should return already assigned guests when add fails due to concurrent unique constraint`() {
+        every { guests.findByIds(brideFamily.guestIds) } returns setOf(johnDoe)
+        every { invitations.findAssignedGuestIds(brideFamily.guestIds) } returnsMany listOf(emptySet(), brideFamily.guestIds)
+        every { invitations.add(any()) } throws DataIntegrityViolationException("duplicate key")
+
+        assertThat(invitationAdder.add(brideFamily)).isEqualTo(AddInvitationResult.AlreadyAssignedGuests(brideFamily.guestIds))
     }
 
     @Test
