@@ -145,6 +145,25 @@ class GuestEndpointTest {
     }
 
     @Test
+    fun `should list guests with search query`() {
+        val request = mockk<ServerRequest>()
+        val guestPage = GuestPage(
+            items = listOf(johnDoe),
+            page = 0,
+            size = 20,
+            totalItems = 1,
+            totalPages = 1,
+        )
+
+        stubPaginationParams(request, search = "john")
+        every { guestLister.list(GuestListCriteria(page = 0, size = 20, status = GuestStatus.ACTIVE, search = "john")) } returns guestPage
+
+        val response = guestEndpoint.listGuests(request)
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK)
+    }
+
+    @Test
     fun `should return bad request when status query param is invalid`() {
         val request = mockk<ServerRequest>()
 
@@ -368,10 +387,12 @@ class GuestEndpointTest {
         page: String? = null,
         size: String? = null,
         status: String? = null,
+        search: String? = null,
     ) {
         every { request.param("page") } returns Optional.ofNullable(page)
         every { request.param("size") } returns Optional.ofNullable(size)
         every { request.param("status") } returns Optional.ofNullable(status)
+        every { request.param("search") } returns Optional.ofNullable(search)
     }
 
 }

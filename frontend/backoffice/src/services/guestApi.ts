@@ -33,13 +33,24 @@ export type GuestStatus = 'active' | 'archived' | 'all';
 const guestApiBaseUrl = getApiBaseUrl({ includeApiPath: true });
 
 export const listGuests = async (
-  { page = 0, size = 20, status = 'active' }: { page?: number; size?: number; status?: GuestStatus } = {}
+  {
+    page = 0,
+    size = 20,
+    status = 'active',
+    search
+  }: { page?: number; size?: number; status?: GuestStatus; search?: string } = {}
 ): Promise<GuestPageResponse> => {
   const queryParams = new URLSearchParams({
     page: String(page),
     size: String(size),
     status
   });
+
+  const normalizedSearch = search?.trim();
+
+  if (normalizedSearch) {
+    queryParams.set('search', normalizedSearch);
+  }
 
   const response = await fetch(`${guestApiBaseUrl}/guests?${queryParams}`, {
     method: 'GET',

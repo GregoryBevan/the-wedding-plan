@@ -130,6 +130,20 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `should filter guests by search query`() {
+        val guests = guestsRepository.list(
+            GuestListCriteria(
+                page = 0,
+                size = 10,
+                status = GuestStatus.ACTIVE,
+                search = "john",
+            )
+        )
+
+        assertThat(guests.items).isEqualTo(listOf(johnDoe))
+    }
+
+    @Test
     fun `should find guest by id`() {
         val guest = guestsRepository.findById(johnDoe.id)
 

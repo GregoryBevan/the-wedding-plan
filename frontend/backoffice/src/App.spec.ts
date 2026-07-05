@@ -23,7 +23,7 @@ vi.mock('./services/guestApi', () => guestApiMock);
 
 const globalStubs = {
   GuestForm: true,
-  GuestList: true,
+  GuestListView: true,
   InvitationsListView: true
 };
 
@@ -108,7 +108,7 @@ describe('App auth states', () => {
     expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.invitationList);
     expect(router.currentRoute.value.path).toBe('/invitations');
     expect(wrapper.findComponent({ name: 'InvitationsListView' }).exists()).toBe(true);
-    expect(wrapper.findComponent({ name: 'GuestList' }).exists()).toBe(false);
+    expect(wrapper.findComponent({ name: 'GuestListView' }).exists()).toBe(false);
 
     await wrapper.get('[data-test="user-menu-toggle"]').trigger('click');
 
@@ -128,7 +128,7 @@ describe('App auth states', () => {
 
     expect(wrapper.find('[data-test="backoffice-sidebar"]').exists()).toBe(true);
     expect(wrapper.find('nav[aria-label="Backoffice navigation"]').exists()).toBe(true);
-    expect(wrapper.findComponent({ name: 'GuestList' }).exists()).toBe(true);
+    expect(wrapper.findComponent({ name: 'GuestListView' }).exists()).toBe(true);
   });
 
   it('does not render left sidebar shell on public routes', async () => {
@@ -153,7 +153,7 @@ describe('App auth states', () => {
     expect(router.currentRoute.value.path).toBe('/guests/new');
     expect(wrapper.text()).toContain('Add a New Guest');
     expect(wrapper.findComponent({ name: 'GuestForm' }).exists()).toBe(true);
-    expect(wrapper.findComponent({ name: 'GuestList' }).exists()).toBe(false);
+    expect(wrapper.findComponent({ name: 'GuestListView' }).exists()).toBe(false);
   });
 
   it('does not refetch auth status in App when only the query string changes', async () => {

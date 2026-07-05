@@ -36,6 +36,13 @@ describe('InvitationsListView', () => {
           component: InvitationsListView
         },
         {
+          path: '/invitations/new',
+          name: BACKOFFICE_ROUTE_NAMES.invitationAdd,
+          component: defineComponent({
+            template: '<div>create invitation view</div>'
+          })
+        },
+        {
           path: '/guests/new',
           name: BACKOFFICE_ROUTE_NAMES.guestAdd,
           component: defineComponent({
@@ -95,16 +102,19 @@ describe('InvitationsListView', () => {
     const { wrapper } = await mountView();
 
     const cards = wrapper.findAll('[data-test="invitation-card"]');
+    const createInvitationCta = wrapper.get('[data-test="create-invitation-cta"]');
 
     expect(cards).toHaveLength(1);
+    expect(createInvitationCta.attributes('href')).toBe('/invitations/new');
     expect(wrapper.find('[data-test="invitation-card-list"]').exists()).toBe(true);
     expect(wrapper.find('table').exists()).toBe(false);
     expect(wrapper.text()).toContain('Family table');
     expect(wrapper.text()).toContain('2 guests');
-    expect(wrapper.text()).toContain('Alice Martin - alice@example.com');
-    expect(wrapper.text()).toContain('Bob Durand - bob@example.com');
+    expect(wrapper.text()).toContain('Alice Martin');
+    expect(wrapper.text()).toContain('Bob Durand');
+    expect(wrapper.text()).not.toContain('alice@example.com');
+    expect(wrapper.text()).not.toContain('bob@example.com');
     expect(cards[0].findAll('[data-test="invitation-card-guest-item"]')).toHaveLength(2);
-    expect(wrapper.find('[data-test="invitation-card-creation-date"]').exists()).toBe(true);
     const actionButtons = cards[0].findAll('button');
 
     expect(actionButtons).toHaveLength(2);
