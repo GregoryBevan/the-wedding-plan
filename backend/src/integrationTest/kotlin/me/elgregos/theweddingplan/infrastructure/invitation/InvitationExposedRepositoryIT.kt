@@ -6,6 +6,7 @@ import assertk.assertions.isNull
 import me.elgregos.theweddingplan.AbstractIntegrationTest
 import me.elgregos.theweddingplan.domain.guest.Guest
 import me.elgregos.theweddingplan.domain.guest.GuestId
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.emmaWilson
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.liamMiller
 import me.elgregos.theweddingplan.domain.guest.Guests
@@ -17,8 +18,10 @@ import me.elgregos.theweddingplan.domain.invitation.InvitationId
 import me.elgregos.theweddingplan.domain.invitation.InvitationListCriteria
 import me.elgregos.theweddingplan.domain.invitation.Invitations
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.JdbcTemplate
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 import kotlin.uuid.toJavaUuid
 
 class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
@@ -87,6 +90,36 @@ class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
         assertThat(outOfRangePage.size).isEqualTo(1)
         assertThat(outOfRangePage.totalItems).isEqualTo(itemCount.toLong())
         assertThat(outOfRangePage.totalPages).isEqualTo(itemCount)
+    }
+
+    @Test
+    fun `should reject duplicate guest assignment across invitations`() {
+        val invitationId = java.util.UUID.randomUUID()
+
+        try {
+            jdbcTemplate.update(
+                """
+                insert into invitation (id, version, creation_date, update_date, label, description)
+                values (?, 0, now() at time zone 'utc', now() at time zone 'utc', ?, ?)
+                """.trimIndent(),
+                invitationId,
+                "Duplicate assignment",
+                "Used to validate unique guest assignment constraint",
+            )
+
+            assertFailsWith<DataIntegrityViolationException> {
+                jdbcTemplate.update(
+                    """
+                    insert into invitation_guest (invitation_id, guest_id)
+                    values (?, ?)
+                    """.trimIndent(),
+                    invitationId,
+                    janeDoe.id.value.toJavaUuid(),
+                )
+            }
+        } finally {
+            jdbcTemplate.update("delete from invitation where id = ?", invitationId)
+        }
     }
 
     private fun invitationCount() =
