@@ -14,6 +14,7 @@ import me.elgregos.theweddingplan.application.guest.GuestUpdater
 import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.charlieDavis
 import me.elgregos.theweddingplan.api.guest.UpdateGuestRequestFixtures.johnDoeUpdated as johnDoeUpdatedRequest
 import me.elgregos.theweddingplan.domain.guest.GuestStatus
+import me.elgregos.theweddingplan.domain.guest.GuestAvailability
 import me.elgregos.theweddingplan.domain.guest.GuestListCriteria
 import me.elgregos.theweddingplan.domain.guest.GuestId
 import me.elgregos.theweddingplan.domain.guest.GuestPage
@@ -99,7 +100,11 @@ class GuestEndpointTest {
         )
 
         stubPaginationParams(request)
-        every { guestLister.list(GuestListCriteria(page = 0, size = 20, status = GuestStatus.ACTIVE)) } returns guestPage
+        every {
+            guestLister.list(
+                GuestListCriteria(page = 0, size = 20, status = GuestStatus.ACTIVE, availability = GuestAvailability.ALL)
+            )
+        } returns guestPage
 
         val response = guestEndpoint.listGuests(request)
 
@@ -118,7 +123,11 @@ class GuestEndpointTest {
         )
 
         stubPaginationParams(request, status = "archived")
-        every { guestLister.list(GuestListCriteria(page = 0, size = 20, status = GuestStatus.ARCHIVED)) } returns guestPage
+        every {
+            guestLister.list(
+                GuestListCriteria(page = 0, size = 20, status = GuestStatus.ARCHIVED, availability = GuestAvailability.ALL)
+            )
+        } returns guestPage
 
         val response = guestEndpoint.listGuests(request)
 
@@ -137,7 +146,11 @@ class GuestEndpointTest {
         )
 
         stubPaginationParams(request, status = "all")
-        every { guestLister.list(GuestListCriteria(page = 0, size = 20, status = GuestStatus.ALL)) } returns guestPage
+        every {
+            guestLister.list(
+                GuestListCriteria(page = 0, size = 20, status = GuestStatus.ALL, availability = GuestAvailability.ALL)
+            )
+        } returns guestPage
 
         val response = guestEndpoint.listGuests(request)
 
@@ -156,7 +169,17 @@ class GuestEndpointTest {
         )
 
         stubPaginationParams(request, search = "john")
-        every { guestLister.list(GuestListCriteria(page = 0, size = 20, status = GuestStatus.ACTIVE, search = "john")) } returns guestPage
+        every {
+            guestLister.list(
+                GuestListCriteria(
+                    page = 0,
+                    size = 20,
+                    status = GuestStatus.ACTIVE,
+                    availability = GuestAvailability.ALL,
+                    search = "john"
+                )
+            )
+        } returns guestPage
 
         val response = guestEndpoint.listGuests(request)
 
@@ -172,6 +195,36 @@ class GuestEndpointTest {
         val response = guestEndpoint.listGuests(request)
 
         assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    fun `should list unassigned guests when availability query param is unassigned`() {
+        val request = mockk<ServerRequest>()
+        val guestPage = GuestPage(
+            items = listOf(johnDoe),
+            page = 0,
+            size = 20,
+            totalItems = 1,
+            totalPages = 1,
+        )
+
+        stubPaginationParams(request, availability = "unassigned")
+        every {
+            guestLister.list(
+                GuestListCriteria(page = 0, size = 20, status = GuestStatus.ACTIVE, availability = GuestAvailability.UNASSIGNED)
+            )
+        } returns guestPage
+
+        assertThat(guestEndpoint.listGuests(request).statusCode()).isEqualTo(HttpStatus.OK)
+    }
+
+    @Test
+    fun `should return bad request when availability query param is invalid`() {
+        val request = mockk<ServerRequest>()
+
+        stubPaginationParams(request, availability = "unknown")
+
+        assertThat(guestEndpoint.listGuests(request).statusCode()).isEqualTo(HttpStatus.BAD_REQUEST)
     }
 
     @Test
@@ -387,11 +440,13 @@ class GuestEndpointTest {
         page: String? = null,
         size: String? = null,
         status: String? = null,
+        availability: String? = null,
         search: String? = null,
     ) {
         every { request.param("page") } returns Optional.ofNullable(page)
         every { request.param("size") } returns Optional.ofNullable(size)
         every { request.param("status") } returns Optional.ofNullable(status)
+        every { request.param("availability") } returns Optional.ofNullable(availability)
         every { request.param("search") } returns Optional.ofNullable(search)
     }
 
