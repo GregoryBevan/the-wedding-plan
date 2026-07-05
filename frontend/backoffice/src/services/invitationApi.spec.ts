@@ -96,5 +96,19 @@ describe('invitationApi', () => {
       guestIds: []
     })).rejects.toThrow('At least one guest is required.');
   });
+
+  it('throws dedicated conflict message when create endpoint returns 409 without body message', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => ({})
+    } as Response);
+
+    await expect(createInvitation({
+      label: 'Family table',
+      description: 'Main family table',
+      guestIds: ['guest-1']
+    })).rejects.toThrow('Some guests are already assigned to another invitation. Please refresh and try again.');
+  });
 });
 

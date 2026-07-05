@@ -29,6 +29,7 @@ export interface GuestPageResponse {
 }
 
 export type GuestStatus = 'active' | 'archived' | 'all';
+export type GuestAvailability = 'all' | 'unassigned';
 
 const guestApiBaseUrl = getApiBaseUrl({ includeApiPath: true });
 
@@ -37,13 +38,15 @@ export const listGuests = async (
     page = 0,
     size = 20,
     status = 'active',
+    availability = 'all',
     search
-  }: { page?: number; size?: number; status?: GuestStatus; search?: string } = {}
+  }: { page?: number; size?: number; status?: GuestStatus; availability?: GuestAvailability; search?: string } = {}
 ): Promise<GuestPageResponse> => {
   const queryParams = new URLSearchParams({
     page: String(page),
     size: String(size),
-    status
+    status,
+    availability
   });
 
   const normalizedSearch = search?.trim();

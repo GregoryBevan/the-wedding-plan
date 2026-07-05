@@ -80,6 +80,11 @@ export const createInvitation = async (payload: CreateInvitationPayload): Promis
 
   if (!response.ok) {
     const body = await response.json().catch(() => null) as { message?: string } | null;
+
+    if (response.status === 409) {
+      throw new Error(body?.message ?? 'Some guests are already assigned to another invitation. Please refresh and try again.');
+    }
+
     throw new Error(body?.message ?? 'Unable to create invitation at the moment.');
   }
 
