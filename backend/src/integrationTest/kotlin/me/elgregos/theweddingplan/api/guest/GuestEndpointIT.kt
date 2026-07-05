@@ -6,6 +6,8 @@ import assertk.assertions.isNotNull
 import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
 import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.charlieDavis
 import me.elgregos.theweddingplan.api.guest.UpdateGuestRequestFixtures.johnDoeUpdated
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -153,6 +155,24 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             .jsonPath("$.size").isEqualTo(1)
             .jsonPath("$.totalItems").exists()
             .jsonPath("$.totalPages").exists()
+    }
+
+    @Test
+    fun `should list only unassigned guests when availability is unassigned`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+
+        val guests = restTestClient.get().uri("/api/guests?availability=unassigned&page=0&size=20")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody(GuestPageResponse::class.java)
+            .returnResult()
+            .responseBody
+            ?: error("Expected guest page in response body")
+
+        assertThat(guests.items.any { it.id == johnDoe.id.toString() }).isEqualTo(true)
+        assertThat(guests.items.any { it.id == janeDoe.id.toString() }).isEqualTo(false)
     }
 
     @Test

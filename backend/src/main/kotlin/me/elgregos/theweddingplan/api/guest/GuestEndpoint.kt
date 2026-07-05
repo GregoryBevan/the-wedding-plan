@@ -1,6 +1,7 @@
 package me.elgregos.theweddingplan.api.guest
 
 import me.elgregos.theweddingplan.api.common.statusQueryParam
+import me.elgregos.theweddingplan.api.common.availabilityQueryParam
 import me.elgregos.theweddingplan.api.common.guestIdPathParam
 import me.elgregos.theweddingplan.api.common.intQueryParam
 import me.elgregos.theweddingplan.application.guest.*
@@ -26,12 +27,17 @@ class GuestEndpoint(
         val page = request.intQueryParam("page", 0) ?: return ServerResponse.badRequest().build()
         val size = request.intQueryParam("size", 20) ?: return ServerResponse.badRequest().build()
         val status = request.statusQueryParam() ?: return ServerResponse.badRequest().build()
+        val availability = request.availabilityQueryParam() ?: return ServerResponse.badRequest().build()
         val search = request.param("search").orElse(null)?.trim()?.takeIf(String::isNotEmpty)
 
         return if (page < 0 || size <= 0) {
             ServerResponse.badRequest().build()
         } else {
-            ServerResponse.ok().body(guestLister.list(GuestListCriteria(page = page, size = size, status = status, search = search)).toResponse())
+            ServerResponse.ok().body(
+                guestLister.list(
+                    GuestListCriteria(page = page, size = size, status = status, availability = availability, search = search)
+                ).toResponse()
+            )
         }
     }
 

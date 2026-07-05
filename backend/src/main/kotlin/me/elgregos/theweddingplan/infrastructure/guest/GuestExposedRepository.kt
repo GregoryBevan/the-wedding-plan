@@ -1,11 +1,14 @@
 package me.elgregos.theweddingplan.infrastructure.guest
 
 import me.elgregos.theweddingplan.domain.guest.Guest
+import me.elgregos.theweddingplan.domain.guest.GuestAvailability
 import me.elgregos.theweddingplan.domain.guest.GuestStatus
 import me.elgregos.theweddingplan.domain.guest.GuestListCriteria
 import me.elgregos.theweddingplan.domain.guest.GuestId
 import me.elgregos.theweddingplan.domain.guest.GuestPage
 import me.elgregos.theweddingplan.domain.guest.Guests
+import me.elgregos.theweddingplan.infrastructure.invitation.InvitationGuestTable
+import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Op
@@ -91,7 +94,7 @@ class GuestExposedRepository : Guests {
 
     @Transactional(readOnly = true)
     override fun list(criteria: GuestListCriteria): GuestPage {
-        val totalItems = GuestTable.selectAll().applyFilters(criteria).count()
+        val totalItems = listQuery(criteria).applyFilters(criteria).count()
         val totalPages = if (totalItems == 0L) 0 else ((totalItems - 1) / criteria.size + 1).toInt()
         val offset = criteria.page.toLong() * criteria.size
 
@@ -118,21 +121,32 @@ class GuestExposedRepository : Guests {
     private fun selectGuests(
         criteria: GuestListCriteria,
         offset: Long
-    ): List<Guest> = GuestTable.selectAll()
+    ): List<Guest> = listQuery(criteria)
         .applyFilters(criteria)
         .orderBy(*listOrder)
         .limit(criteria.size)
         .offset(offset)
         .map { it.toGuest() }
 
+    private fun listQuery(criteria: GuestListCriteria): Query =
+        if (criteria.availability == GuestAvailability.UNASSIGNED) {
+            GuestTable
+                .join(InvitationGuestTable, JoinType.LEFT, GuestTable.id, InvitationGuestTable.guestId)
+                .selectAll()
+        } else {
+            GuestTable.selectAll()
+        }
+
     private fun Query.applyFilters(criteria: GuestListCriteria): Query {
         val statusCondition = buildStatusCondition(criteria.status)
+        val availabilityCondition = buildAvailabilityCondition(criteria.availability)
         val searchCondition = buildSearchCondition(criteria.search)
-        return when {
-            statusCondition != null && searchCondition != null -> statusCondition and searchCondition
-            statusCondition != null -> statusCondition
-            else -> searchCondition
-        }?.let { where { it } } ?: this
+        val combinedCondition = listOfNotNull(statusCondition, availabilityCondition, searchCondition)
+            .reduceOrNull(Op<Boolean>::and)
+
+        return combinedCondition
+            ?.let { where { it } }
+            ?: this
     }
 
     private fun buildStatusCondition(status: GuestStatus): Op<Boolean>? =
@@ -140,6 +154,12 @@ class GuestExposedRepository : Guests {
             GuestStatus.ACTIVE -> GuestTable.deletionDate.isNull()
             GuestStatus.ARCHIVED -> GuestTable.deletionDate.isNotNull()
             GuestStatus.ALL -> null
+        }
+
+    private fun buildAvailabilityCondition(availability: GuestAvailability): Op<Boolean>? =
+        when (availability) {
+            GuestAvailability.ALL -> null
+            GuestAvailability.UNASSIGNED -> InvitationGuestTable.guestId.isNull()
         }
 
     private fun buildSearchCondition(search: String?): Op<Boolean>? =

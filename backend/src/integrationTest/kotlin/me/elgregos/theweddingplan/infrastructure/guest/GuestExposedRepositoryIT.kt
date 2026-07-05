@@ -9,6 +9,7 @@ import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import me.elgregos.theweddingplan.AbstractIntegrationTest
 import me.elgregos.theweddingplan.domain.guest.Guest
+import me.elgregos.theweddingplan.domain.guest.GuestAvailability
 import me.elgregos.theweddingplan.domain.guest.GuestStatus
 import me.elgregos.theweddingplan.domain.guest.GuestListCriteria
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures
@@ -141,6 +142,21 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
         )
 
         assertThat(guests.items).isEqualTo(listOf(johnDoe))
+    }
+
+    @Test
+    fun `should list only unassigned guests when availability is unassigned`() {
+        val guests = guestsRepository.list(
+            GuestListCriteria(
+                status = GuestStatus.ACTIVE,
+                availability = GuestAvailability.UNASSIGNED,
+                page = 0,
+                size = 200,
+            )
+        )
+
+        assertThat(guests.items.any { it.id == janeDoe.id }).isFalse()
+        assertThat(guests.items.any { it.id == johnDoe.id }).isTrue()
     }
 
     @Test
