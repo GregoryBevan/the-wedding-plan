@@ -186,6 +186,7 @@ const loadGuests = async ({ reset = false }: { reset?: boolean } = {}) => {
       page: pageToLoad,
       size: GUEST_PAGE_SIZE,
       status: 'active',
+      availability: 'unassigned',
       search: normalizedSearch || undefined
     });
 

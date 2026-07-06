@@ -23,7 +23,7 @@ describe('guestApi', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, options] = fetchMock.mock.calls[0];
 
-    expect(url).toBe('http://localhost:8080/api/guests?page=0&size=20&status=active');
+    expect(url).toBe('http://localhost:8080/api/guests?page=0&size=20&status=active&availability=all');
     expect(options).toMatchObject({
       method: 'GET',
       credentials: 'include'
@@ -48,7 +48,7 @@ describe('guestApi', () => {
     await listGuests({ page: 1, size: 50, status: 'archived' });
 
     const [url] = fetchMock.mock.calls[0];
-    expect(url).toBe('http://localhost:8080/api/guests?page=1&size=50&status=archived');
+    expect(url).toBe('http://localhost:8080/api/guests?page=1&size=50&status=archived&availability=all');
   });
 
   it('calls backend list endpoint with search query', async () => {
@@ -60,7 +60,19 @@ describe('guestApi', () => {
     await listGuests({ page: 0, size: 20, status: 'active', search: 'john doe' });
 
     const [url] = fetchMock.mock.calls[0];
-    expect(url).toBe('http://localhost:8080/api/guests?page=0&size=20&status=active&search=john+doe');
+    expect(url).toBe('http://localhost:8080/api/guests?page=0&size=20&status=active&availability=all&search=john+doe');
+  });
+
+  it('calls backend list endpoint with unassigned availability filter', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => createGuestPage()
+    } as Response);
+
+    await listGuests({ page: 0, size: 20, status: 'active', availability: 'unassigned' });
+
+    const [url] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://localhost:8080/api/guests?page=0&size=20&status=active&availability=unassigned');
   });
 
   it('calls backend create endpoint with expected payload', async () => {

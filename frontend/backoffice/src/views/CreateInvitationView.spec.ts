@@ -101,7 +101,7 @@ describe('CreateInvitationView', () => {
     await wrapper.get('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(listGuestsMock).toHaveBeenCalledWith({ page: 0, size: 10, status: 'active', search: undefined });
+    expect(listGuestsMock).toHaveBeenCalledWith({ page: 0, size: 10, status: 'active', availability: 'unassigned', search: undefined });
     expect(createInvitationMock).toHaveBeenCalledWith({
       label: 'Family table',
       description: 'Main table',
@@ -201,6 +201,37 @@ describe('CreateInvitationView', () => {
     expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.invitationAdd);
   });
 
+  it('shows clear conflict error when a selected guest has been assigned concurrently', async () => {
+    listGuestsMock.mockResolvedValue({
+      items: [
+        {
+          id: 'guest-1',
+          version: 1,
+          creationDate: '2026-07-03T10:00:00Z',
+          updateDate: '2026-07-03T10:00:00Z',
+          firstName: 'Alice',
+          lastName: 'Martin',
+          email: 'alice@example.com'
+        }
+      ],
+      page: 0,
+      size: 10,
+      totalItems: 1,
+      totalPages: 1
+    });
+    createInvitationMock.mockRejectedValue(new Error('Some guests are already assigned to another invitation.'));
+
+    const { wrapper, router } = await mountView();
+
+    await wrapper.get('[data-test="invitation-label-input"]').setValue('Family table');
+    await wrapper.get('[data-test="guest-checkbox"]').setValue(true);
+    await wrapper.get('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(wrapper.get('[data-test="invitation-submit-error"]').text()).toContain('Some guests are already assigned to another invitation.');
+    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.invitationAdd);
+  });
+
   it('shows empty available guests state with create guest link', async () => {
     listGuestsMock.mockResolvedValue({
       items: [],
@@ -253,7 +284,7 @@ describe('CreateInvitationView', () => {
       vi.advanceTimersByTime(301);
       await flushPromises();
 
-      expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10, status: 'active', search: 'zzz-does-not-match' });
+      expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10, status: 'active', availability: 'unassigned', search: 'zzz-does-not-match' });
       expect(wrapper.get('[data-test="empty-no-search-match"]').text()).toContain('No guests match your search.');
       expect(wrapper.find('[data-test="empty-no-guests-available"]').exists()).toBe(false);
     } finally {
@@ -310,8 +341,8 @@ describe('CreateInvitationView', () => {
     await container.trigger('scroll');
     await flushPromises();
 
-    expect(listGuestsMock).toHaveBeenNthCalledWith(1, { page: 0, size: 10, status: 'active', search: undefined });
-    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 1, size: 10, status: 'active', search: undefined });
+    expect(listGuestsMock).toHaveBeenNthCalledWith(1, { page: 0, size: 10, status: 'active', availability: 'unassigned', search: undefined });
+    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 1, size: 10, status: 'active', availability: 'unassigned', search: undefined });
     expect(wrapper.text()).toContain('Alice Martin');
     expect(wrapper.text()).toContain('Zoe Durand');
   });
