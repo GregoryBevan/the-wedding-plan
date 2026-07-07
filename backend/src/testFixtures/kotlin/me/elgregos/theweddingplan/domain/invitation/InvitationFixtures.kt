@@ -11,6 +11,9 @@ object InvitationFixtures {
 
     val creationDate: LocalDateTime = LocalDateTime.of(2026, 7, 1, 10, 45, 28)
 
+    const val unknownToken = "b7fb2f39-fa8f-4b8d-b47f-f65bc5fd0ad1"
+    const val malformedToken = "not-a-uuid"
+
     val bridesMaidInvitation = Invitation(
         id = InvitationId.fromString("019f2282-6db9-72a3-8d9d-2f6dc80cb89d"),
         creationDate = creationDate,

@@ -9,6 +9,9 @@ This is a fullstack project.
 - **Workflow**: After any code modification, ensure you stage the affected files using `git add`. When starting to work on a new issue you should update the main branch and create a new branch for your work. You should never commit or push work.
 - **Branch naming convention**: Use the format `feat/#<issue-number><short-description>` for new features and `fix/#<issue-number><short-description>` for bug fixes.
 - **Versioning rule**: For every issue (frontend, backend, or fullstack), bump and keep aligned both application versions before staging changes: `frontend/package.json` and `backend/build.gradle.kts`.
+- **Craft principles**:
+  - **KISS**: prefer the simplest implementation that satisfies the scope; avoid unnecessary abstraction, indirection, or overly clever code.
+  - **YAGNI**: implement only what is required by the current issue scope; do not add speculative features, extension points, or premature generalization.
 
 
 ## Backend
