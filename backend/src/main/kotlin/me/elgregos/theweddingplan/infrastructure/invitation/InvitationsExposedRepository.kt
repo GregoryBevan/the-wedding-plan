@@ -2,17 +2,9 @@ package me.elgregos.theweddingplan.infrastructure.invitation
 
 import me.elgregos.theweddingplan.domain.guest.Guest
 import me.elgregos.theweddingplan.domain.guest.GuestId
-import me.elgregos.theweddingplan.domain.invitation.Invitation
-import me.elgregos.theweddingplan.domain.invitation.InvitationId
-import me.elgregos.theweddingplan.domain.invitation.InvitationListCriteria
-import me.elgregos.theweddingplan.domain.invitation.InvitationPage
-import me.elgregos.theweddingplan.domain.invitation.Invitations
+import me.elgregos.theweddingplan.domain.invitation.*
 import me.elgregos.theweddingplan.infrastructure.guest.GuestTable
-import org.jetbrains.exposed.v1.core.JoinType
-import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -35,6 +27,7 @@ class InvitationsExposedRepository : Invitations {
             it[updateDate] = invitation.updateDate
             it[label] = invitation.label
             it[description] = invitation.description
+            it[accessToken] = invitation.accessToken.value
         }
 
         InvitationGuestTable.batchInsert(invitation.guests) { guest ->
@@ -89,6 +82,19 @@ class InvitationsExposedRepository : Invitations {
             }
             ?: emptySet()
 
+
+    @Transactional(readOnly = true)
+    override fun findInvitationByAccessToken(token: InvitationAccessToken): Invitation? =
+        InvitationTable.selectAll()
+            .where { InvitationTable.accessToken eq token.value }
+            .firstOrNull()
+            ?.let { row ->
+                row[InvitationTable.id]
+                    .let { invitationId ->
+                        row.toInvitation(fetchGuestsByInvitationIds(setOf(invitationId))[invitationId].orEmpty())
+                    }
+            }
+
     private fun fetchGuestsByInvitationIds(invitationIds: Set<Uuid>) =
         if (invitationIds.isEmpty()) {
             emptyMap()
@@ -120,6 +126,7 @@ class InvitationsExposedRepository : Invitations {
         label = this[InvitationTable.label],
         description = this[InvitationTable.description],
         guests = guests,
+        accessToken = InvitationAccessToken(this[InvitationTable.accessToken]),
     )
 }
 

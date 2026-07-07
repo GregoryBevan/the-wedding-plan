@@ -26,5 +26,6 @@ abstract class AbstractIntegrationTest {
             .withDatabaseName("wedding_db")
             .withUsername("user")
             .withPassword("password")
+            .withInitScript("init-test-db.sql")
     }
 }
