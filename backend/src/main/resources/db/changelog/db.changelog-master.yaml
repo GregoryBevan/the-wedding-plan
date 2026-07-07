@@ -11,4 +11,6 @@ databaseChangeLog:
       file: classpath:db/changelog/005-add-description-column-to-invitation-table.sql
   - include:
       file: classpath:db/changelog/006-enforce-unique-guest-assignment-in-invitation-guest.sql
+  - include:
+      file: classpath:db/changelog/007-add-invitation-access-token-column.sql
 

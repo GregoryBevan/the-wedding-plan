@@ -5,18 +5,15 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import me.elgregos.theweddingplan.AbstractIntegrationTest
 import me.elgregos.theweddingplan.domain.guest.Guest
-import me.elgregos.theweddingplan.domain.guest.GuestId
-import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.emmaWilson
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.liamMiller
+import me.elgregos.theweddingplan.domain.guest.GuestId
 import me.elgregos.theweddingplan.domain.guest.Guests
-import me.elgregos.theweddingplan.domain.invitation.Invitation
+import me.elgregos.theweddingplan.domain.invitation.*
 import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.bestManInvitation
 import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.bridesMaidInvitation
 import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.friendsInvitation
-import me.elgregos.theweddingplan.domain.invitation.InvitationId
-import me.elgregos.theweddingplan.domain.invitation.InvitationListCriteria
-import me.elgregos.theweddingplan.domain.invitation.Invitations
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.JdbcTemplate
@@ -24,7 +21,7 @@ import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.uuid.toJavaUuid
 
-class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
+class InvitationsExposedRepositoryIT : AbstractIntegrationTest() {
 
     @Autowired
     private lateinit var invitationsRepository: Invitations
@@ -41,10 +38,10 @@ class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
 
         guestRepository.add(emmaWilson)
         guestRepository.add(liamMiller)
-        invitationsRepository.add(friendsInvitation)
+        val createdInvitation = invitationsRepository.add(friendsInvitation)
 
         assertThat(invitationCount()).isEqualTo(initialCount + 1)
-        assertThat(invitationById(friendsInvitation.id)).isEqualTo(friendsInvitation)
+        assertThat(invitationById(friendsInvitation.id)).isEqualTo(createdInvitation)
     }
     @Test
     fun `should find invitation by id`() {
@@ -94,31 +91,15 @@ class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
 
     @Test
     fun `should reject duplicate guest assignment across invitations`() {
-        val invitationId = java.util.UUID.randomUUID()
-
-        try {
+        assertFailsWith<DataIntegrityViolationException> {
             jdbcTemplate.update(
                 """
-                insert into invitation (id, version, creation_date, update_date, label, description)
-                values (?, 0, now() at time zone 'utc', now() at time zone 'utc', ?, ?)
+                insert into invitation_guest (invitation_id, guest_id)
+                values (?, ?)
                 """.trimIndent(),
-                invitationId,
-                "Duplicate assignment",
-                "Used to validate unique guest assignment constraint",
+                bestManInvitation.id.value.toJavaUuid(),
+                janeDoe.id.value.toJavaUuid(),
             )
-
-            assertFailsWith<DataIntegrityViolationException> {
-                jdbcTemplate.update(
-                    """
-                    insert into invitation_guest (invitation_id, guest_id)
-                    values (?, ?)
-                    """.trimIndent(),
-                    invitationId,
-                    janeDoe.id.value.toJavaUuid(),
-                )
-            }
-        } finally {
-            jdbcTemplate.update("delete from invitation where id = ?", invitationId)
         }
     }
 
@@ -129,6 +110,28 @@ class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
         val assignedGuestIds = invitationsRepository.findAssignedGuestIds(setOf(janeDoe.id, unassignedGuestId))
 
         assertThat(assignedGuestIds).isEqualTo(setOf(janeDoe.id))
+    }
+
+    @Test
+    fun `should resolve invitation by access token`() {
+        val found = invitationsRepository.findInvitationByAccessToken(bridesMaidInvitation.accessToken)
+
+        assertThat(found).isEqualTo(bridesMaidInvitation)
+    }
+
+    @Test
+    fun `should reject duplicate access token values at database level`() {
+        assertFailsWith<DataIntegrityViolationException> {
+            jdbcTemplate.update(
+                """
+                update invitation
+                set access_token = ?
+                where id = ?
+                """.trimIndent(),
+                bridesMaidInvitation.accessToken.value,
+                bestManInvitation.id.value.toJavaUuid(),
+            )
+        }
     }
 
     private fun invitationCount() =
@@ -143,6 +146,7 @@ class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
                    i.update_date,
                    i.label,
                    i.description,
+                   i.access_token,
                    array_agg(g.id order by g.id) as guest_ids,
                    array_agg(g.version order by g.id) as guest_versions,
                    array_agg(g.creation_date order by g.id) as guest_creation_dates,
@@ -155,7 +159,7 @@ class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
             inner join invitation_guest ig on ig.invitation_id = i.id
             inner join guest g on g.id = ig.guest_id
             where i.id = ?
-            group by i.id, i.version, i.creation_date, i.update_date, i.label, i.description
+            group by i.id, i.version, i.creation_date, i.update_date, i.label, i.description, i.access_token
         """.trimIndent(),
             { rs, _ ->
                 val guestIds = (rs.getArray("guest_ids").array as Array<*>).map { GuestId.fromString(it.toString()) }
@@ -188,6 +192,7 @@ class InvitationExposedRepositoryIT : AbstractIntegrationTest() {
                     label = rs.getString("label"),
                     description = rs.getString("description"),
                     guests = guests,
+                    accessToken = InvitationAccessToken(rs.getString("access_token")),
                 )
             },
             invitationId.value.toJavaUuid())

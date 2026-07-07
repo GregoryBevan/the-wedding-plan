@@ -18,6 +18,7 @@ object InvitationFixtures {
         label = "Bridesmaid",
         description = "Bridesmaid invitation",
         guests = setOf(janeDoe),
+        accessToken = InvitationAccessToken("dca71c6f-4b29-43a0-80df-426786ca9075"),
     )
 
     val bestManInvitation = Invitation(
@@ -27,6 +28,7 @@ object InvitationFixtures {
         label = "Bestman",
         description = "Best man invitation",
         guests = setOf(mickaelKael),
+        accessToken = InvitationAccessToken("35cae9dd-4e1a-4a01-95c0-4c286cafc3e4"),
     )
 
     val brideFamilyInvitation = Invitation(

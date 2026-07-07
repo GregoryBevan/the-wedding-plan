@@ -9,3 +9,5 @@ services:
       POSTGRES_DB: wedding_db
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
+    volumes:
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro

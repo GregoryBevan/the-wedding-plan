@@ -8,5 +8,6 @@ interface Invitations {
     fun findById(id: InvitationId): Invitation?
     fun list(criteria: InvitationListCriteria): InvitationPage
     fun findAssignedGuestIds(guestIds: Set<GuestId>): Set<GuestId>
+    fun findInvitationByAccessToken(token: InvitationAccessToken): Invitation?
 }
 
