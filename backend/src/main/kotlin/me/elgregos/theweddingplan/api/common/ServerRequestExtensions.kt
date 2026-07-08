@@ -3,6 +3,7 @@ package me.elgregos.theweddingplan.api.common
 import me.elgregos.theweddingplan.domain.guest.GuestStatus
 import me.elgregos.theweddingplan.domain.guest.GuestAvailability
 import me.elgregos.theweddingplan.domain.guest.GuestId
+import me.elgregos.theweddingplan.domain.invitation.InvitationAccessToken
 import me.elgregos.theweddingplan.domain.invitation.InvitationId
 import org.springframework.web.servlet.function.ServerRequest
 
@@ -20,18 +21,13 @@ internal fun ServerRequest.availabilityQueryParam(): GuestAvailability? =
         ?: if (param(AVAILABILITY_PARAM_NAME).isEmpty) GuestAvailability.ALL else null
 
 internal fun ServerRequest.guestIdPathParam(): GuestId? =
-    runCatching {
-        pathVariable("id")
-            .takeIf(String::isNotEmpty)
-            ?.let { GuestId.fromString(it) }
-    }.getOrNull()
+    GuestId.fromStringOrNull(pathVariable("id"))
 
-internal fun ServerRequest.invitationIdPathParam() =
-    runCatching {
-        pathVariable("id")
-            .takeIf(String::isNotEmpty)
-            ?.let { InvitationId.fromString(it) }
-    }.getOrNull()
+internal fun ServerRequest.invitationIdPathParam(): InvitationId? =
+    InvitationId.fromStringOrNull(pathVariable("id"))
+
+internal fun ServerRequest.invitationAccessTokenPathParam() =
+    InvitationAccessToken.fromStringOrNull(pathVariable("token"))
 
 private fun ServerRequest.queryParamOrNull(name: String) =
     param(name).orElse(null)

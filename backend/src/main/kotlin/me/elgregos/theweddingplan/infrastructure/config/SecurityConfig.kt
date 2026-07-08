@@ -78,6 +78,7 @@ class SecurityConfig(
                         "/assets/**",
                         "/backoffice/**",
                         "/public/**",
+                        "/guest-access/**",
                         "/*.html",
                         "/favicon.ico",
                         "/favicon.svg",
