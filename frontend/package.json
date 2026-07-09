@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "type": "module",
   "scripts": {
     "dev:public": "vite public --config vite.config.ts",
