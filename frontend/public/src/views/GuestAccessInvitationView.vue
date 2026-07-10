@@ -10,7 +10,9 @@
         <div class="envelope__back" aria-hidden="true"></div>
 
         <article class="invitation-sheet" :class="{ 'invitation-sheet--visible': invitationVisible }">
-        <p v-if="isLoading" class="text-center text-sm text-[#093D57]/80">Ouverture de votre invitation...</p>
+        <p v-if="isLoading" class="text-center text-sm text-[#093D57]/80">
+        <br>
+        </p>
 
         <div v-else-if="errorMessage" class="rounded-2xl bg-[#E7D4CD]/55 p-4 text-sm text-[#093D57]">
           <p>{{ errorMessage }}</p>
@@ -34,9 +36,10 @@
 
             <ul class="guest-list mt-3 space-y-2" :class="{ 'guest-list--revealed': showGuestList }">
               <li
-                v-for="guest in invitation.guests"
+                v-for="(guest, index) in invitation.guests"
                 :key="`${guest.firstName}-${guest.lastName}`"
-                class="rounded-xl bg-[#BEC6C2]/30 px-4 py-3 text-[#093D57]"
+                class="guest-list__item rounded-xl bg-[#BEC6C2]/30 px-4 py-3 text-[#093D57]"
+                :style="{ transitionDelay: showGuestList ? `${index * 90}ms` : '0ms' }"
               >
                 <span class="text-sm font-medium">{{ guest.firstName }} {{ guest.lastName }}</span>
               </li>
@@ -101,10 +104,11 @@ const loadInvitation = async (): Promise<void> => {
   const revealDelay = (async () => {
     await wait(500);
     flapOpened.value = true;
-    // Wait for the flap's own CSS transition (1s, see .envelope__flap)
-    // to fully finish before the letter starts sliding out, otherwise
-    // the letter overtakes the still-opening flap.
+    // Wait for the flap's 1s rotation to finish (its z-index drops behind the
+    // card at that point), then hold a short beat so the top of the card is
+    // seen in the notch before it slides out of the opening.
     await wait(1000);
+    await wait(500);
     invitationVisible.value = true;
   })();
 
@@ -160,7 +164,7 @@ watch(normalizedToken, () => {
 .envelope {
   position: absolute;
   left: 50%;
-  bottom: -2dvh;
+  bottom: 5dvh;
   transform: translateX(-50%);
   width: min(30rem, calc(100vw - 1.5rem));
   height: 50dvh;
@@ -170,8 +174,11 @@ watch(normalizedToken, () => {
 
 .envelope__back {
   position: absolute;
-  inset: 0;
-  border-radius: 14px;
+  top: 36%;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 0 0 14px 14px;
   background: linear-gradient(160deg, #7b97a6, #28536b);
   box-shadow: 0 20px 45px rgba(9, 61, 87, 0.28);
   z-index: 1;
@@ -183,22 +190,23 @@ watch(normalizedToken, () => {
   position: absolute;
   left: 7%;
   right: 7%;
-  bottom: 8%;
-  max-height: 82%;
+  top: 46%;
+  max-height: 52%;
   overflow-y: auto;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.96);
   padding: 1.1rem;
   box-shadow: 0 16px 32px rgba(9, 61, 87, 0.18);
-  transform: translateY(44%);
-  opacity: 0;
-  transition: transform 1.1s cubic-bezier(0.2, 0.86, 0.28, 1), opacity 0.5s ease;
-  z-index: 2;
+  /* Anchored by its top so the card's head always sits inside the front's
+     notch (independent of content height): once the flap opens you see the
+     top of the card in the notch, then it slides up out of the opening. */
+  transform: translateY(0);
+  transition: transform 1.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+  z-index: 3;
 }
 
 .invitation-sheet--visible {
-  opacity: 1;
-  transform: translateY(-78%);
+  transform: translateY(-30dvh);
 }
 
 /* Front pocket: covers the lower part of the envelope with a V-notch top
@@ -208,33 +216,39 @@ watch(normalizedToken, () => {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 66%;
+  height: 64%;
   background: linear-gradient(165deg, #0c4663, #093d57);
-  clip-path: polygon(0 0, 50% 44%, 100% 0, 100% 100%, 0 100%);
+  clip-path: polygon(0 0, 50% 34%, 100% 0, 100% 100%, 0 100%);
   border-radius: 0 0 14px 14px;
   box-shadow: inset 0 8px 18px rgba(9, 61, 87, 0.35);
-  z-index: 3;
+  z-index: 5;
 }
 
 /* Flap: triangle covering the top opening, hinged at the top. When open it
-   simply rotates upward and stays visible above the envelope. */
+   rotates upward and drops behind the invitation card (but above the back). */
 .envelope__flap {
   position: absolute;
   left: 0;
   right: 0;
-  top: 0;
-  height: 44%;
-  background: linear-gradient(165deg, #0e4a68, #093d57);
+  top: 36%;
+  height: 28%;
+  background: linear-gradient(165deg, #15597d, #0b435f);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   transform-origin: top center;
   transform: rotateX(0deg);
-  transition: transform 1s ease;
-  box-shadow: 0 12px 24px rgba(9, 61, 87, 0.28);
-  z-index: 4;
+  /* Keep the flap above the card while it is still rotating; only drop its
+     z-index once the 1s rotation is finished, so the card's head never
+     flashes over the flap mid-animation. */
+  transition: transform 1s ease, z-index 0s linear 1s;
+  /* drop-shadow follows the clipped triangle, giving a visible light rim
+     so the flap reads distinctly against the front pocket. */
+  filter: drop-shadow(0 0 1px rgba(231, 212, 205, 0.9)) drop-shadow(0 6px 10px rgba(9, 61, 87, 0.3));
+  z-index: 6;
 }
 
 .envelope--opened .envelope__flap {
   transform: rotateX(-162deg);
+  z-index: 2;
 }
 
 .guest-list-stage {
@@ -255,13 +269,17 @@ watch(normalizedToken, () => {
 }
 
 .guest-list {
-  transform: translateY(40%);
-  opacity: 0;
-  transition: transform 0.95s cubic-bezier(0.22, 0.8, 0.3, 1), opacity 0.5s ease;
-  transition-delay: 0.35s;
+  /* container stays in place; each item staggers in individually */
+  margin-top: 0.75rem;
 }
 
-.guest-list--revealed {
+.guest-list__item {
+  transform: translateY(10px);
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.22, 0.8, 0.3, 1), opacity 0.5s ease;
+}
+
+.guest-list--revealed .guest-list__item {
   transform: translateY(0);
   opacity: 1;
 }
