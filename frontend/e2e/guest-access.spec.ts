@@ -31,7 +31,7 @@ test.describe('Guest access invitation page', () => {
     await expect(page.getByRole('heading', { name: 'Famille Martin' })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Alice Martin')).toBeVisible();
     await expect(page.getByText('Bob Martin')).toBeVisible();
-    await expect(page.getByText('2 invités')).toBeVisible();
+    await expect(page.getByText(/2 (invités|guests)/i)).toBeVisible();
   });
 
   test('shows a not-found message for an unknown token', async ({ page }) => {
@@ -45,8 +45,18 @@ test.describe('Guest access invitation page', () => {
 
     await page.goto(`${PUBLIC_BASE_URL}/guest-access/${VALID_TOKEN}`);
 
-    await expect(page.getByText(/introuvable/i)).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('button', { name: 'Réessayer' })).toBeVisible();
+    await expect(page.getByText(/introuvable|could not be found/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('button', { name: /Réessayer|Try again/i })).toBeVisible();
+  });
+
+  test('allows switching language manually', async ({ page }) => {
+    await page.goto(`${PUBLIC_BASE_URL}/`);
+
+    await page.getByRole('button', { name: 'EN' }).click();
+    await expect(page.getByRole('heading', { name: 'Private invitation' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'FR' }).click();
+    await expect(page.getByRole('heading', { name: 'Invitation privée' })).toBeVisible();
   });
 });
 

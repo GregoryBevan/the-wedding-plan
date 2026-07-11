@@ -2,8 +2,11 @@
   <main class="guest-access-page min-h-dvh">
     <section class="envelope-stage">
       <div class="envelope-stage__header">
-        <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#A88277]">Wedding Plan</p>
-        <h1 class="mt-2 text-2xl font-semibold text-[#093D57]">Votre invitation</h1>
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#A88277]">{{ t('common.appName') }}</p>
+          <LanguageSwitcher />
+        </div>
+        <h1 class="mt-2 text-2xl font-semibold text-[#093D57]">{{ t('invitation.title') }}</h1>
       </div>
 
       <div class="envelope" :class="{ 'envelope--opened': flapOpened }">
@@ -21,7 +24,7 @@
             type="button"
             @click="loadInvitation"
           >
-            Réessayer
+            {{ t('common.retry') }}
           </button>
         </div>
 
@@ -31,7 +34,7 @@
 
           <div class="guest-list-stage mt-4">
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#738F9D]">
-              {{ invitation.guestCount }} invité{{ invitation.guestCount > 1 ? 's' : '' }}
+              {{ guestCountLabel(invitation.guestCount) }}
             </p>
 
             <ul class="guest-list mt-3 space-y-2" :class="{ 'guest-list--revealed': showGuestList }">
@@ -57,11 +60,13 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import LanguageSwitcher from '../components/LanguageSwitcher.vue';
 import {
   GuestAccessInvitationApiError,
   type GuestInvitationResponse,
   resolveInvitationByToken,
 } from '../services/guestAccessInvitationApi';
+import { useGuestAccessI18n } from '../i18n/guestAccessI18n';
 
 const props = defineProps<{ token: string }>();
 
@@ -71,6 +76,8 @@ const errorMessage = ref('');
 const flapOpened = ref(false);
 const invitationVisible = ref(false);
 
+const { t, guestCountLabel } = useGuestAccessI18n();
+
 const normalizedToken = computed(() => props.token.trim());
 const showGuestList = computed(() => invitationVisible.value && Boolean(invitation.value) && !isLoading.value);
 
@@ -78,14 +85,14 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const buildErrorMessage = (status: number): string => {
   if (status === 404) {
-    return 'Cette invitation est introuvable. Vérifiez le lien de votre QR code.';
+    return t('invitation.errors.notFound');
   }
 
   if (status === 400) {
-    return 'Le lien de l\'invitation est invalide.';
+    return t('invitation.errors.invalidLink');
   }
 
-  return 'Impossible de charger cette invitation pour le moment.';
+  return t('invitation.errors.unavailable');
 };
 
 const loadInvitation = async (): Promise<void> => {
@@ -96,7 +103,7 @@ const loadInvitation = async (): Promise<void> => {
   invitationVisible.value = false;
 
   if (!normalizedToken.value) {
-    errorMessage.value = 'Le lien de l\'invitation est invalide.';
+    errorMessage.value = t('invitation.errors.invalidLink');
     isLoading.value = false;
     return;
   }
@@ -127,7 +134,7 @@ const loadInvitation = async (): Promise<void> => {
       return;
     }
 
-    errorMessage.value = 'Impossible de charger cette invitation pour le moment.';
+    errorMessage.value = t('invitation.errors.unavailable');
   } finally {
     isLoading.value = false;
   }
