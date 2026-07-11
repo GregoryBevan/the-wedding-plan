@@ -6,6 +6,8 @@
       class="language-switcher__button"
       :class="{ 'language-switcher__button--active': localeValue === availableLocale }"
       type="button"
+      :lang="availableLocale"
+      :aria-label="availableLocale === 'fr' ? 'Français' : 'English'"
       :aria-pressed="localeValue === availableLocale"
       @click="setLocale(availableLocale)"
     >
