@@ -12,7 +12,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: '/opt/homebrew/bin/pnpm exec vite backoffice --config vite.config.ts --host 127.0.0.1 --port 4173',
+      command: 'pnpm exec vite backoffice --config vite.config.ts --host 127.0.0.1 --port 4173',
       port: 4173,
       reuseExistingServer: !process.env.CI,
       env: {
@@ -21,7 +21,7 @@ export default defineConfig({
       }
     },
     {
-      command: '/opt/homebrew/bin/pnpm exec vite public --config vite.config.ts --host 127.0.0.1 --port 4174',
+      command: 'pnpm exec vite public --config vite.config.ts --host 127.0.0.1 --port 4174',
       port: 4174,
       reuseExistingServer: !process.env.CI,
       env: {

@@ -60,6 +60,8 @@ jobs:
         pnpm install
         pnpm audit --audit-level=high
         pnpm run test:coverage
+        pnpm exec playwright install --with-deps chromium
+        pnpm run test:e2e
         pnpm run build
       working-directory: frontend
     - name: Upload coverage artifacts

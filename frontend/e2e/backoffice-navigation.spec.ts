@@ -65,7 +65,16 @@ test.describe('Backoffice navigation', () => {
   test('edit flow keeps list context when canceling', async ({ page }) => {
     await allowAuthorizedSession(page);
 
-    await page.route('**/api/guests?page=2&size=10', async (route) => {
+    await page.route('**/api/guests**', async (route) => {
+      const requestUrl = new URL(route.request().url());
+      const pageParam = requestUrl.searchParams.get('page');
+      const sizeParam = requestUrl.searchParams.get('size');
+
+      if (requestUrl.pathname !== '/api/guests' || pageParam !== '2' || sizeParam !== '10') {
+        await route.fallback();
+        return;
+      }
+
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

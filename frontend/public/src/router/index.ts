@@ -16,6 +16,10 @@ const router = createRouter({
       component: GuestAccessInvitationView,
       props: true,
     },
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: '/',
+    },
   ],
 })
 
