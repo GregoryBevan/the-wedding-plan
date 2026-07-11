@@ -4,6 +4,7 @@ const importI18nModule = async () => import('./guestAccessI18n');
 
 describe('guestAccessI18n', () => {
   beforeEach(() => {
+    vi.restoreAllMocks();
     vi.resetModules();
     window.localStorage.clear();
   });

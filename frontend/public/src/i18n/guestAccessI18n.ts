@@ -8,7 +8,6 @@ type TranslationKey =
   | 'landing.title'
   | 'landing.description'
   | 'invitation.title'
-  | 'invitation.loading'
   | 'invitation.errors.notFound'
   | 'invitation.errors.invalidLink'
   | 'invitation.errors.unavailable';
@@ -22,7 +21,6 @@ const messages: Record<GuestAccessLocale, Record<TranslationKey, string>> = {
     'landing.title': 'Invitation privée',
     'landing.description': 'Scannez le QR code présent sur votre invitation pour ouvrir votre page d\'accès.',
     'invitation.title': 'Votre invitation',
-    'invitation.loading': 'Ouverture de votre invitation...',
     'invitation.errors.notFound': 'Cette invitation est introuvable. Vérifiez le lien de votre QR code.',
     'invitation.errors.invalidLink': 'Le lien de l\'invitation est invalide.',
     'invitation.errors.unavailable': 'Impossible de charger cette invitation pour le moment.',
@@ -33,7 +31,6 @@ const messages: Record<GuestAccessLocale, Record<TranslationKey, string>> = {
     'landing.title': 'Private invitation',
     'landing.description': 'Scan the QR code on your invitation to open your access page.',
     'invitation.title': 'Your invitation',
-    'invitation.loading': 'Opening your invitation...',
     'invitation.errors.notFound': 'This invitation could not be found. Please check your QR code link.',
     'invitation.errors.invalidLink': 'The invitation link is invalid.',
     'invitation.errors.unavailable': 'Unable to load this invitation right now.',
