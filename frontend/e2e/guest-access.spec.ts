@@ -31,7 +31,7 @@ test.describe('Guest access invitation page', () => {
     await expect(page.getByRole('heading', { name: 'Famille Martin' })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Alice Martin')).toBeVisible();
     await expect(page.getByText('Bob Martin')).toBeVisible();
-    await expect(page.getByText('2 invites')).toBeVisible();
+    await expect(page.getByText('2 invités')).toBeVisible();
   });
 
   test('shows a not-found message for an unknown token', async ({ page }) => {
