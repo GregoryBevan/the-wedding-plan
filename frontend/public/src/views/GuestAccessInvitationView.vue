@@ -37,7 +37,7 @@
             <ul class="guest-list mt-3 space-y-2" :class="{ 'guest-list--revealed': showGuestList }">
               <li
                 v-for="(guest, index) in invitation.guests"
-                :key="`${guest.firstName}-${guest.lastName}`"
+                :key="`${guest.firstName}-${guest.lastName}-${index}`"
                 class="guest-list__item rounded-xl bg-[#BEC6C2]/30 px-4 py-3 text-[#093D57]"
                 :style="{ transitionDelay: showGuestList ? `${index * 90}ms` : '0ms' }"
               >
