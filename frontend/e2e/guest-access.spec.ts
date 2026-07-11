@@ -1,0 +1,52 @@
+import { expect, test } from '@playwright/test';
+
+const PUBLIC_BASE_URL = 'http://127.0.0.1:4174';
+const VALID_TOKEN = '957f8251-f50b-48ca-9cd1-998e71ffd2e9';
+
+const jsonHeaders = {
+  'content-type': 'application/json',
+  'access-control-allow-origin': '*'
+};
+
+test.describe('Guest access invitation page', () => {
+  test('reveals the invitation and its guests for a valid token', async ({ page }) => {
+    await page.route('**/guest-access/invitations/**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          label: 'Famille Martin',
+          description: 'Nous serions ravis de vous compter parmi nous.',
+          guestCount: 2,
+          guests: [
+            { firstName: 'Alice', lastName: 'Martin' },
+            { firstName: 'Bob', lastName: 'Martin' }
+          ]
+        })
+      });
+    });
+
+    await page.goto(`${PUBLIC_BASE_URL}/guest-access/${VALID_TOKEN}`);
+
+    await expect(page.getByRole('heading', { name: 'Famille Martin' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Alice Martin')).toBeVisible();
+    await expect(page.getByText('Bob Martin')).toBeVisible();
+    await expect(page.getByText('2 invités')).toBeVisible();
+  });
+
+  test('shows a not-found message for an unknown token', async ({ page }) => {
+    await page.route('**/guest-access/invitations/**', async (route) => {
+      await route.fulfill({
+        status: 404,
+        headers: jsonHeaders,
+        body: '{}'
+      });
+    });
+
+    await page.goto(`${PUBLIC_BASE_URL}/guest-access/${VALID_TOKEN}`);
+
+    await expect(page.getByText(/introuvable/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('button', { name: 'Réessayer' })).toBeVisible();
+  });
+});
+
