@@ -78,7 +78,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const buildErrorMessage = (status: number): string => {
   if (status === 404) {
-    return 'Cette invitation est introuvable. Verifiez le lien de votre QR code.';
+    return 'Cette invitation est introuvable. Vérifiez le lien de votre QR code.';
   }
 
   if (status === 400) {
