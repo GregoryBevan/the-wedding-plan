@@ -70,9 +70,11 @@ import { useGuestAccessI18n } from '../i18n/guestAccessI18n';
 
 const props = defineProps<{ token: string }>();
 
+type InvitationErrorKey = 'notFound' | 'invalidLink' | 'unavailable';
+
 const invitation = ref<GuestInvitationResponse | null>(null);
 const isLoading = ref(false);
-const errorMessage = ref('');
+const errorKey = ref<InvitationErrorKey | null>(null);
 const flapOpened = ref(false);
 const invitationVisible = ref(false);
 
@@ -80,30 +82,42 @@ const { t, guestCountLabel } = useGuestAccessI18n();
 
 const normalizedToken = computed(() => props.token.trim());
 const showGuestList = computed(() => invitationVisible.value && Boolean(invitation.value) && !isLoading.value);
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const buildErrorMessage = (status: number): string => {
-  if (status === 404) {
+const errorMessageForKey = (key: InvitationErrorKey): string => {
+  if (key === 'notFound') {
     return t('invitation.errors.notFound');
   }
 
-  if (status === 400) {
+  if (key === 'invalidLink') {
     return t('invitation.errors.invalidLink');
   }
 
   return t('invitation.errors.unavailable');
 };
+const errorMessage = computed(() => (errorKey.value ? errorMessageForKey(errorKey.value) : ''));
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const resolveErrorKey = (status: number): InvitationErrorKey => {
+  if (status === 404) {
+    return 'notFound';
+  }
+
+  if (status === 400) {
+    return 'invalidLink';
+  }
+
+  return 'unavailable';
+};
 
 const loadInvitation = async (): Promise<void> => {
   invitation.value = null;
-  errorMessage.value = '';
+  errorKey.value = null;
   isLoading.value = true;
   flapOpened.value = false;
   invitationVisible.value = false;
 
   if (!normalizedToken.value) {
-    errorMessage.value = t('invitation.errors.invalidLink');
+    errorKey.value = 'invalidLink';
     isLoading.value = false;
     return;
   }
@@ -130,11 +144,11 @@ const loadInvitation = async (): Promise<void> => {
     await revealDelay;
 
     if (error instanceof GuestAccessInvitationApiError) {
-      errorMessage.value = buildErrorMessage(error.status);
+      errorKey.value = resolveErrorKey(error.status);
       return;
     }
 
-    errorMessage.value = t('invitation.errors.unavailable');
+    errorKey.value = 'unavailable';
   } finally {
     isLoading.value = false;
   }
