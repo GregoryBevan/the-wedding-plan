@@ -4,7 +4,7 @@
       <p class="text-xs font-semibold uppercase tracking-[0.25em] text-[#093D57]">Wedding Plan</p>
       <h1 class="mt-3 text-2xl font-semibold text-[#093D57]">Invitation privee</h1>
       <p class="mt-4 text-sm leading-6 text-[#093D57]/80">
-        Scannez le QR code present sur votre invitation pour ouvrir votre page d'acces.
+        Scannez le QR code présent sur votre invitation pour ouvrir votre page d'accès.
       </p>
     </section>
   </main>
