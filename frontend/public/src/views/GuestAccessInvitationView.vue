@@ -21,7 +21,7 @@
             type="button"
             @click="loadInvitation"
           >
-            Reessayer
+            Réessayer
           </button>
         </div>
 
