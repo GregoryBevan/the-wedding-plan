@@ -31,7 +31,7 @@
 
           <div class="guest-list-stage mt-4">
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#738F9D]">
-              {{ invitation.guestCount }} invite{{ invitation.guestCount > 1 ? 's' : '' }}
+              {{ invitation.guestCount }} invité{{ invitation.guestCount > 1 ? 's' : '' }}
             </p>
 
             <ul class="guest-list mt-3 space-y-2" :class="{ 'guest-list--revealed': showGuestList }">
