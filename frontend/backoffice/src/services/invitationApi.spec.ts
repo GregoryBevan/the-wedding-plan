@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createInvitation, listInvitations } from './invitationApi';
+import { createInvitation, getInvitationById, listInvitations } from './invitationApi';
 
 describe('invitationApi', () => {
   afterEach(() => {
@@ -42,6 +42,46 @@ describe('invitationApi', () => {
     } as Response);
 
     await expect(listInvitations()).rejects.toThrow('Unable to retrieve invitations at the moment.');
+  });
+
+  it('calls backend invitation details endpoint with csrf header', async () => {
+    document.cookie = 'XSRF-TOKEN=test-csrf-token';
+
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 'inv-1',
+        creationDate: '2026-07-03T10:00:00Z',
+        updateDate: '2026-07-03T10:00:00Z',
+        label: 'Family table',
+        description: 'Main family table',
+        guests: [],
+        guestCount: 2
+      })
+    } as Response);
+
+    await getInvitationById('inv-1');
+
+    const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+
+    expect(url).toBe('http://localhost:8080/api/invitations/inv-1');
+    expect(options).toMatchObject({
+      method: 'GET',
+      credentials: 'include'
+    });
+
+    const headers = options.headers as Headers;
+    expect(headers.get('X-XSRF-TOKEN')).toBe('test-csrf-token');
+  });
+
+  it('throws not found message when details endpoint returns 404', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({})
+    } as Response);
+
+    await expect(getInvitationById('inv-404')).rejects.toThrow('Invitation not found.');
   });
 
   it('calls backend create invitation endpoint with csrf header', async () => {

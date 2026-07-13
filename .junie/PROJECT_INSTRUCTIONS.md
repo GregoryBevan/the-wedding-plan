@@ -6,31 +6,53 @@ This is a fullstack project.
 
 - **Project Goal**: The application is an iterative wedding planning tool designed to help manage wedding preparations,
   starting with guest management. Note: This goal is evolving as we work iteratively.
-- **Workflow**: After any code modification, ensure you stage the affected files using `git add`.
+- **Workflow**: After any code modification, ensure you stage the affected files using `git add`. When starting to work on a new issue you should update the main branch and create a new branch for your work. You should never commit or push work.
+- **Branch naming convention**: Use the format `feat/#<issue-number><short-description>` for new features and `fix/#<issue-number><short-description>` for bug fixes.
+- **Versioning rule**: For every issue (frontend, backend, or fullstack), bump and keep aligned both application versions before staging changes: `frontend/package.json` and `backend/build.gradle.kts`.
+- **Craft principles**:
+  - **KISS**: prefer the simplest implementation that satisfies the scope; avoid unnecessary abstraction, indirection, or overly clever code.
+  - **YAGNI**: implement only what is required by the current issue scope; do not add speculative features, extension points, or premature generalization.
 
 
 ## Backend
-
+- If java is not found
+  - `export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home"`
+  - `export PATH="$JAVA_HOME/bin:/opt/homebrew/bin:$PATH"`
 - All backend code is located in the `backend` directory.
 - **Architecture**: Follows a DDD/Clean Architecture pattern with `api`, `application`, `domain`, and `infrastructure`
   packages. The `api` layer uses functional routing (Kotlin DSL).
+  - Current API modules include guest endpoints in `backend/src/main/kotlin/me/elgregos/theweddingplan/api/guest` and auth endpoints in `backend/src/main/kotlin/me/elgregos/theweddingplan/api/auth`.
 - **Technologies**: Kotlin, Spring Boot, Gradle, Exposed (for SQL), Liquibase (for DB migrations), and PostgreSQL.
+- **Build & Test Commands**:
+  - Run unit tests: `./gradlew test`
+  - Run integration tests: `./gradlew integrationTest`
+  - Run full verification (includes integration tests): `./gradlew check`
 - **Testing**:
-    - JUnit 5, AssertK, MockK, and Testcontainers for integration tests.
-    - Use class fixtures to implement tests.
-    - Use `lateinit var` for top-level test variables and initialize them in a `@BeforTest` function.
-    - Structure test methods into three distinct blocks (Given, When, Then) separated by blank lines, without explicit
-      comments.
-    - Use static imports for assertions, fixtures, and common utilities to improve code readability.
+  - JUnit 5, AssertK, MockK, and Testcontainers for integration tests.
+  - Use class fixtures from the dedicated `testFixtures` source set (organized by layer: domain, API, infrastructure).
+  - Use `lateinit var` for top-level test variables and initialize them in a `@BeforeTest` function.
+  - Structure test methods into three distinct blocks (Given, When, Then) separated by blank lines, without explicit
+    comments.
+  - Use static imports for assertions, fixtures, and common utilities to improve code readability.
+  - Integration tests should extend `AbstractIntegrationTest` or `AbstractEndpointIntegrationTest` (located in `backend/src/integrationTest/kotlin/me/elgregos/theweddingplan/`) to inherit Testcontainers PostgreSQL setup with reusable containers.
 - **Coding Style**: For Kotlin development, adopt idiomatic Kotlin best practices: use concise syntax, favor functional
-  style, and avoid verbose Java-like patterns. Specifically, use one-line functions with `=` whenever possible.
-- If java is not found
-    - `export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home"`
-    - `export PATH="$JAVA_HOME/bin:/opt/homebrew/bin:$PATH"`
+  style, and avoid verbose Java-like patterns. Specifically, use one-line functions with `=` whenever possible. The build enforces strict null-safety with the `-Xjsr305=strict` compiler option.
+
 
 ## Frontend
 
 - All frontend code is located in the `frontend` directory.
-- If pnpm or Node.js is not found:
-    - Ensure Node.js is installed and available on `PATH` (e.g., via fnm/nvm/asdf or your package manager)
-    - Enable Corepack (or install pnpm) so `pnpm` is available on `PATH`
+- Frontend contains two Vite apps with separate HTML entries: `frontend/public/index.html` and `frontend/backoffice/index.html`.
+- **Technologies**: Vue 3, TypeScript, Vite, Vitest, Tailwind CSS (with Vite plugin), Vue Test Utils.
+- **Build & Test Commands**:
+  - Install dependencies: `/opt/homebrew/bin/pnpm install`
+  - Run public app in development: `/opt/homebrew/bin/pnpm run dev:public`
+  - Run backoffice app in development: `/opt/homebrew/bin/pnpm run dev:backoffice`
+  - For each frontend issue, bump the app version before staging changes: `/opt/homebrew/bin/pnpm run version:issue`
+  - Run tests: `/opt/homebrew/bin/pnpm run test`
+  - Run tests in watch mode: `/opt/homebrew/bin/pnpm run test:watch`
+  - Run tests with coverage: `/opt/homebrew/bin/pnpm run test:coverage`
+  - Vitest currently includes `backoffice/src/**/*.spec.ts` (see `frontend/vite.config.ts`).
+- if pnpm or node is not found :
+  - Use `pnpm` from this absolute path: `/opt/homebrew/bin/pnpm`.
+  - Use `node` from this absolute path: `/Users/grego/.local/state/fnm_multishells/4700_1781734884722/bin/node`

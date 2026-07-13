@@ -31,6 +31,31 @@ export interface CreateInvitationPayload {
   guestIds: string[];
 }
 
+export const getInvitationById = async (id: string): Promise<InvitationResponse> => {
+  const csrfToken = readCookie('XSRF-TOKEN');
+  const headers = new Headers();
+
+  if (csrfToken) {
+    headers.set('X-XSRF-TOKEN', csrfToken);
+  }
+
+  const response = await fetch(`${invitationApiBaseUrl}/invitations/${id}`, {
+    method: 'GET',
+    credentials: 'include',
+    headers
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Invitation not found.');
+    }
+
+    throw new Error('Unable to retrieve invitation details at the moment.');
+  }
+
+  return response.json() as Promise<InvitationResponse>;
+};
+
 const invitationApiBaseUrl = getApiBaseUrl({ includeApiPath: true });
 
 export const listInvitations = async (
