@@ -76,6 +76,86 @@ object GuestFixtures {
         updateDate = creationDate.plusDays(3),
     )
 
+    val albertEinstein = Guest(
+        id = GuestId.fromString("019f6c83-cd2d-7357-833b-e7cda750ba33"),
+        version = 1L,
+        firstName = "Albert",
+        lastName = "Einstein",
+        email = "albert@example.com",
+        creationDate = creationDate,
+        updateDate = creationDate,
+    )
+
+    val marieCurie = Guest(
+        id = GuestId.fromString("019f6c83-cd2d-7357-833b-e7cda750ba34"),
+        version = 1L,
+        firstName = "Marie",
+        lastName = "Curie",
+        email = "marie@example.com",
+        creationDate = creationDate,
+        updateDate = creationDate,
+    )
+
+    val pierreCurie = Guest(
+        id = GuestId.fromString("019f6c83-cd2d-7357-833b-e7cda750ba35"),
+        version = 1L,
+        firstName = "Pierre",
+        lastName = "Curie",
+        email = "pierre@example.com",
+        creationDate = creationDate,
+        updateDate = creationDate,
+    )
+
+    val ryanEvans = Guest(
+        id = GuestId.fromString("019f7000-0000-7000-8000-000000000001"),
+        version = 1L,
+        firstName = "Ryan",
+        lastName = "Evans",
+        email = "ryanevans@teleworm.us",
+        creationDate = creationDate,
+        updateDate = creationDate,
+    )
+
+    val joyceClement = Guest(
+        id = GuestId.fromString("019f7000-0000-7000-8000-000000000002"),
+        version = 1L,
+        firstName = "Joyce",
+        lastName = "Clement",
+        email = "joyceclement@example.com",
+        creationDate = creationDate,
+        updateDate = creationDate,
+    )
+
+    val julianneWhitaker = Guest(
+        id = GuestId.fromString("019f7000-0000-7000-8000-000000000003"),
+        version = 1L,
+        firstName = "Julianne",
+        lastName = "Whitaker",
+        email = "juliannewhitaker@jourrapide.com",
+        creationDate = creationDate,
+        updateDate = creationDate,
+    )
+
+    val restoreCandidate = Guest(
+        id = GuestId.fromString("019f7000-0000-7000-8000-000000000004"),
+        version = 1L,
+        firstName = "Restore",
+        lastName = "Candidate",
+        email = "restore.candidate@example.com",
+        creationDate = creationDate,
+        updateDate = creationDate,
+    )
+
+    val sarahMills = Guest(
+        id = GuestId.fromString("019f7000-0000-7000-8000-000000000005"),
+        version = 1L,
+        firstName = "Sarah",
+        lastName = "Mills",
+        email = "sarahmills@example.com",
+        creationDate = creationDate,
+        updateDate = creationDate,
+    )
+
     val liamMillerUpdated = Guest(
         id = GuestId.fromString("019f0e7e-8f4d-790b-af81-9af8f2db8501"),
         version = 2L,
@@ -111,6 +191,26 @@ object GuestFixtures {
         firstName = "Mickael",
         lastName = "Kael",
         email = "mickael.kael@example.com",
+        creationDate = creationDate,
+        updateDate = creationDate
+    )
+
+    val martinLaval = Guest(
+        id = GuestId.fromString("019f5c29-d4e0-749b-a719-8eb3788ecc80"),
+        version = 1L,
+        firstName = "Martin",
+        lastName = "Laval",
+        email = "martin.laval@example.com",
+        creationDate = creationDate,
+        updateDate = creationDate
+    )
+
+    val pierrePonce = Guest(
+        id = GuestId.fromString("019f5c2b-3194-71af-9492-38d2a7509e60"),
+        version = 1L,
+        firstName = "Pierre",
+        lastName = "Ponce",
+        email = "pierre.ponce@example.com",
         creationDate = creationDate,
         updateDate = creationDate
     )

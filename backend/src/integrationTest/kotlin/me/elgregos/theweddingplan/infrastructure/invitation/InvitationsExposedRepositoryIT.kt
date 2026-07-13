@@ -5,15 +5,22 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import me.elgregos.theweddingplan.AbstractIntegrationTest
 import me.elgregos.theweddingplan.domain.guest.Guest
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.albertEinstein
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.emmaWilson
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.liamMiller
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.marieCurie
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.pierreCurie
 import me.elgregos.theweddingplan.domain.guest.GuestId
 import me.elgregos.theweddingplan.domain.guest.Guests
 import me.elgregos.theweddingplan.domain.invitation.*
 import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.bestManInvitation
 import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.bridesMaidInvitation
 import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.friendsInvitation
+import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.nonExistingInvitation
+import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.scienceConferenceInvitation
+import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.scienceConferenceInvitationUpdated
+import me.elgregos.theweddingplan.domain.shared.Dates.nowUtcMillis
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.JdbcTemplate
@@ -43,6 +50,39 @@ class InvitationsExposedRepositoryIT : AbstractIntegrationTest() {
         assertThat(invitationCount()).isEqualTo(initialCount + 1)
         assertThat(invitationById(friendsInvitation.id)).isEqualTo(createdInvitation)
     }
+
+    @Test
+    fun `should update existing invitation details and guests`() {
+        guestRepository.add(albertEinstein)
+        guestRepository.add(marieCurie)
+
+        val invitation = scienceConferenceInvitation
+        val createdInvitation = invitationsRepository.add(invitation)
+        val initialCount = invitationCount()
+
+        val invitationToUpdate =scienceConferenceInvitationUpdated
+
+        val updatedInvitation = invitationsRepository.update(invitationToUpdate)
+
+        assertThat(updatedInvitation).isEqualTo(invitationToUpdate)
+        assertThat(invitationsRepository.findById(createdInvitation.id)).isEqualTo(invitationToUpdate)
+        assertThat(invitationCount()).isEqualTo(initialCount)
+        assertThat(invitationsRepository.findAssignedGuestIds(setOf(albertEinstein.id))).isEqualTo(emptySet())
+        assertThat(invitationsRepository.findAssignedGuestIds(setOf(marieCurie.id))).isEqualTo(setOf(marieCurie.id))
+    }
+
+    @Test
+    fun `should return null when trying to update non-existing invitation`() {
+        val guest = pierreCurie
+        guestRepository.add(guest)
+
+        val nonExisting = nonExistingInvitation(guest, updateDate = nowUtcMillis())
+
+        val updatedInvitation = invitationsRepository.update(nonExisting)
+
+        assertThat(updatedInvitation).isNull()
+    }
+
     @Test
     fun `should find invitation by id`() {
         val found = invitationsRepository.findById(bridesMaidInvitation.id)

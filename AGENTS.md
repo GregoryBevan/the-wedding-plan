@@ -38,6 +38,12 @@ This is a fullstack project.
 - **Coding Style**: For Kotlin development, adopt idiomatic Kotlin best practices: use concise syntax, favor functional
   style, and avoid verbose Java-like patterns. Specifically, use one-line functions with `=` whenever possible. The build enforces strict null-safety with the `-Xjsr305=strict` compiler option.
 
+### Fixture usage (project convention)
+
+- Prefer using shared fixtures from the `testFixtures` source set instead of creating test data inline in tests. This keeps tests consistent and simplifies updates to test data.
+- Use static imports for fixtures (e.g. `import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe`) so test code reads clearly.
+- When you need new test data, add it to the appropriate fixtures file (domain, API, infrastructure) and update tests to reuse it.
+
 
 ## Frontend
 

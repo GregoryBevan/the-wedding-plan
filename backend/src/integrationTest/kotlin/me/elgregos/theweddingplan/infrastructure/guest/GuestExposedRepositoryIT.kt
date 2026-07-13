@@ -19,6 +19,13 @@ import me.elgregos.theweddingplan.domain.guest.GuestFixtures.liamMiller
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.liamMillerUpdated
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.noahAnderson
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.noahAndersonUpdated
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.ryanEvans
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.joyceClement
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.julianneWhitaker
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.martinLaval
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.pierrePonce
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.restoreCandidate
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.sarahMills
 import me.elgregos.theweddingplan.domain.guest.GuestId
 import me.elgregos.theweddingplan.domain.guest.GuestPage
 import me.elgregos.theweddingplan.domain.shared.Dates
@@ -72,13 +79,12 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
 
     @Test
     fun `should return null when trying to update an archived guest`() {
-        val guest = Guest(firstName = "Ryan", lastName = "Evans", email = "ryanevans@teleworm.us")
-        guestsRepository.add(guest)
-        markAsArchived(guest)
+        guestsRepository.add(pierrePonce)
+        markAsArchived(pierrePonce)
 
         val result = guestsRepository.update(
-            guest.copy(firstName = "Updated"),
-            expectedVersion = guest.version,
+            pierrePonce.copy(firstName = "Updated"),
+            expectedVersion = pierrePonce.version,
         )
 
         assertThat(result).isNull()
@@ -93,20 +99,19 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
 
     @Test
     fun `should list only active guests`() {
-        val archivedGuest = Guest(firstName = "Joyce", lastName = "Clement", email = "joyceclement@example.com")
-        guestsRepository.add(archivedGuest)
-        markAsArchived(archivedGuest)
+        guestsRepository.add(joyceClement)
+        markAsArchived(joyceClement)
 
         val guests = guestsRepository.list(GuestListCriteria(status = GuestStatus.ACTIVE))
 
-        assertThat(guests.items.any { it.id == archivedGuest.id }).isFalse()
+        assertThat(guests.items.any { it.id == joyceClement.id }).isFalse()
     }
 
     @Test
     fun `should list only archived guests from trash query`() {
-        val activeGuest = Guest(firstName = "Ryan", lastName = "Evans", email = "ryanevans@teleworm.us")
+        val activeGuest = ryanEvans
         guestsRepository.add(activeGuest)
-        val archivedGuest = Guest(firstName = "Julianne", lastName = "Whitaker", email = "juliannewhitaker@jourrapide.com")
+        val archivedGuest = julianneWhitaker
         guestsRepository.add(archivedGuest)
         markAsArchived(archivedGuest)
 
@@ -175,24 +180,20 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
 
     @Test
     fun `should return null for an archived guest`() {
-        val guest = Guest(firstName = "Joyce", lastName = "Clement", email = "joyceclement@example.com")
-        guestsRepository.add(guest)
-        markAsArchived(guest)
+        guestsRepository.add(martinLaval)
+        markAsArchived(martinLaval)
 
-        val found = guestsRepository.findById(guest.id)
-
-        assertThat(found).isNull()
+        assertThat(guestsRepository.findById(martinLaval.id)).isNull()
     }
 
     @Test
     fun `should restore an archived guest`() {
-        val guest = Guest(firstName = "Restore", lastName = "Candidate", email = "restore.candidate@example.com")
-        guestsRepository.add(guest)
-        markAsArchived(guest)
+        guestsRepository.add(restoreCandidate)
+        markAsArchived(restoreCandidate)
 
-        val archivedGuest = guestById(guest.id)
+        val archivedGuest = guestById(restoreCandidate.id)
         val restoredGuest = guestsRepository.restore(archivedGuest.restore(now = Dates.nowUtcMillis()), expectedVersion = archivedGuest.version)
-        val found = guestsRepository.findById(guest.id)
+        val found = guestsRepository.findById(restoreCandidate.id)
 
         assertThat(restoredGuest).isNotNull()
         assertThat(found).isNotNull()
@@ -208,11 +209,10 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
 
     @Test
     fun `should persist deletion date when guest is marked as archived`() {
-        val guest = Guest(firstName = "Sarah", lastName = "Mills", email = "sarahmills@example.com")
-        guestsRepository.add(guest)
+        guestsRepository.add(sarahMills)
 
-        markAsArchived(guest)
-        val archivedGuest = guestById(guest.id)
+        markAsArchived(sarahMills)
+        val archivedGuest = guestById(sarahMills.id)
 
         assertThat(archivedGuest.deletionDate).isNotNull()
     }
