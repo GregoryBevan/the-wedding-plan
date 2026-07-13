@@ -8,7 +8,7 @@
       <RouterLink
         :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationAdd }"
         aria-label="Create invitation"
-        class="justify-self-end inline-flex h-10 w-10 items-center justify-center rounded-full border border-primary bg-primary text-white hover:opacity-90"
+        class="justify-self-end inline-flex h-10 w-10 items-center justify-center rounded-full border border-primary bg-primary text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
         data-test="create-invitation-cta"
         title="Create invitation"
       >
@@ -16,12 +16,13 @@
       </RouterLink>
     </header>
 
-    <p v-if="isLoading" class="py-8 text-center text-sm">Loading invitations...</p>
+    <p v-if="isLoading" class="py-8 text-center text-sm" aria-live="polite">Loading invitations...</p>
 
     <div v-else-if="errorMessage" class="space-y-3 py-8 text-center">
-      <p class="text-sm text-red-700">{{ errorMessage }}</p>
+      <p class="text-sm text-red-700" role="alert">{{ errorMessage }}</p>
       <button
-        class="rounded-md bg-primary px-4 py-2 text-white hover:opacity-90"
+        class="rounded-md bg-primary px-4 py-2 text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        type="button"
         @click="loadData"
       >
         Try again
@@ -36,7 +37,7 @@
       <p class="text-sm text-text/80">You need at least one guest before creating invitations.</p>
       <RouterLink
         :to="{ name: BACKOFFICE_ROUTE_NAMES.guestAdd }"
-        class="inline-flex rounded-md bg-primary px-4 py-2 text-white hover:opacity-90"
+        class="inline-flex rounded-md bg-primary px-4 py-2 text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
         data-test="create-first-guest-cta"
       >
         Create your first guest
@@ -55,7 +56,7 @@
       <article
         v-for="invitation in invitationPage.items"
         :key="invitation.id"
-        class="rounded-xl border border-secondary/30 bg-white p-4 shadow-sm"
+        class="flex h-full flex-col rounded-xl border border-secondary/30 bg-white p-4 shadow-sm"
         data-test="invitation-card"
       >
         <h3 class="mb-3 text-lg font-medium text-text" data-test="invitation-card-label">{{ invitation.label }}</h3>
@@ -72,24 +73,24 @@
           </li>
         </ul>
 
-        <div class="flex items-center justify-end gap-2">
+        <div class="mt-auto flex items-center justify-end gap-2 pt-2">
+          <RouterLink
+            :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationDetails, params: { id: invitation.id } }"
+            aria-label="View invitation"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            title="View"
+          >
+            <img :src="viewInvitationIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
+          </RouterLink>
           <button
-            class="cursor-not-allowed rounded-md border border-secondary px-3 py-1 text-xs opacity-60"
+            aria-label="Edit invitation"
+            class="inline-flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-full bg-primary text-white opacity-60"
             type="button"
             disabled
             aria-disabled="true"
             title="Coming soon"
           >
-            View
-          </button>
-          <button
-            class="cursor-not-allowed rounded-md border border-secondary px-3 py-1 text-xs opacity-60"
-            type="button"
-            disabled
-            aria-disabled="true"
-            title="Coming soon"
-          >
-            Edit
+            <img :src="editInvitationIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
           </button>
         </div>
       </article>
@@ -100,6 +101,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import addInvitationIcon from '../assets/icons/add-invitation.svg';
+import editInvitationIcon from '../assets/icons/edit.svg';
+import viewInvitationIcon from '../assets/icons/view.svg';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 import { listGuests } from '../services/guestApi';
 import { listInvitations, type InvitationPageResponse } from '../services/invitationApi';

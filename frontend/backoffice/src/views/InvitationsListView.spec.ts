@@ -43,6 +43,13 @@ describe('InvitationsListView', () => {
           })
         },
         {
+          path: '/invitations/:id',
+          name: BACKOFFICE_ROUTE_NAMES.invitationDetails,
+          component: defineComponent({
+            template: '<div>invitation details view</div>'
+          })
+        },
+        {
           path: '/guests/new',
           name: BACKOFFICE_ROUTE_NAMES.guestAdd,
           component: defineComponent({
@@ -116,9 +123,11 @@ describe('InvitationsListView', () => {
     expect(wrapper.text()).not.toContain('bob@example.com');
     expect(cards[0].findAll('[data-test="invitation-card-guest-item"]')).toHaveLength(2);
     const actionButtons = cards[0].findAll('button');
+    const viewLink = cards[0].get('a');
 
-    expect(actionButtons).toHaveLength(2);
-    expect(actionButtons.every((button) => button.attributes('disabled') !== undefined)).toBe(true);
+    expect(actionButtons).toHaveLength(1);
+    expect(actionButtons[0].attributes('disabled')).toBeDefined();
+    expect(viewLink.attributes('href')).toBe('/invitations/inv-1');
     expect(listGuestsMock).not.toHaveBeenCalled();
   });
 

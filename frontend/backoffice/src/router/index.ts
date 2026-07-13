@@ -25,6 +25,14 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/invitations/:id',
+    name: BACKOFFICE_ROUTE_NAMES.invitationDetails,
+    component: () => import('../views/InvitationDetailsView.vue'),
+    meta: {
+      requiresAuthorized: true
+    }
+  },
+  {
     path: '/guests',
     name: BACKOFFICE_ROUTE_NAMES.guestList,
     component: () => import('../views/GuestListView.vue'),
