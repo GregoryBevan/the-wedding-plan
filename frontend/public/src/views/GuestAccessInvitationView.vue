@@ -2,8 +2,11 @@
   <main class="guest-access-page min-h-dvh">
     <section class="envelope-stage">
       <div class="envelope-stage__header">
-        <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#A88277]">Wedding Plan</p>
-        <h1 class="mt-2 text-2xl font-semibold text-[#093D57]">Votre invitation</h1>
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#A88277]">{{ t('common.appName') }}</p>
+          <LanguageSwitcher />
+        </div>
+        <h1 class="mt-2 text-2xl font-semibold text-[#093D57]">{{ t('invitation.title') }}</h1>
       </div>
 
       <div class="envelope" :class="{ 'envelope--opened': flapOpened }">
@@ -21,7 +24,7 @@
             type="button"
             @click="loadInvitation"
           >
-            Réessayer
+            {{ t('common.retry') }}
           </button>
         </div>
 
@@ -31,7 +34,7 @@
 
           <div class="guest-list-stage mt-4">
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#738F9D]">
-              {{ invitation.guestCount }} invité{{ invitation.guestCount > 1 ? 's' : '' }}
+              {{ guestCountLabel(invitation.guestCount) }}
             </p>
 
             <ul class="guest-list mt-3 space-y-2" :class="{ 'guest-list--revealed': showGuestList }">
@@ -57,46 +60,64 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import LanguageSwitcher from '../components/LanguageSwitcher.vue';
 import {
   GuestAccessInvitationApiError,
   type GuestInvitationResponse,
   resolveInvitationByToken,
 } from '../services/guestAccessInvitationApi';
+import { useGuestAccessI18n } from '../i18n/guestAccessI18n';
 
 const props = defineProps<{ token: string }>();
 
+type InvitationErrorKey = 'notFound' | 'invalidLink' | 'unavailable';
+
 const invitation = ref<GuestInvitationResponse | null>(null);
 const isLoading = ref(false);
-const errorMessage = ref('');
+const errorKey = ref<InvitationErrorKey | null>(null);
 const flapOpened = ref(false);
 const invitationVisible = ref(false);
 
+const { t, guestCountLabel } = useGuestAccessI18n();
+
 const normalizedToken = computed(() => props.token.trim());
 const showGuestList = computed(() => invitationVisible.value && Boolean(invitation.value) && !isLoading.value);
+const errorMessageForKey = (key: InvitationErrorKey): string => {
+  if (key === 'notFound') {
+    return t('invitation.errors.notFound');
+  }
+
+  if (key === 'invalidLink') {
+    return t('invitation.errors.invalidLink');
+  }
+
+  return t('invitation.errors.unavailable');
+};
+const errorMessage = computed(() => (errorKey.value ? errorMessageForKey(errorKey.value) : ''));
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const buildErrorMessage = (status: number): string => {
+const resolveErrorKey = (status: number): InvitationErrorKey => {
   if (status === 404) {
-    return 'Cette invitation est introuvable. Vérifiez le lien de votre QR code.';
+    return 'notFound';
   }
 
   if (status === 400) {
-    return 'Le lien de l\'invitation est invalide.';
+    return 'invalidLink';
   }
 
-  return 'Impossible de charger cette invitation pour le moment.';
+  return 'unavailable';
 };
 
 const loadInvitation = async (): Promise<void> => {
   invitation.value = null;
-  errorMessage.value = '';
+  errorKey.value = null;
   isLoading.value = true;
   flapOpened.value = false;
   invitationVisible.value = false;
 
   if (!normalizedToken.value) {
-    errorMessage.value = 'Le lien de l\'invitation est invalide.';
+    errorKey.value = 'invalidLink';
     isLoading.value = false;
     return;
   }
@@ -123,11 +144,11 @@ const loadInvitation = async (): Promise<void> => {
     await revealDelay;
 
     if (error instanceof GuestAccessInvitationApiError) {
-      errorMessage.value = buildErrorMessage(error.status);
+      errorKey.value = resolveErrorKey(error.status);
       return;
     }
 
-    errorMessage.value = 'Impossible de charger cette invitation pour le moment.';
+    errorKey.value = 'unavailable';
   } finally {
     isLoading.value = false;
   }

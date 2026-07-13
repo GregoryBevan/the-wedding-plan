@@ -12,7 +12,7 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    include: ['backoffice/src/**/*.spec.ts'],
+    include: ['backoffice/src/**/*.spec.ts', 'public/src/**/*.spec.ts'],
     globals: true,
     coverage: {
       provider: 'v8',

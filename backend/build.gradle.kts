@@ -12,7 +12,7 @@ plugins {
 
 
 group = "me.elgregoss"
-version = "0.0.13-SNAPSHOT"
+version = "0.0.14-SNAPSHOT"
 
 java {
     toolchain {
