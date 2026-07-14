@@ -2,6 +2,7 @@ import { getApiBaseUrl, readCookie } from './http';
 
 export interface InvitationResponse {
   id: string;
+  version: number;
   creationDate: string;
   updateDate: string;
   label: string;
@@ -32,6 +33,7 @@ export interface CreateInvitationPayload {
 }
 
 export interface UpdateInvitationPayload {
+  version: number;
   label: string;
   description: string;
   guestIds: string[];

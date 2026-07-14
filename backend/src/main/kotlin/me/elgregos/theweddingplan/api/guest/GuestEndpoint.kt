@@ -6,6 +6,7 @@ import me.elgregos.theweddingplan.api.common.guestIdPathParam
 import me.elgregos.theweddingplan.api.common.intQueryParam
 import me.elgregos.theweddingplan.application.guest.*
 import me.elgregos.theweddingplan.domain.guest.Guest
+import me.elgregos.theweddingplan.domain.guest.GuestId
 import me.elgregos.theweddingplan.domain.guest.GuestListCriteria
 import me.elgregos.theweddingplan.domain.guest.GuestPage
 import org.springframework.http.HttpStatus
@@ -61,9 +62,9 @@ class GuestEndpoint(
         val id = request.guestIdPathParam() ?: return ServerResponse.badRequest().build()
         val payload = request.body(UpdateGuestRequest::class.java)
 
-        return with(guestUpdater.update(id, payload.toCommand())) {
+        return with(guestUpdater.update(payload.toCommand(id))) {
             when (this) {
-                is UpdateGuestResult.Updated -> ServerResponse.ok().body(this.guest.toResponse())
+                is UpdateGuestResult.Updated -> ServerResponse.ok().body(guest.toResponse())
                 is UpdateGuestResult.NotFound -> ServerResponse.notFound().build()
                 is UpdateGuestResult.VersionConflict -> ServerResponse.status(HttpStatus.CONFLICT).build()
             }
@@ -129,8 +130,8 @@ internal fun Guest.toResponse() =
 internal fun AddGuestRequest.toCommand() =
     AddGuestCommand(firstName = firstName, lastName = lastName, email = email)
 
-internal fun UpdateGuestRequest.toCommand() =
-    UpdateGuestCommand(version = version, firstName = firstName, lastName = lastName, email = email)
+internal fun UpdateGuestRequest.toCommand(id: GuestId) =
+    UpdateGuestCommand(id = id, version = version, firstName = firstName, lastName = lastName, email = email)
 
 internal fun GuestPage.toResponse() =
     GuestPageResponse(

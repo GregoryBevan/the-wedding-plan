@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clearSessionAuthStatus, getSessionAuthStatus } from './authStatusCache';
+import { createAuthStatus } from '../testFixtures/authFixtures';
 
 const authApiMock = vi.hoisted(() => ({
   getAuthStatus: vi.fn()
@@ -16,11 +17,7 @@ describe('authStatusCache', () => {
   });
 
   it('reuses cached auth status across calls', async () => {
-    authApiMock.getAuthStatus.mockResolvedValue({
-      isAuthenticated: true,
-      email: 'allowed@example.com',
-      isAuthorized: true
-    });
+    authApiMock.getAuthStatus.mockResolvedValue(createAuthStatus());
 
     const first = await getSessionAuthStatus();
     const second = await getSessionAuthStatus();
@@ -38,11 +35,7 @@ describe('authStatusCache', () => {
     const pendingFirst = getSessionAuthStatus();
     const pendingSecond = getSessionAuthStatus();
 
-    resolveRequest!({
-      isAuthenticated: true,
-      email: 'allowed@example.com',
-      isAuthorized: true
-    });
+    resolveRequest!(createAuthStatus());
 
     const [first, second] = await Promise.all([pendingFirst, pendingSecond]);
 
@@ -52,16 +45,8 @@ describe('authStatusCache', () => {
 
   it('clears cache when requested', async () => {
     authApiMock.getAuthStatus
-      .mockResolvedValueOnce({
-        isAuthenticated: true,
-        email: 'first@example.com',
-        isAuthorized: true
-      })
-      .mockResolvedValueOnce({
-        isAuthenticated: true,
-        email: 'second@example.com',
-        isAuthorized: true
-      });
+      .mockResolvedValueOnce(createAuthStatus({ email: 'first@example.com' }))
+      .mockResolvedValueOnce(createAuthStatus({ email: 'second@example.com' }));
 
     const first = await getSessionAuthStatus();
     clearSessionAuthStatus();
@@ -73,17 +58,8 @@ describe('authStatusCache', () => {
   });
 
   it('refreshes cached data after TTL expires', async () => {
-    const firstStatus = {
-      isAuthenticated: true,
-      email: 'first@example.com',
-      isAuthorized: true
-    };
-
-    const secondStatus = {
-      isAuthenticated: true,
-      email: 'second@example.com',
-      isAuthorized: true
-    };
+    const firstStatus = createAuthStatus({ email: 'first@example.com' });
+    const secondStatus = createAuthStatus({ email: 'second@example.com' });
 
     authApiMock.getAuthStatus
       .mockResolvedValueOnce(firstStatus)
@@ -108,21 +84,13 @@ describe('authStatusCache', () => {
     authApiMock.getAuthStatus.mockImplementationOnce(() => new Promise((resolve) => {
       resolveRequest = resolve;
     }));
-    authApiMock.getAuthStatus.mockResolvedValueOnce({
-      isAuthenticated: true,
-      email: 'fresh@example.com',
-      isAuthorized: true
-    });
+    authApiMock.getAuthStatus.mockResolvedValueOnce(createAuthStatus({ email: 'fresh@example.com' }));
 
     const pendingRequest = getSessionAuthStatus();
 
     clearSessionAuthStatus();
 
-    resolveRequest!({
-      isAuthenticated: true,
-      email: 'stale@example.com',
-      isAuthorized: true
-    });
+    resolveRequest!(createAuthStatus({ email: 'stale@example.com' }));
 
     await pendingRequest;
 

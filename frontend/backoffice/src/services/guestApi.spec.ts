@@ -1,27 +1,30 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { addGuest, archiveGuest, getGuestById, listGuests, restoreGuest, updateGuest } from './guestApi';
 import { createGuestPage, createGuestPayload, createGuestResponse } from '../testFixtures/guestFixtures';
+import { clearCsrfCookie, expectCsrfHeader, getFirstRequest, mockFetchResponse, setCsrfCookie } from '../testFixtures/httpTestHelpers';
+
+const guestNotFoundMessage = 'Guest not found.';
 
 describe('guestApi', () => {
   afterEach(() => {
     vi.restoreAllMocks();
-    document.cookie = 'XSRF-TOKEN=; Max-Age=0; path=/';
+    clearCsrfCookie();
   });
 
   it('calls backend list endpoint with default pagination', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    const fetchMock = mockFetchResponse({
       ok: true,
-      json: async () => createGuestPage({
+      body: createGuestPage({
         items: [],
         totalItems: 0,
         totalPages: 0
       })
-    } as Response);
+    });
 
     await listGuests();
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, options] = fetchMock.mock.calls[0];
+    const [url, options] = getFirstRequest(fetchMock);
 
     expect(url).toBe('http://localhost:8080/api/guests?page=0&size=20&status=active&availability=all');
     expect(options).toMatchObject({
@@ -31,64 +34,49 @@ describe('guestApi', () => {
   });
 
   it('throws when list endpoint response is not ok', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: false,
-      json: async () => ({})
-    } as Response);
+    mockFetchResponse({ ok: false });
 
     await expect(listGuests()).rejects.toThrow('Unable to retrieve guests at the moment.');
   });
 
   it('calls backend list endpoint with archived status', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      json: async () => createGuestPage()
-    } as Response);
+    const fetchMock = mockFetchResponse({ ok: true, body: createGuestPage() });
 
     await listGuests({ page: 1, size: 50, status: 'archived' });
 
-    const [url] = fetchMock.mock.calls[0];
+    const [url] = getFirstRequest(fetchMock);
     expect(url).toBe('http://localhost:8080/api/guests?page=1&size=50&status=archived&availability=all');
   });
 
   it('calls backend list endpoint with search query', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      json: async () => createGuestPage()
-    } as Response);
+    const fetchMock = mockFetchResponse({ ok: true, body: createGuestPage() });
 
     await listGuests({ page: 0, size: 20, status: 'active', search: 'john doe' });
 
-    const [url] = fetchMock.mock.calls[0];
+    const [url] = getFirstRequest(fetchMock);
     expect(url).toBe('http://localhost:8080/api/guests?page=0&size=20&status=active&availability=all&search=john+doe');
   });
 
   it('calls backend list endpoint with unassigned availability filter', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      json: async () => createGuestPage()
-    } as Response);
+    const fetchMock = mockFetchResponse({ ok: true, body: createGuestPage() });
 
     await listGuests({ page: 0, size: 20, status: 'active', availability: 'unassigned' });
 
-    const [url] = fetchMock.mock.calls[0];
+    const [url] = getFirstRequest(fetchMock);
     expect(url).toBe('http://localhost:8080/api/guests?page=0&size=20&status=active&availability=unassigned');
   });
 
   it('calls backend create endpoint with expected payload', async () => {
-    document.cookie = 'XSRF-TOKEN=test-csrf-token';
+    setCsrfCookie();
 
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      json: async () => ({ id: 42 })
-    } as Response);
+    const fetchMock = mockFetchResponse({ ok: true, body: { id: 42 } });
 
     const payload = createGuestPayload();
 
     const result = await addGuest(payload);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, options] = fetchMock.mock.calls[0];
+    const [url, options] = getFirstRequest(fetchMock);
 
     expect(url).toBe('http://localhost:8080/api/guests');
     expect(options).toMatchObject({
@@ -98,28 +86,21 @@ describe('guestApi', () => {
     });
     expect(options?.headers).toBeInstanceOf(Headers);
 
-    const headers = options?.headers as Headers;
+    const headers = options.headers as Headers;
     expect(headers.get('Content-Type')).toBe('application/json');
-    expect(headers.get('X-XSRF-TOKEN')).toBe('test-csrf-token');
+    expectCsrfHeader(options);
     expect(result).toEqual({ id: 42 });
   });
 
   it('throws when create endpoint response is not ok', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: false,
-      json: async () => ({})
-    } as Response);
+    mockFetchResponse({ ok: false });
 
     await expect(addGuest(createGuestPayload())).rejects.toThrow('Unable to create guest at the moment.');
   });
 
   it('calls backend detail endpoint by guest id', async () => {
     const guest = createGuestResponse({ id: 'abc-123' });
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => guest
-    } as Response);
+    const fetchMock = mockFetchResponse({ ok: true, body: guest });
 
     const result = await getGuestById('abc-123');
 
@@ -131,23 +112,18 @@ describe('guestApi', () => {
   });
 
   it('throws not found error when detail endpoint returns 404', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: false,
-      status: 404,
-      json: async () => ({})
-    } as Response);
+    mockFetchResponse({ ok: false, status: 404 });
 
-    await expect(getGuestById('missing')).rejects.toThrow('Guest not found.');
+    await expect(getGuestById('missing')).rejects.toThrow(guestNotFoundMessage);
   });
 
   it('calls backend update endpoint with expected payload', async () => {
-    document.cookie = 'XSRF-TOKEN=test-csrf-token';
+    setCsrfCookie();
 
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    const fetchMock = mockFetchResponse({
       ok: true,
-      status: 200,
-      json: async () => createGuestResponse({ id: 'guest-1', version: 2 })
-    } as Response);
+      body: createGuestResponse({ id: 'guest-1', version: 2 })
+    });
 
     const payload = {
       ...createGuestPayload(),
@@ -157,7 +133,7 @@ describe('guestApi', () => {
     await updateGuest('guest-1', payload);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, options] = fetchMock.mock.calls[0];
+    const [url, options] = getFirstRequest(fetchMock);
     expect(url).toBe('http://localhost:8080/api/guests/guest-1');
     expect(options).toMatchObject({
       method: 'PUT',
@@ -165,17 +141,13 @@ describe('guestApi', () => {
       body: JSON.stringify(payload)
     });
 
-    const headers = options?.headers as Headers;
+    const headers = options.headers as Headers;
     expect(headers.get('Content-Type')).toBe('application/json');
-    expect(headers.get('X-XSRF-TOKEN')).toBe('test-csrf-token');
+    expectCsrfHeader(options);
   });
 
   it('throws conflict error when update endpoint returns 409', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: false,
-      status: 409,
-      json: async () => ({})
-    } as Response);
+    mockFetchResponse({ ok: false, status: 409 });
 
     await expect(updateGuest('guest-1', {
       ...createGuestPayload(),
@@ -184,66 +156,54 @@ describe('guestApi', () => {
   });
 
   it('calls backend archive endpoint with csrf header', async () => {
-    document.cookie = 'XSRF-TOKEN=test-csrf-token';
+    setCsrfCookie();
 
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    const fetchMock = mockFetchResponse({
       ok: true,
-      status: 200,
-      json: async () => createGuestResponse({ id: 'guest-1', version: 2 })
-    } as Response);
+      body: createGuestResponse({ id: 'guest-1', version: 2 })
+    });
 
     await archiveGuest('guest-1');
 
-    const [url, options] = fetchMock.mock.calls[0];
+    const [url, options] = getFirstRequest(fetchMock);
     expect(url).toBe('http://localhost:8080/api/guests/guest-1');
     expect(options).toMatchObject({
       method: 'DELETE',
       credentials: 'include'
     });
 
-    const headers = options?.headers as Headers;
-    expect(headers.get('X-XSRF-TOKEN')).toBe('test-csrf-token');
+    expectCsrfHeader(options);
   });
 
   it('throws not found when archive endpoint returns 404', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: false,
-      status: 404,
-      json: async () => ({})
-    } as Response);
+    mockFetchResponse({ ok: false, status: 404 });
 
-    await expect(archiveGuest('missing')).rejects.toThrow('Guest not found.');
+    await expect(archiveGuest('missing')).rejects.toThrow(guestNotFoundMessage);
   });
 
   it('calls backend restoration endpoint with csrf header', async () => {
-    document.cookie = 'XSRF-TOKEN=test-csrf-token';
+    setCsrfCookie();
 
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    const fetchMock = mockFetchResponse({
       ok: true,
-      status: 200,
-      json: async () => createGuestResponse({ id: 'guest-1', version: 3 })
-    } as Response);
+      body: createGuestResponse({ id: 'guest-1', version: 3 })
+    });
 
     await restoreGuest('guest-1');
 
-    const [url, options] = fetchMock.mock.calls[0];
+    const [url, options] = getFirstRequest(fetchMock);
     expect(url).toBe('http://localhost:8080/api/guests/guest-1/restoration');
     expect(options).toMatchObject({
       method: 'POST',
       credentials: 'include'
     });
 
-    const headers = options?.headers as Headers;
-    expect(headers.get('X-XSRF-TOKEN')).toBe('test-csrf-token');
+    expectCsrfHeader(options);
   });
 
   it('throws not found when restoration endpoint returns 404', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: false,
-      status: 404,
-      json: async () => ({})
-    } as Response);
+    mockFetchResponse({ ok: false, status: 404 });
 
-    await expect(restoreGuest('missing')).rejects.toThrow('Guest not found.');
+    await expect(restoreGuest('missing')).rejects.toThrow(guestNotFoundMessage);
   });
 });

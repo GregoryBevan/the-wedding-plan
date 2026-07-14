@@ -6,6 +6,8 @@ import App from './App.vue';
 import { createBackofficeRouter } from './router';
 import { BACKOFFICE_ROUTE_NAMES } from './router/routeNames';
 import { clearSessionAuthStatus } from './services/authStatusCache';
+import type { AuthStatus } from './services/authApi';
+import { authorizedAuthStatus, unauthenticatedAuthStatus, unauthorizedAuthStatus } from './testFixtures/authFixtures';
 import { createGuestPayload } from './testFixtures/guestFixtures';
 
 const authApiMock = vi.hoisted(() => ({
@@ -36,6 +38,11 @@ const guestFormSubmitStub = defineComponent({
     }, 'Submit guest form');
   }
 });
+
+
+const mockAuthStatus = (status: AuthStatus = authorizedAuthStatus) => {
+  authApiMock.getAuthStatus.mockResolvedValue(status);
+};
 
 describe('App auth states', () => {
   beforeEach(() => {
@@ -68,11 +75,7 @@ describe('App auth states', () => {
   };
 
   it('shows login action for unauthenticated users', async () => {
-    authApiMock.getAuthStatus.mockResolvedValue({
-      isAuthenticated: false,
-      email: null,
-      isAuthorized: false
-    });
+    mockAuthStatus(unauthenticatedAuthStatus);
 
     const { wrapper } = await mountApp({ route: '/guests' });
 
@@ -84,11 +87,7 @@ describe('App auth states', () => {
   });
 
   it('shows blocked message for unauthorized authenticated users', async () => {
-    authApiMock.getAuthStatus.mockResolvedValue({
-      isAuthenticated: true,
-      email: 'someone@example.com',
-      isAuthorized: false
-    });
+    mockAuthStatus(unauthorizedAuthStatus);
 
     const { wrapper } = await mountApp({ route: '/guests' });
 
@@ -97,11 +96,7 @@ describe('App auth states', () => {
   });
 
   it('redirects root route to invitations list for authorized users', async () => {
-    authApiMock.getAuthStatus.mockResolvedValue({
-      isAuthenticated: true,
-      email: 'allowed@example.com',
-      isAuthorized: true
-    });
+    mockAuthStatus();
 
     const { wrapper, router } = await mountApp({ route: '/' });
 
@@ -118,11 +113,7 @@ describe('App auth states', () => {
   });
 
   it('renders left sidebar shell on protected routes while keeping routed content visible', async () => {
-    authApiMock.getAuthStatus.mockResolvedValue({
-      isAuthenticated: true,
-      email: 'allowed@example.com',
-      isAuthorized: true
-    });
+    mockAuthStatus();
 
     const { wrapper } = await mountApp({ route: '/guests' });
 
@@ -142,11 +133,7 @@ describe('App auth states', () => {
   });
 
   it('navigates to add guest route for authorized users', async () => {
-    authApiMock.getAuthStatus.mockResolvedValue({
-      isAuthenticated: true,
-      email: 'allowed@example.com',
-      isAuthorized: true
-    });
+    mockAuthStatus();
 
     const { wrapper, router } = await mountApp({ route: '/guests' });
 
@@ -160,11 +147,7 @@ describe('App auth states', () => {
   });
 
   it('does not refetch auth status in App when only the query string changes', async () => {
-    authApiMock.getAuthStatus.mockResolvedValue({
-      isAuthenticated: true,
-      email: 'allowed@example.com',
-      isAuthorized: true
-    });
+    mockAuthStatus();
 
     const router = createRouter({
       history: createMemoryHistory(),
@@ -205,11 +188,7 @@ describe('App auth states', () => {
   });
 
   it('logs out and returns to login state', async () => {
-    authApiMock.getAuthStatus.mockResolvedValue({
-      isAuthenticated: true,
-      email: 'allowed@example.com',
-      isAuthorized: true
-    });
+    mockAuthStatus();
     authApiMock.logout.mockResolvedValue(undefined);
 
     const { wrapper } = await mountApp({ route: '/guests' });
@@ -223,11 +202,7 @@ describe('App auth states', () => {
   });
 
   it('redirects to guest list after submit in add guest route', async () => {
-    authApiMock.getAuthStatus.mockResolvedValue({
-      isAuthenticated: true,
-      email: 'allowed@example.com',
-      isAuthorized: true
-    });
+    mockAuthStatus();
     guestApiMock.addGuest.mockResolvedValue({ id: '1' });
 
     const { wrapper, router } = await mountApp({
@@ -245,11 +220,7 @@ describe('App auth states', () => {
   });
 
   it('renders not found view for unknown routes', async () => {
-    authApiMock.getAuthStatus.mockResolvedValue({
-      isAuthenticated: true,
-      email: 'allowed@example.com',
-      isAuthorized: true
-    });
+    mockAuthStatus();
 
     const { wrapper, router } = await mountApp({ route: '/unknown-page' });
 
@@ -259,11 +230,7 @@ describe('App auth states', () => {
   });
 
   it('can return to add route after successful submit', async () => {
-    authApiMock.getAuthStatus.mockResolvedValue({
-      isAuthenticated: true,
-      email: 'allowed@example.com',
-      isAuthorized: true
-    });
+    mockAuthStatus();
     guestApiMock.addGuest.mockResolvedValue({ id: '1' });
 
     const { wrapper, router } = await mountApp({

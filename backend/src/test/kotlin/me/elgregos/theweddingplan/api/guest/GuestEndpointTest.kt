@@ -102,7 +102,12 @@ class GuestEndpointTest {
         stubPaginationParams(request)
         every {
             guestLister.list(
-                GuestListCriteria(page = 0, size = 20, status = GuestStatus.ACTIVE, availability = GuestAvailability.ALL)
+                GuestListCriteria(
+                    page = 0,
+                    size = 20,
+                    status = GuestStatus.ACTIVE,
+                    availability = GuestAvailability.ALL
+                )
             )
         } returns guestPage
 
@@ -125,7 +130,12 @@ class GuestEndpointTest {
         stubPaginationParams(request, status = "archived")
         every {
             guestLister.list(
-                GuestListCriteria(page = 0, size = 20, status = GuestStatus.ARCHIVED, availability = GuestAvailability.ALL)
+                GuestListCriteria(
+                    page = 0,
+                    size = 20,
+                    status = GuestStatus.ARCHIVED,
+                    availability = GuestAvailability.ALL
+                )
             )
         } returns guestPage
 
@@ -211,7 +221,12 @@ class GuestEndpointTest {
         stubPaginationParams(request, availability = "unassigned")
         every {
             guestLister.list(
-                GuestListCriteria(page = 0, size = 20, status = GuestStatus.ACTIVE, availability = GuestAvailability.UNASSIGNED)
+                GuestListCriteria(
+                    page = 0,
+                    size = 20,
+                    status = GuestStatus.ACTIVE,
+                    availability = GuestAvailability.UNASSIGNED
+                )
             )
         } returns guestPage
 
@@ -333,7 +348,7 @@ class GuestEndpointTest {
         every { request.pathVariable("id") } returns guest.id.toString()
         every { request.body(UpdateGuestRequest::class.java) } returns johnDoeUpdatedRequest
         every {
-            guestUpdater.update(guest.id, johnDoeUpdatedRequest.toCommand())
+            guestUpdater.update(johnDoeUpdatedRequest.toCommand(guest.id))
         } returns UpdateGuestResult.Updated(johnDoeUpdated)
 
         val response = guestEndpoint.updateGuest(request)
@@ -410,7 +425,7 @@ class GuestEndpointTest {
         every { request.pathVariable("id") } returns guestId.toString()
         every { request.body(UpdateGuestRequest::class.java) } returns johnDoeUpdatedRequest
         every {
-            guestUpdater.update(guestId, johnDoeUpdatedRequest.toCommand())
+            guestUpdater.update(johnDoeUpdatedRequest.toCommand(guestId))
         } returns UpdateGuestResult.NotFound
 
         val response = guestEndpoint.updateGuest(request)
@@ -427,7 +442,7 @@ class GuestEndpointTest {
         every { request.pathVariable("id") } returns guestId.toString()
         every { request.body(UpdateGuestRequest::class.java) } returns updateRequest
         every {
-            guestUpdater.update(guestId, updateRequest.toCommand())
+            guestUpdater.update(updateRequest.toCommand(guestId))
         } returns UpdateGuestResult.VersionConflict
 
         val response = guestEndpoint.updateGuest(request)

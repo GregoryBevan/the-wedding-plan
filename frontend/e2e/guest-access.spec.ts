@@ -1,28 +1,20 @@
 import { expect, test } from '@playwright/test';
+import { fulfillJson } from './fixtures/httpHelpers';
 
 const PUBLIC_BASE_URL = 'http://127.0.0.1:4174';
 const VALID_TOKEN = '957f8251-f50b-48ca-9cd1-998e71ffd2e9';
 
-const jsonHeaders = {
-  'content-type': 'application/json',
-  'access-control-allow-origin': '*'
-};
-
 test.describe('Guest access invitation page', () => {
   test('reveals the invitation and its guests for a valid token', async ({ page }) => {
     await page.route('**/guest-access/invitations/**', async (route) => {
-      await route.fulfill({
-        status: 200,
-        headers: jsonHeaders,
-        body: JSON.stringify({
-          label: 'Famille Martin',
-          description: 'Nous serions ravis de vous compter parmi nous.',
-          guestCount: 2,
-          guests: [
-            { firstName: 'Alice', lastName: 'Martin' },
-            { firstName: 'Bob', lastName: 'Martin' }
-          ]
-        })
+      await fulfillJson(route, {
+        label: 'Famille Martin',
+        description: 'Nous serions ravis de vous compter parmi nous.',
+        guestCount: 2,
+        guests: [
+          { firstName: 'Alice', lastName: 'Martin' },
+          { firstName: 'Bob', lastName: 'Martin' }
+        ]
       });
     });
 
@@ -36,11 +28,7 @@ test.describe('Guest access invitation page', () => {
 
   test('shows a not-found message for an unknown token', async ({ page }) => {
     await page.route('**/guest-access/invitations/**', async (route) => {
-      await route.fulfill({
-        status: 404,
-        headers: jsonHeaders,
-        body: '{}'
-      });
+      await fulfillJson(route, {}, 404);
     });
 
     await page.goto(`${PUBLIC_BASE_URL}/guest-access/${VALID_TOKEN}`);

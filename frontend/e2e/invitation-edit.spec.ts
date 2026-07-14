@@ -1,18 +1,6 @@
 import { expect, test } from '@playwright/test';
-
-const allowAuthorizedSession = async (page: import('@playwright/test').Page) => {
-  await page.route('**/auth/me', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        isAuthenticated: true,
-        isAuthorized: true,
-        email: 'planner@example.com'
-      })
-    });
-  });
-};
+import { allowAuthorizedSession } from './fixtures/authSetup';
+import { fulfillJson } from './fixtures/httpHelpers';
 
 test.describe('Invitation edit', () => {
   test('edit invitation successfully and redirect to details', async ({ page }) => {
@@ -23,52 +11,46 @@ test.describe('Invitation edit', () => {
     // Mock API calls for editing invitation
     await page.route('**/api/invitations/inv-1', async (route) => {
       if (route.request().method() === 'GET') {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            id: invitationId,
-            creationDate: '2026-07-03T10:00:00Z',
-            updateDate: '2026-07-03T10:00:00Z',
-            label: 'Family table',
-            description: 'Main family table',
-            guests: [
-              {
-                id: 'guest-1',
-                firstName: 'Alice',
-                lastName: 'Martin',
-                email: 'alice@example.com'
-              },
-              {
-                id: 'guest-2',
-                firstName: 'Bob',
-                lastName: 'Durand',
-                email: 'bob@example.com'
-              }
-            ],
-            guestCount: 2
-          })
+        await fulfillJson(route, {
+          id: invitationId,
+          version: 1,
+          creationDate: '2026-07-03T10:00:00Z',
+          updateDate: '2026-07-03T10:00:00Z',
+          label: 'Family table',
+          description: 'Main family table',
+          guests: [
+            {
+              id: 'guest-1',
+              firstName: 'Alice',
+              lastName: 'Martin',
+              email: 'alice@example.com'
+            },
+            {
+              id: 'guest-2',
+              firstName: 'Bob',
+              lastName: 'Durand',
+              email: 'bob@example.com'
+            }
+          ],
+          guestCount: 2
         });
       } else if (route.request().method() === 'PUT') {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            id: invitationId,
-            creationDate: '2026-07-03T10:00:00Z',
-            updateDate: '2026-07-04T10:00:00Z',
-            label: 'Family table updated',
-            description: 'Updated family table',
-            guests: [
-              {
-                id: 'guest-1',
-                firstName: 'Alice',
-                lastName: 'Martin',
-                email: 'alice@example.com'
-              }
-            ],
-            guestCount: 1
-          })
+        await fulfillJson(route, {
+          id: invitationId,
+          version: 1,
+          creationDate: '2026-07-03T10:00:00Z',
+          updateDate: '2026-07-04T10:00:00Z',
+          label: 'Family table updated',
+          description: 'Updated family table',
+          guests: [
+            {
+              id: 'guest-1',
+              firstName: 'Alice',
+              lastName: 'Martin',
+              email: 'alice@example.com'
+            }
+          ],
+          guestCount: 1
         });
       } else {
         await route.fallback();
@@ -77,35 +59,31 @@ test.describe('Invitation edit', () => {
 
     // Mock guests API
     await page.route('**/api/guests*', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          items: [
-            {
-              id: 'guest-1',
-              version: 1,
-              creationDate: '2026-06-25T00:00:00Z',
-              updateDate: '2026-06-25T00:00:00Z',
-              firstName: 'Alice',
-              lastName: 'Martin',
-              email: 'alice@example.com'
-            },
-            {
-              id: 'guest-2',
-              version: 1,
-              creationDate: '2026-06-25T00:00:00Z',
-              updateDate: '2026-06-25T00:00:00Z',
-              firstName: 'Bob',
-              lastName: 'Durand',
-              email: 'bob@example.com'
-            }
-          ],
-          page: 0,
-          size: 20,
-          totalItems: 2,
-          totalPages: 1
-        })
+      await fulfillJson(route, {
+        items: [
+          {
+            id: 'guest-1',
+            version: 1,
+            creationDate: '2026-06-25T00:00:00Z',
+            updateDate: '2026-06-25T00:00:00Z',
+            firstName: 'Alice',
+            lastName: 'Martin',
+            email: 'alice@example.com'
+          },
+          {
+            id: 'guest-2',
+            version: 1,
+            creationDate: '2026-06-25T00:00:00Z',
+            updateDate: '2026-06-25T00:00:00Z',
+            firstName: 'Bob',
+            lastName: 'Durand',
+            email: 'bob@example.com'
+          }
+        ],
+        page: 0,
+        size: 20,
+        totalItems: 2,
+        totalPages: 1
       });
     });
 
@@ -137,49 +115,42 @@ test.describe('Invitation edit', () => {
     const invitationId = 'inv-2';
 
     await page.route('**/api/invitations/inv-2', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          id: invitationId,
-          creationDate: '2026-07-03T10:00:00Z',
-          updateDate: '2026-07-03T10:00:00Z',
-          label: 'Family table',
-          description: 'Main family table',
-          guests: [
-            {
-              id: 'guest-1',
-              firstName: 'Alice',
-              lastName: 'Martin',
-              email: 'alice@example.com'
-            }
-          ],
-          guestCount: 1
-        })
+      await fulfillJson(route, {
+        id: invitationId,
+        version: 1,
+        creationDate: '2026-07-03T10:00:00Z',
+        updateDate: '2026-07-03T10:00:00Z',
+        label: 'Family table',
+        description: 'Main family table',
+        guests: [
+          {
+            id: 'guest-1',
+            firstName: 'Alice',
+            lastName: 'Martin',
+            email: 'alice@example.com'
+          }
+        ],
+        guestCount: 1
       });
     });
 
     await page.route('**/api/guests*', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          items: [
-            {
-              id: 'guest-1',
-              version: 1,
-              creationDate: '2026-06-25T00:00:00Z',
-              updateDate: '2026-06-25T00:00:00Z',
-              firstName: 'Alice',
-              lastName: 'Martin',
-              email: 'alice@example.com'
-            }
-          ],
-          page: 0,
-          size: 20,
-          totalItems: 1,
-          totalPages: 1
-        })
+      await fulfillJson(route, {
+        items: [
+          {
+            id: 'guest-1',
+            version: 1,
+            creationDate: '2026-06-25T00:00:00Z',
+            updateDate: '2026-06-25T00:00:00Z',
+            firstName: 'Alice',
+            lastName: 'Martin',
+            email: 'alice@example.com'
+          }
+        ],
+        page: 0,
+        size: 20,
+        totalItems: 1,
+        totalPages: 1
       });
     });
 
@@ -200,49 +171,43 @@ test.describe('Invitation edit', () => {
     const invitationId = 'inv-3';
 
     await page.route('**/api/invitations/inv-3', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          id: invitationId,
-          creationDate: '2026-07-03T10:00:00Z',
-          updateDate: '2026-07-03T10:00:00Z',
-          label: 'Family table',
-          description: 'Main family table',
-          guests: [
-            {
-              id: 'guest-1',
-              firstName: 'Alice',
-              lastName: 'Martin',
-              email: 'alice@example.com'
-            }
-          ],
-          guestCount: 1
-        })
+      await fulfillJson(route, {
+        id: invitationId,
+        version: 1,
+        creationDate: '2026-07-03T10:00:00Z',
+        updateDate: '2026-07-03T10:00:00Z',
+        label: 'Family table',
+        description: 'Main family table',
+        guests: [
+          {
+            id: 'guest-1',
+            version: 1,
+            firstName: 'Alice',
+            lastName: 'Martin',
+            email: 'alice@example.com'
+          }
+        ],
+        guestCount: 1
       });
     });
 
     await page.route('**/api/guests*', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          items: [
-            {
-              id: 'guest-1',
-              version: 1,
-              creationDate: '2026-06-25T00:00:00Z',
-              updateDate: '2026-06-25T00:00:00Z',
-              firstName: 'Alice',
-              lastName: 'Martin',
-              email: 'alice@example.com'
-            }
-          ],
-          page: 0,
-          size: 20,
-          totalItems: 1,
-          totalPages: 1
-        })
+      await fulfillJson(route, {
+        items: [
+          {
+            id: 'guest-1',
+            version: 1,
+            creationDate: '2026-06-25T00:00:00Z',
+            updateDate: '2026-06-25T00:00:00Z',
+            firstName: 'Alice',
+            lastName: 'Martin',
+            email: 'alice@example.com'
+          }
+        ],
+        page: 0,
+        size: 20,
+        totalItems: 1,
+        totalPages: 1
       });
     });
 
@@ -262,11 +227,7 @@ test.describe('Invitation edit', () => {
     const invitationId = 'inv-404';
 
     await page.route('**/api/invitations/inv-404', async (route) => {
-      await route.fulfill({
-        status: 404,
-        contentType: 'application/json',
-        body: JSON.stringify({})
-      });
+      await fulfillJson(route, {}, 404);
     });
 
     await page.goto(`/invitations/${invitationId}/edit`);
@@ -280,49 +241,43 @@ test.describe('Invitation edit', () => {
     const invitationId = 'inv-5';
 
     await page.route('**/api/invitations/inv-5', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          id: invitationId,
-          creationDate: '2026-07-03T10:00:00Z',
-          updateDate: '2026-07-03T10:00:00Z',
-          label: 'Family table',
-          description: 'Main family table',
-          guests: [
-            {
-              id: 'guest-1',
-              firstName: 'Alice',
-              lastName: 'Martin',
-              email: 'alice@example.com'
-            }
-          ],
-          guestCount: 1
-        })
+      await fulfillJson(route, {
+        id: invitationId,
+        version: 1,
+        creationDate: '2026-07-03T10:00:00Z',
+        updateDate: '2026-07-03T10:00:00Z',
+        label: 'Family table',
+        description: 'Main family table',
+        guests: [
+          {
+            id: 'guest-1',
+            version: 1,
+            firstName: 'Alice',
+            lastName: 'Martin',
+            email: 'alice@example.com'
+          }
+        ],
+        guestCount: 1
       });
     });
 
     await page.route('**/api/guests*', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          items: [
-            {
-              id: 'guest-1',
-              version: 1,
-              creationDate: '2026-06-25T00:00:00Z',
-              updateDate: '2026-06-25T00:00:00Z',
-              firstName: 'Alice',
-              lastName: 'Martin',
-              email: 'alice@example.com'
-            }
-          ],
-          page: 0,
-          size: 20,
-          totalItems: 1,
-          totalPages: 1
-        })
+      await fulfillJson(route, {
+        items: [
+          {
+            id: 'guest-1',
+            version: 1,
+            creationDate: '2026-06-25T00:00:00Z',
+            updateDate: '2026-06-25T00:00:00Z',
+            firstName: 'Alice',
+            lastName: 'Martin',
+            email: 'alice@example.com'
+          }
+        ],
+        page: 0,
+        size: 20,
+        totalItems: 1,
+        totalPages: 1
       });
     });
 

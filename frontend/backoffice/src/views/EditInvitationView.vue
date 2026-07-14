@@ -146,6 +146,7 @@ const route = useRoute();
 
 const invitationId = computed(() => String(route.params.id ?? ''));
 
+const invitationVersion = ref<number>(0);
 const guests = ref<GuestResponse[]>([]);
 const selectedGuestIds = ref<string[]>([]);
 const label = ref('');
@@ -186,6 +187,7 @@ const loadInvitation = async () => {
 
   try {
     const invitation = await getInvitationById(invitationId.value);
+    invitationVersion.value = invitation.version;
     label.value = invitation.label;
     description.value = invitation.description;
     selectedGuestIds.value = invitation.guests.map(guest => guest.id);
@@ -325,6 +327,7 @@ const handleSubmit = async () => {
 
   try {
     await updateInvitation(invitationId.value, {
+      version: invitationVersion.value,
       label: label.value.trim(),
       description: description.value.trim(),
       guestIds: selectedGuestIds.value

@@ -26,6 +26,52 @@ vi.mock('../services/invitationApi', async (importOriginal) => {
   };
 });
 
+const aliceGuest = {
+  id: 'guest-1',
+  version: 1,
+  creationDate: '2026-07-03T10:00:00Z',
+  updateDate: '2026-07-03T10:00:00Z',
+  firstName: 'Alice',
+  lastName: 'Martin',
+  email: 'alice@example.com'
+};
+
+const buildGuestPage = ({
+  items = [aliceGuest],
+  page = 0,
+  size = 10,
+  totalItems = items.length,
+  totalPages = totalItems === 0 ? 0 : 1
+}: {
+  items?: Array<typeof aliceGuest | {
+    id: string;
+    version: number;
+    creationDate: string;
+    updateDate: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  }>;
+  page?: number;
+  size?: number;
+  totalItems?: number;
+  totalPages?: number;
+} = {}) => ({
+  items,
+  page,
+  size,
+  totalItems,
+  totalPages
+});
+
+const firstPageQuery = {
+  page: 0,
+  size: 10,
+  status: 'active' as const,
+  availability: 'unassigned' as const,
+  search: undefined
+};
+
 describe('CreateInvitationView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -74,23 +120,7 @@ describe('CreateInvitationView', () => {
   };
 
   it('submits successfully and navigates back to invitation list', async () => {
-    listGuestsMock.mockResolvedValue({
-      items: [
-        {
-          id: 'guest-1',
-          version: 1,
-          creationDate: '2026-07-03T10:00:00Z',
-          updateDate: '2026-07-03T10:00:00Z',
-          firstName: 'Alice',
-          lastName: 'Martin',
-          email: 'alice@example.com'
-        }
-      ],
-      page: 0,
-      size: 10,
-      totalItems: 1,
-      totalPages: 1
-    });
+    listGuestsMock.mockResolvedValue(buildGuestPage());
     createInvitationMock.mockResolvedValue({ id: 'inv-1' });
 
     const { wrapper, router } = await mountView();
@@ -101,7 +131,7 @@ describe('CreateInvitationView', () => {
     await wrapper.get('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(listGuestsMock).toHaveBeenCalledWith({ page: 0, size: 10, status: 'active', availability: 'unassigned', search: undefined });
+    expect(listGuestsMock).toHaveBeenCalledWith(firstPageQuery);
     expect(createInvitationMock).toHaveBeenCalledWith({
       label: 'Family table',
       description: 'Main table',
@@ -111,23 +141,7 @@ describe('CreateInvitationView', () => {
   });
 
   it('shows validation error when no guest is selected', async () => {
-    listGuestsMock.mockResolvedValue({
-      items: [
-        {
-          id: 'guest-1',
-          version: 1,
-          creationDate: '2026-07-03T10:00:00Z',
-          updateDate: '2026-07-03T10:00:00Z',
-          firstName: 'Alice',
-          lastName: 'Martin',
-          email: 'alice@example.com'
-        }
-      ],
-      page: 0,
-      size: 10,
-      totalItems: 1,
-      totalPages: 1
-    });
+    listGuestsMock.mockResolvedValue(buildGuestPage());
 
     const { wrapper } = await mountView();
 
@@ -141,23 +155,7 @@ describe('CreateInvitationView', () => {
   });
 
   it('shows validation error when label is only whitespace', async () => {
-    listGuestsMock.mockResolvedValue({
-      items: [
-        {
-          id: 'guest-1',
-          version: 1,
-          creationDate: '2026-07-03T10:00:00Z',
-          updateDate: '2026-07-03T10:00:00Z',
-          firstName: 'Alice',
-          lastName: 'Martin',
-          email: 'alice@example.com'
-        }
-      ],
-      page: 0,
-      size: 10,
-      totalItems: 1,
-      totalPages: 1
-    });
+    listGuestsMock.mockResolvedValue(buildGuestPage());
 
     const { wrapper } = await mountView();
 
@@ -171,23 +169,7 @@ describe('CreateInvitationView', () => {
   });
 
   it('shows api error when submit fails', async () => {
-    listGuestsMock.mockResolvedValue({
-      items: [
-        {
-          id: 'guest-1',
-          version: 1,
-          creationDate: '2026-07-03T10:00:00Z',
-          updateDate: '2026-07-03T10:00:00Z',
-          firstName: 'Alice',
-          lastName: 'Martin',
-          email: 'alice@example.com'
-        }
-      ],
-      page: 0,
-      size: 10,
-      totalItems: 1,
-      totalPages: 1
-    });
+    listGuestsMock.mockResolvedValue(buildGuestPage());
     createInvitationMock.mockRejectedValue(new Error('At least one guest is required.'));
 
     const { wrapper, router } = await mountView();
@@ -202,23 +184,7 @@ describe('CreateInvitationView', () => {
   });
 
   it('shows clear conflict error when a selected guest has been assigned concurrently', async () => {
-    listGuestsMock.mockResolvedValue({
-      items: [
-        {
-          id: 'guest-1',
-          version: 1,
-          creationDate: '2026-07-03T10:00:00Z',
-          updateDate: '2026-07-03T10:00:00Z',
-          firstName: 'Alice',
-          lastName: 'Martin',
-          email: 'alice@example.com'
-        }
-      ],
-      page: 0,
-      size: 10,
-      totalItems: 1,
-      totalPages: 1
-    });
+    listGuestsMock.mockResolvedValue(buildGuestPage());
     createInvitationMock.mockRejectedValue(new Error('Some guests are already assigned to another invitation.'));
 
     const { wrapper, router } = await mountView();
@@ -233,13 +199,7 @@ describe('CreateInvitationView', () => {
   });
 
   it('shows empty available guests state with create guest link', async () => {
-    listGuestsMock.mockResolvedValue({
-      items: [],
-      page: 0,
-      size: 10,
-      totalItems: 0,
-      totalPages: 0
-    });
+    listGuestsMock.mockResolvedValue(buildGuestPage({ items: [] }));
 
     const { wrapper } = await mountView();
 
@@ -253,30 +213,8 @@ describe('CreateInvitationView', () => {
 
     try {
       listGuestsMock
-        .mockResolvedValueOnce({
-          items: [
-            {
-              id: 'guest-1',
-              version: 1,
-              creationDate: '2026-07-03T10:00:00Z',
-              updateDate: '2026-07-03T10:00:00Z',
-              firstName: 'Alice',
-              lastName: 'Martin',
-              email: 'alice@example.com'
-            }
-          ],
-          page: 0,
-          size: 10,
-          totalItems: 1,
-          totalPages: 1
-        })
-        .mockResolvedValueOnce({
-          items: [],
-          page: 0,
-          size: 10,
-          totalItems: 0,
-          totalPages: 0
-        });
+        .mockResolvedValueOnce(buildGuestPage())
+        .mockResolvedValueOnce(buildGuestPage({ items: [] }));
 
       const { wrapper } = await mountView();
 
@@ -284,7 +222,10 @@ describe('CreateInvitationView', () => {
       vi.advanceTimersByTime(301);
       await flushPromises();
 
-      expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10, status: 'active', availability: 'unassigned', search: 'zzz-does-not-match' });
+      expect(listGuestsMock).toHaveBeenNthCalledWith(2, {
+        ...firstPageQuery,
+        search: 'zzz-does-not-match'
+      });
       expect(wrapper.get('[data-test="empty-no-search-match"]').text()).toContain('No guests match your search.');
       expect(wrapper.find('[data-test="empty-no-guests-available"]').exists()).toBe(false);
     } finally {
@@ -293,41 +234,24 @@ describe('CreateInvitationView', () => {
   });
 
   it('loads more guests when scrolling near the bottom of the list', async () => {
+    const zoeGuest = {
+      id: 'guest-11',
+      version: 1,
+      creationDate: '2026-07-03T10:00:00Z',
+      updateDate: '2026-07-03T10:00:00Z',
+      firstName: 'Zoe',
+      lastName: 'Durand',
+      email: 'zoe@example.com'
+    };
+
     listGuestsMock
-      .mockResolvedValueOnce({
-        items: [
-          {
-            id: 'guest-1',
-            version: 1,
-            creationDate: '2026-07-03T10:00:00Z',
-            updateDate: '2026-07-03T10:00:00Z',
-            firstName: 'Alice',
-            lastName: 'Martin',
-            email: 'alice@example.com'
-          }
-        ],
-        page: 0,
-        size: 10,
-        totalItems: 11,
-        totalPages: 2
-      })
-      .mockResolvedValueOnce({
-        items: [
-          {
-            id: 'guest-11',
-            version: 1,
-            creationDate: '2026-07-03T10:00:00Z',
-            updateDate: '2026-07-03T10:00:00Z',
-            firstName: 'Zoe',
-            lastName: 'Durand',
-            email: 'zoe@example.com'
-          }
-        ],
+      .mockResolvedValueOnce(buildGuestPage({ totalItems: 11, totalPages: 2 }))
+      .mockResolvedValueOnce(buildGuestPage({
+        items: [zoeGuest],
         page: 1,
-        size: 10,
         totalItems: 11,
         totalPages: 2
-      });
+      }));
 
     const { wrapper } = await mountView();
 
@@ -341,8 +265,8 @@ describe('CreateInvitationView', () => {
     await container.trigger('scroll');
     await flushPromises();
 
-    expect(listGuestsMock).toHaveBeenNthCalledWith(1, { page: 0, size: 10, status: 'active', availability: 'unassigned', search: undefined });
-    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 1, size: 10, status: 'active', availability: 'unassigned', search: undefined });
+    expect(listGuestsMock).toHaveBeenNthCalledWith(1, firstPageQuery);
+    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { ...firstPageQuery, page: 1 });
     expect(wrapper.text()).toContain('Alice Martin');
     expect(wrapper.text()).toContain('Zoe Durand');
   });

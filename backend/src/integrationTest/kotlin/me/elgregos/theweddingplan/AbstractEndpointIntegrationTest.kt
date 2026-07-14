@@ -10,7 +10,7 @@ import org.springframework.test.web.servlet.client.RestTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 abstract class AbstractEndpointIntegrationTest : AbstractIntegrationTest() {
-    protected data class CsrfContext(
+    data class CsrfContext(
         val cookies: String,
         val csrfToken: String,
     )

@@ -78,6 +78,7 @@ describe('EditInvitationView', () => {
   it('loads existing invitation data and allows editing', async () => {
     getInvitationByIdMock.mockResolvedValue({
       id: 'inv-1',
+      version: 1,
       creationDate: '2026-07-03T10:00:00Z',
       updateDate: '2026-07-03T10:00:00Z',
       label: 'Family table',
@@ -128,6 +129,7 @@ describe('EditInvitationView', () => {
 
     updateInvitationMock.mockResolvedValue({
       id: 'inv-1',
+      version: 1,
       creationDate: '2026-07-03T10:00:00Z',
       updateDate: '2026-07-04T10:00:00Z',
       label: 'Family table updated',
@@ -161,6 +163,7 @@ describe('EditInvitationView', () => {
     await flushPromises();
 
     expect(updateInvitationMock).toHaveBeenCalledWith('inv-1', {
+      version: 1,
       label: 'Family table updated',
       description: 'Updated family table',
       guestIds: ['guest-1']
@@ -195,6 +198,7 @@ describe('EditInvitationView', () => {
       }
       return Promise.resolve({
         id: 'inv-1',
+        version: 1,
         creationDate: '2026-07-03T10:00:00Z',
         updateDate: '2026-07-03T10:00:00Z',
         label: 'Family table',
@@ -243,6 +247,7 @@ describe('EditInvitationView', () => {
   it('shows validation error when label is empty', async () => {
     getInvitationByIdMock.mockResolvedValue({
       id: 'inv-1',
+      version: 1,
       creationDate: '2026-07-03T10:00:00Z',
       updateDate: '2026-07-03T10:00:00Z',
       label: 'Family table',
@@ -290,6 +295,7 @@ describe('EditInvitationView', () => {
   it('shows validation error when no guest is selected', async () => {
     getInvitationByIdMock.mockResolvedValue({
       id: 'inv-1',
+      version: 1,
       creationDate: '2026-07-03T10:00:00Z',
       updateDate: '2026-07-03T10:00:00Z',
       label: 'Family table',
@@ -338,6 +344,7 @@ describe('EditInvitationView', () => {
   it('shows api error when update fails', async () => {
     getInvitationByIdMock.mockResolvedValue({
       id: 'inv-1',
+      version: 1,
       creationDate: '2026-07-03T10:00:00Z',
       updateDate: '2026-07-03T10:00:00Z',
       label: 'Family table',
@@ -386,6 +393,7 @@ describe('EditInvitationView', () => {
   it('shows conflict error when guests are already assigned concurrently', async () => {
     getInvitationByIdMock.mockResolvedValue({
       id: 'inv-1',
+      version: 1,
       creationDate: '2026-07-03T10:00:00Z',
       updateDate: '2026-07-03T10:00:00Z',
       label: 'Family table',
@@ -434,6 +442,7 @@ describe('EditInvitationView', () => {
   it('shows empty available guests state with create guest link', async () => {
     getInvitationByIdMock.mockResolvedValue({
       id: 'inv-1',
+      version: 1,
       creationDate: '2026-07-03T10:00:00Z',
       updateDate: '2026-07-03T10:00:00Z',
       label: 'Family table',
@@ -460,6 +469,7 @@ describe('EditInvitationView', () => {
   it('loads guests with availability filter set to undefined for edit', async () => {
     getInvitationByIdMock.mockResolvedValue({
       id: 'inv-1',
+      version: 1,
       creationDate: '2026-07-03T10:00:00Z',
       updateDate: '2026-07-03T10:00:00Z',
       label: 'Family table',
@@ -510,6 +520,7 @@ describe('EditInvitationView', () => {
     try {
       getInvitationByIdMock.mockResolvedValue({
         id: 'inv-1',
+        version: 1,
         creationDate: '2026-07-03T10:00:00Z',
         updateDate: '2026-07-03T10:00:00Z',
         label: 'Family table',
@@ -568,6 +579,7 @@ describe('EditInvitationView', () => {
   it('loads more guests when scrolling near the bottom of the list', async () => {
     getInvitationByIdMock.mockResolvedValue({
       id: 'inv-1',
+      version: 1,
       creationDate: '2026-07-03T10:00:00Z',
       updateDate: '2026-07-03T10:00:00Z',
       label: 'Family table',
@@ -635,6 +647,176 @@ describe('EditInvitationView', () => {
     expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 1, size: 10, status: 'active', availability: undefined, search: undefined });
     expect(wrapper.text()).toContain('Alice Martin');
     expect(wrapper.text()).toContain('Zoe Durand');
+  });
+
+  it('shows error state when guest loading fails', async () => {
+    getInvitationByIdMock.mockResolvedValue({
+      id: 'inv-1',
+      version: 1,
+      creationDate: '2026-07-03T10:00:00Z',
+      updateDate: '2026-07-03T10:00:00Z',
+      label: 'Family table',
+      description: 'Main family table',
+      guests: [
+        {
+          id: 'guest-1',
+          firstName: 'Alice',
+          lastName: 'Martin',
+          email: 'alice@example.com'
+        }
+      ],
+      guestCount: 1
+    });
+
+    listGuestsMock.mockRejectedValue(new Error('Unable to retrieve guests at the moment.'));
+
+    const { wrapper } = await mountView();
+
+    expect(wrapper.get('[data-test="guest-load-error"]').text()).toContain('Unable to retrieve guests at the moment.');
+  });
+
+  it('trims label and description before submitting update payload', async () => {
+    getInvitationByIdMock.mockResolvedValue({
+      id: 'inv-1',
+      version: 1,
+      creationDate: '2026-07-03T10:00:00Z',
+      updateDate: '2026-07-03T10:00:00Z',
+      label: 'Family table',
+      description: 'Main family table',
+      guests: [
+        {
+          id: 'guest-1',
+          firstName: 'Alice',
+          lastName: 'Martin',
+          email: 'alice@example.com'
+        }
+      ],
+      guestCount: 1
+    });
+
+    listGuestsMock.mockResolvedValue({
+      items: [
+        {
+          id: 'guest-1',
+          version: 1,
+          creationDate: '2026-07-03T10:00:00Z',
+          updateDate: '2026-07-03T10:00:00Z',
+          firstName: 'Alice',
+          lastName: 'Martin',
+          email: 'alice@example.com'
+        }
+      ],
+      page: 0,
+      size: 10,
+      totalItems: 1,
+      totalPages: 1
+    });
+
+    updateInvitationMock.mockResolvedValue({
+      id: 'inv-1',
+      version: 2,
+      creationDate: '2026-07-03T10:00:00Z',
+      updateDate: '2026-07-04T10:00:00Z',
+      label: 'Family table updated',
+      description: 'Updated family table',
+      guests: [
+        {
+          id: 'guest-1',
+          firstName: 'Alice',
+          lastName: 'Martin',
+          email: 'alice@example.com'
+        }
+      ],
+      guestCount: 1
+    });
+
+    const { wrapper } = await mountView();
+
+    await wrapper.get('[data-test="invitation-label-input"]').setValue('  Family table updated  ');
+    await wrapper.get('[data-test="invitation-description-input"]').setValue('  Updated family table  ');
+    await wrapper.get('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(updateInvitationMock).toHaveBeenCalledWith('inv-1', {
+      version: 1,
+      label: 'Family table updated',
+      description: 'Updated family table',
+      guestIds: ['guest-1']
+    });
+  });
+
+  it('disables submit button and shows pending label while update is in progress', async () => {
+    getInvitationByIdMock.mockResolvedValue({
+      id: 'inv-1',
+      version: 1,
+      creationDate: '2026-07-03T10:00:00Z',
+      updateDate: '2026-07-03T10:00:00Z',
+      label: 'Family table',
+      description: 'Main family table',
+      guests: [
+        {
+          id: 'guest-1',
+          firstName: 'Alice',
+          lastName: 'Martin',
+          email: 'alice@example.com'
+        }
+      ],
+      guestCount: 1
+    });
+
+    listGuestsMock.mockResolvedValue({
+      items: [
+        {
+          id: 'guest-1',
+          version: 1,
+          creationDate: '2026-07-03T10:00:00Z',
+          updateDate: '2026-07-03T10:00:00Z',
+          firstName: 'Alice',
+          lastName: 'Martin',
+          email: 'alice@example.com'
+        }
+      ],
+      page: 0,
+      size: 10,
+      totalItems: 1,
+      totalPages: 1
+    });
+
+    let resolveUpdate: (() => void) | undefined;
+    updateInvitationMock.mockImplementation(
+      () => new Promise((resolve) => {
+        resolveUpdate = () => {
+          resolve({
+            id: 'inv-1',
+            version: 2,
+            creationDate: '2026-07-03T10:00:00Z',
+            updateDate: '2026-07-04T10:00:00Z',
+            label: 'Family table',
+            description: 'Main family table',
+            guests: [],
+            guestCount: 0
+          });
+        };
+      })
+    );
+
+    const { wrapper } = await mountView();
+
+    const submitButton = wrapper.get('[data-test="update-invitation-submit"]');
+
+    await wrapper.get('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(submitButton.attributes('disabled')).toBeDefined();
+    expect(submitButton.text()).toContain('Updating invitation...');
+    expect(updateInvitationMock).toHaveBeenCalledTimes(1);
+
+    if (!resolveUpdate) {
+      throw new Error('Expected update promise resolver to be initialized.');
+    }
+
+    resolveUpdate();
+    await flushPromises();
   });
 });
 

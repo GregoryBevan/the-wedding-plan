@@ -1,18 +1,6 @@
 import { expect, test } from '@playwright/test';
-
-const allowAuthorizedSession = async (page: import('@playwright/test').Page) => {
-  await page.route('**/auth/me', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        isAuthenticated: true,
-        isAuthorized: true,
-        email: 'planner@example.com'
-      })
-    });
-  });
-};
+import { allowAuthorizedSession } from './fixtures/authSetup';
+import { fulfillJson } from './fixtures/httpHelpers';
 
 test.describe('Backoffice navigation', () => {
   test('add guest view shows success toast and returns to list after submit', async ({ page }) => {
@@ -20,32 +8,24 @@ test.describe('Backoffice navigation', () => {
 
     await page.route('**/api/guests', async (route) => {
       if (route.request().method() === 'POST') {
-        await route.fulfill({
-          status: 201,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            id: 'new-guest',
-            version: 1,
-            creationDate: '2026-06-25T00:00:00Z',
-            updateDate: '2026-06-25T00:00:00Z',
-            firstName: 'John',
-            lastName: 'Doe',
-            email: 'john.doe@email.com'
-          })
-        });
+        await fulfillJson(route, {
+          id: 'new-guest',
+          version: 1,
+          creationDate: '2026-06-25T00:00:00Z',
+          updateDate: '2026-06-25T00:00:00Z',
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@email.com'
+        }, 201);
         return;
       }
 
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          items: [],
-          page: 2,
-          size: 10,
-          totalItems: 0,
-          totalPages: 1
-        })
+      await fulfillJson(route, {
+        items: [],
+        page: 2,
+        size: 10,
+        totalItems: 0,
+        totalPages: 1
       });
     });
 
@@ -75,42 +55,34 @@ test.describe('Backoffice navigation', () => {
         return;
       }
 
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          items: [
-            {
-              id: '1',
-              version: 1,
-              creationDate: '2026-06-25T00:00:00Z',
-              updateDate: '2026-06-25T00:00:00Z',
-              firstName: 'Jane',
-              lastName: 'Doe',
-              email: 'jane.doe@email.com'
-            }
-          ],
-          page: 2,
-          size: 10,
-          totalItems: 1,
-          totalPages: 1
-        })
+      await fulfillJson(route, {
+        items: [
+          {
+            id: '1',
+            version: 1,
+            creationDate: '2026-06-25T00:00:00Z',
+            updateDate: '2026-06-25T00:00:00Z',
+            firstName: 'Jane',
+            lastName: 'Doe',
+            email: 'jane.doe@email.com'
+          }
+        ],
+        page: 2,
+        size: 10,
+        totalItems: 1,
+        totalPages: 1
       });
     });
 
     await page.route('**/api/guests/1', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          id: '1',
-          version: 1,
-          creationDate: '2026-06-25T00:00:00Z',
-          updateDate: '2026-06-25T00:00:00Z',
-          firstName: 'Jane',
-          lastName: 'Doe',
-          email: 'jane.doe@email.com'
-        })
+      await fulfillJson(route, {
+        id: '1',
+        version: 1,
+        creationDate: '2026-06-25T00:00:00Z',
+        updateDate: '2026-06-25T00:00:00Z',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        email: 'jane.doe@email.com'
       });
     });
 
@@ -162,16 +134,12 @@ test.describe('Unsaved changes confirmation dialog', () => {
     await allowAuthorizedSession(page);
 
     await page.route('**/api/guests', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          items: [],
-          page: 0,
-          size: 10,
-          totalItems: 0,
-          totalPages: 1
-        })
+      await fulfillJson(route, {
+        items: [],
+        page: 0,
+        size: 10,
+        totalItems: 0,
+        totalPages: 1
       });
     });
 
