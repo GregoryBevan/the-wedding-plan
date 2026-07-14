@@ -27,21 +27,20 @@ class InvitationUpdater(
             val alreadyAssigned = alreadyAssignedGuestIds(command, currentInvitation)
             if (alreadyAssigned.isNotEmpty()) return UpdateInvitationResult.AlreadyAssignedGuests(alreadyAssigned)
 
-            return updateInvitation(command, currentInvitation, activeGuests, alreadyAssigned)
+            return updateInvitation(command, currentInvitation, activeGuests)
         } ?: UpdateInvitationResult.NotFound
 
     private fun updateInvitation(
         command: UpdateInvitationCommand,
         currentInvitation: Invitation,
         activeGuests: Set<Guest>,
-        alreadyAssigned: Set<GuestId>,
     ): UpdateInvitationResult =
         try {
             invitations.update(command.toInvitation(currentInvitation, activeGuests))
                 ?.let { UpdateInvitationResult.Updated(it) }
                 ?: UpdateInvitationResult.NotFound
         } catch (exception: DataIntegrityViolationException) {
-            alreadyAssigned
+            alreadyAssignedGuestIds(command, currentInvitation)
                 .takeIf { it.isNotEmpty() }
                 ?.let { UpdateInvitationResult.AlreadyAssignedGuests(it) }
                 ?: throw exception

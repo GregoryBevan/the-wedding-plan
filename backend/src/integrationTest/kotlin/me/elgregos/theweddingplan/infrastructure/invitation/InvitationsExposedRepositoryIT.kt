@@ -1,8 +1,10 @@
 package me.elgregos.theweddingplan.infrastructure.invitation
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
+import assertk.assertions.prop
 import me.elgregos.theweddingplan.AbstractIntegrationTest
 import me.elgregos.theweddingplan.domain.guest.Guest
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.albertEinstein
@@ -24,6 +26,7 @@ import me.elgregos.theweddingplan.domain.shared.Dates.nowUtcMillis
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.JdbcTemplate
+import java.sql.Timestamp
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.uuid.toJavaUuid
@@ -60,7 +63,7 @@ class InvitationsExposedRepositoryIT : AbstractIntegrationTest() {
         val createdInvitation = invitationsRepository.add(invitation)
         val initialCount = invitationCount()
 
-        val invitationToUpdate =scienceConferenceInvitationUpdated
+        val invitationToUpdate = scienceConferenceInvitationUpdated
 
         val updatedInvitation = invitationsRepository.update(invitationToUpdate)
 
@@ -73,10 +76,9 @@ class InvitationsExposedRepositoryIT : AbstractIntegrationTest() {
 
     @Test
     fun `should return null when trying to update non-existing invitation`() {
-        val guest = pierreCurie
-        guestRepository.add(guest)
+        guestRepository.add(pierreCurie)
 
-        val nonExisting = nonExistingInvitation(guest, updateDate = nowUtcMillis())
+        val nonExisting = nonExistingInvitation(pierreCurie, updateDate = nowUtcMillis())
 
         val updatedInvitation = invitationsRepository.update(nonExisting)
 
@@ -100,20 +102,24 @@ class InvitationsExposedRepositoryIT : AbstractIntegrationTest() {
     @Test
     fun `should list invitations with pagination and id ordering`() {
         val itemCount = invitationCount()
-        val firstPage = invitationsRepository.list(InvitationListCriteria(page = 0, size = 1))
+        val firstPage: InvitationPage = invitationsRepository.list(InvitationListCriteria(page = 0, size = 1))
         val secondPage = invitationsRepository.list(InvitationListCriteria(page = 1, size = 1))
 
-        assertThat(firstPage.items).isEqualTo(listOf(bridesMaidInvitation))
-        assertThat(firstPage.page).isEqualTo(0)
-        assertThat(firstPage.size).isEqualTo(1)
-        assertThat(firstPage.totalItems).isEqualTo(itemCount.toLong())
-        assertThat(firstPage.totalPages).isEqualTo(itemCount)
+        assertThat(firstPage).all {
+            prop(InvitationPage::items).isEqualTo(listOf(bridesMaidInvitation))
+            prop(InvitationPage::page).isEqualTo(0)
+            prop(InvitationPage::size).isEqualTo(1)
+            prop(InvitationPage::totalItems).isEqualTo(itemCount.toLong())
+            prop(InvitationPage::totalPages).isEqualTo(itemCount)
+        }
 
-        assertThat(secondPage.items).isEqualTo(listOf(bestManInvitation))
-        assertThat(secondPage.page).isEqualTo(1)
-        assertThat(secondPage.size).isEqualTo(1)
-        assertThat(secondPage.totalItems).isEqualTo(itemCount.toLong())
-        assertThat(secondPage.totalPages).isEqualTo(itemCount)
+        assertThat(secondPage).all {
+            prop(InvitationPage::items).isEqualTo(listOf(bestManInvitation))
+            prop(InvitationPage::page).isEqualTo(1)
+            prop(InvitationPage::size).isEqualTo(1)
+            prop(InvitationPage::totalItems).isEqualTo(itemCount.toLong())
+            prop(InvitationPage::totalPages).isEqualTo(itemCount)
+        }
     }
 
     @Test
@@ -122,11 +128,13 @@ class InvitationsExposedRepositoryIT : AbstractIntegrationTest() {
 
         val outOfRangePage = invitationsRepository.list(InvitationListCriteria(page = itemCount, size = 1))
 
-        assertThat(outOfRangePage.items).isEqualTo(emptyList())
-        assertThat(outOfRangePage.page).isEqualTo(itemCount)
-        assertThat(outOfRangePage.size).isEqualTo(1)
-        assertThat(outOfRangePage.totalItems).isEqualTo(itemCount.toLong())
-        assertThat(outOfRangePage.totalPages).isEqualTo(itemCount)
+        assertThat(outOfRangePage).all {
+            prop(InvitationPage::items).isEqualTo(emptyList())
+            prop(InvitationPage::page).isEqualTo(itemCount)
+            prop(InvitationPage::size).isEqualTo(1)
+            prop(InvitationPage::totalItems).isEqualTo(itemCount.toLong())
+            prop(InvitationPage::totalPages).isEqualTo(itemCount)
+        }
     }
 
     @Test
@@ -204,9 +212,9 @@ class InvitationsExposedRepositoryIT : AbstractIntegrationTest() {
             { rs, _ ->
                 val guestIds = (rs.getArray("guest_ids").array as Array<*>).map { GuestId.fromString(it.toString()) }
                 val guestVersions = (rs.getArray("guest_versions").array as Array<*>).map { (it as Number).toLong() }
-                val guestCreationDates = (rs.getArray("guest_creation_dates").array as Array<*>).map { (it as java.sql.Timestamp).toLocalDateTime() }
-                val guestUpdateDates = (rs.getArray("guest_update_dates").array as Array<*>).map { (it as java.sql.Timestamp).toLocalDateTime() }
-                val guestDeletionDates = (rs.getArray("guest_deletion_dates").array as Array<*>).map { (it as java.sql.Timestamp?)?.toLocalDateTime() }
+                val guestCreationDates = (rs.getArray("guest_creation_dates").array as Array<*>).map { (it as Timestamp).toLocalDateTime() }
+                val guestUpdateDates = (rs.getArray("guest_update_dates").array as Array<*>).map { (it as Timestamp).toLocalDateTime() }
+                val guestDeletionDates = (rs.getArray("guest_deletion_dates").array as Array<*>).map { (it as Timestamp?)?.toLocalDateTime() }
                 val guestFirstNames = (rs.getArray("guest_first_names").array as Array<*>).map { it.toString() }
                 val guestLastNames = (rs.getArray("guest_last_names").array as Array<*>).map { it.toString() }
                 val guestEmails = (rs.getArray("guest_emails").array as Array<*>).map { it.toString() }
