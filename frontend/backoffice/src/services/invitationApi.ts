@@ -31,6 +31,12 @@ export interface CreateInvitationPayload {
   guestIds: string[];
 }
 
+export interface UpdateInvitationPayload {
+  label: string;
+  description: string;
+  guestIds: string[];
+}
+
 export const getInvitationById = async (id: string): Promise<InvitationResponse> => {
   const csrfToken = readCookie('XSRF-TOKEN');
   const headers = new Headers();
@@ -111,6 +117,40 @@ export const createInvitation = async (payload: CreateInvitationPayload): Promis
     }
 
     throw new Error(body?.message ?? 'Unable to create invitation at the moment.');
+  }
+
+  return response.json() as Promise<InvitationResponse>;
+};
+
+export const updateInvitation = async (id: string, payload: UpdateInvitationPayload): Promise<InvitationResponse> => {
+  const csrfToken = readCookie('XSRF-TOKEN');
+  const headers = new Headers({
+    'Content-Type': 'application/json'
+  });
+
+  if (csrfToken) {
+    headers.set('X-XSRF-TOKEN', csrfToken);
+  }
+
+  const response = await fetch(`${invitationApiBaseUrl}/invitations/${id}`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers,
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null) as { message?: string } | null;
+
+    if (response.status === 404) {
+      throw new Error(body?.message ?? 'Invitation not found.');
+    }
+
+    if (response.status === 409) {
+      throw new Error(body?.message ?? 'Some guests are already assigned to another invitation. Please refresh and try again.');
+    }
+
+    throw new Error(body?.message ?? 'Unable to update invitation at the moment.');
   }
 
   return response.json() as Promise<InvitationResponse>;

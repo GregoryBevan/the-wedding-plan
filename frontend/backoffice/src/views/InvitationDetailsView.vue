@@ -66,6 +66,16 @@
           </li>
         </ul>
       </div>
+
+      <div class="mt-6 flex gap-3">
+        <RouterLink
+          :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationEdit, params: { id: invitation.id } }"
+          class="flex-1 rounded bg-primary px-4 py-2 text-center text-sm text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          data-test="edit-invitation-link"
+        >
+          Edit
+        </RouterLink>
+      </div>
     </article>
   </section>
 </template>

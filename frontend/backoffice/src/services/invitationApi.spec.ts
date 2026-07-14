@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createInvitation, getInvitationById, listInvitations } from './invitationApi';
+import { createInvitation, getInvitationById, listInvitations, updateInvitation } from './invitationApi';
 
 describe('invitationApi', () => {
   afterEach(() => {
@@ -147,6 +147,74 @@ describe('invitationApi', () => {
     await expect(createInvitation({
       label: 'Family table',
       description: 'Main family table',
+      guestIds: ['guest-1']
+    })).rejects.toThrow('Some guests are already assigned to another invitation. Please refresh and try again.');
+  });
+
+  it('calls backend update invitation endpoint with csrf header', async () => {
+    document.cookie = 'XSRF-TOKEN=test-csrf-token';
+
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 'inv-1',
+        creationDate: '2026-07-03T10:00:00Z',
+        updateDate: '2026-07-04T10:00:00Z',
+        label: 'Updated Family table',
+        description: 'Updated main family table',
+        guests: [],
+        guestCount: 2
+      })
+    } as Response);
+
+    await updateInvitation('inv-1', {
+      label: 'Updated Family table',
+      description: 'Updated main family table',
+      guestIds: ['guest-1', 'guest-2']
+    });
+
+    const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+
+    expect(url).toBe('http://localhost:8080/api/invitations/inv-1');
+    expect(options).toMatchObject({
+      method: 'PUT',
+      credentials: 'include',
+      body: JSON.stringify({
+        label: 'Updated Family table',
+        description: 'Updated main family table',
+        guestIds: ['guest-1', 'guest-2']
+      })
+    });
+
+    const headers = options.headers as Headers;
+    expect(headers.get('Content-Type')).toBe('application/json');
+    expect(headers.get('X-XSRF-TOKEN')).toBe('test-csrf-token');
+  });
+
+  it('throws not found message when update endpoint returns 404', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({})
+    } as Response);
+
+    await expect(updateInvitation('inv-404', {
+      label: 'Updated Family table',
+      description: 'Updated main family table',
+      guestIds: ['guest-1']
+    })).rejects.toThrow('Invitation not found.');
+  });
+
+  it('throws dedicated conflict message when update endpoint returns 409 without body message', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => ({})
+    } as Response);
+
+    await expect(updateInvitation('inv-1', {
+      label: 'Updated Family table',
+      description: 'Updated main family table',
       guestIds: ['guest-1']
     })).rejects.toThrow('Some guests are already assigned to another invitation. Please refresh and try again.');
   });
