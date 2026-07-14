@@ -8,6 +8,7 @@ import me.elgregos.theweddingplan.application.invitation.AddInvitationResult
 import me.elgregos.theweddingplan.application.invitation.InvitationAdder
 import me.elgregos.theweddingplan.application.invitation.InvitationGetter
 import me.elgregos.theweddingplan.application.invitation.InvitationLister
+import me.elgregos.theweddingplan.application.invitation.InvitationUpdater
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
 import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.brideFamilyInvitation
 import me.elgregos.theweddingplan.domain.invitation.InvitationId
@@ -23,6 +24,7 @@ class InvitationEndpointTest {
     private lateinit var invitationAdder: InvitationAdder
     private lateinit var invitationLister: InvitationLister
     private lateinit var invitationGetter: InvitationGetter
+    private lateinit var invitationUpdater: InvitationUpdater
     private lateinit var invitationEndpoint: InvitationEndpoint
 
     @BeforeTest
@@ -30,7 +32,8 @@ class InvitationEndpointTest {
         invitationAdder = mockk()
         invitationLister = mockk()
         invitationGetter = mockk()
-        invitationEndpoint = InvitationEndpoint(invitationAdder, invitationLister, invitationGetter)
+        invitationUpdater = mockk()
+        invitationEndpoint = InvitationEndpoint(invitationAdder, invitationLister, invitationGetter, invitationUpdater)
     }
 
     @Test

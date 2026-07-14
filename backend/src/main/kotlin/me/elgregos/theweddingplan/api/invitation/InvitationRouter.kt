@@ -13,6 +13,7 @@ class InvitationRouter(private val invitationEndpoint: InvitationEndpoint) {
             GET("", invitationEndpoint::listInvitations)
             POST("", invitationEndpoint::addInvitation)
             GET("/{id}", invitationEndpoint::getInvitation)
+            PUT("/{id}", invitationEndpoint::updateInvitation)
         }
     }
 }
