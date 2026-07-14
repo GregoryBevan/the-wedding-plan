@@ -1,9 +1,12 @@
 package me.elgregos.theweddingplan.domain.invitation
 
+import me.elgregos.theweddingplan.domain.guest.Guest
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.albertEinstein
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.emmaWilson
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.liamMiller
+import me.elgregos.theweddingplan.domain.guest.GuestFixtures.marieCurie
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.mickaelKael
 import java.time.LocalDateTime
 
@@ -51,4 +54,27 @@ object InvitationFixtures {
         description = "Friends brunch invitation",
         guests = setOf(emmaWilson, liamMiller),
     )
+
+    val scienceConferenceInvitation = Invitation(
+        label = "Science Conference",
+        description = "Welcome to the conference",
+        guests = setOf(albertEinstein, marieCurie) // guest can be replaced in tests if needed
+    )
+
+    val scienceConferenceInvitationUpdated = scienceConferenceInvitation.copy(
+        label = "Science Conference Updated",
+        description = "Welcome to the updated conference",
+        guests = setOf(marieCurie),
+    )
+    val nonExistingInvitationId = InvitationId.fromString("019f6c83-cd2d-7357-833b-e7cda750ba32")
+
+    fun nonExistingInvitation(guest: Guest, updateDate: LocalDateTime = creationDate) = Invitation(
+        id = nonExistingInvitationId,
+        version = 2L,
+        updateDate = updateDate,
+        label = "Non existing",
+        description = "This does not exist",
+        guests = setOf(guest)
+    )
+
 }

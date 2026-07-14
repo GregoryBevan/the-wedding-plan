@@ -6,8 +6,10 @@ import me.elgregos.theweddingplan.domain.invitation.*
 import me.elgregos.theweddingplan.infrastructure.guest.GuestTable
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import kotlin.uuid.Uuid
@@ -30,6 +32,28 @@ class InvitationsExposedRepository : Invitations {
             it[accessToken] = invitation.accessToken.value
         }
 
+        InvitationGuestTable.batchInsert(invitation.guests) { guest ->
+            this[InvitationGuestTable.invitationId] = invitation.id.value
+            this[InvitationGuestTable.guestId] = guest.id.value
+        }
+
+        return invitation
+    }
+
+    @Transactional
+    override fun update(invitation: Invitation): Invitation? {
+        val updatedRows = InvitationTable.update({ InvitationTable.id eq invitation.id.value }) {
+            it[version] = invitation.version
+            it[updateDate] = invitation.updateDate
+            it[label] = invitation.label
+            it[description] = invitation.description
+        }
+
+        if (updatedRows == 0) {
+            return null
+        }
+
+        InvitationGuestTable.deleteWhere { invitationId eq invitation.id.value }
         InvitationGuestTable.batchInsert(invitation.guests) { guest ->
             this[InvitationGuestTable.invitationId] = invitation.id.value
             this[InvitationGuestTable.guestId] = guest.id.value
@@ -71,16 +95,11 @@ class InvitationsExposedRepository : Invitations {
 
     @Transactional(readOnly = true)
     override fun findAssignedGuestIds(guestIds: Set<GuestId>): Set<GuestId> =
-        guestIds
-            .map(GuestId::value)
-            .takeIf { it.isNotEmpty() }
-            ?.let { candidateIds ->
-                InvitationGuestTable.selectAll()
-                    .where { InvitationGuestTable.guestId inList candidateIds }
-                    .map { GuestId(it[InvitationGuestTable.guestId]) }
-                    .toSet()
-            }
-            ?: emptySet()
+        if (guestIds.isEmpty()) emptySet()
+        else InvitationGuestTable.selectAll()
+            .where { InvitationGuestTable.guestId inList guestIds.map(GuestId::value) }
+            .map { GuestId(it[InvitationGuestTable.guestId]) }
+            .toSet()
 
 
     @Transactional(readOnly = true)
