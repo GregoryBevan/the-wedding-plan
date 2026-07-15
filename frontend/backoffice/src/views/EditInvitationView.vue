@@ -226,9 +226,7 @@ const isSubmitDisabled = computed(() => {
     || currentValidationError.value.length > 0;
 });
 
-const displayedValidationError = computed(() => {
-  return validationErrorMessage.value || currentValidationError.value;
-});
+const displayedValidationError = computed(() => currentValidationError.value);
 
 const guestMatchesSearch = (guest: InvitationGuestResponse | GuestResponse, query: string) => {
   const normalizedGuest = `${guest.firstName} ${guest.lastName} ${guest.email}`.toLowerCase();
