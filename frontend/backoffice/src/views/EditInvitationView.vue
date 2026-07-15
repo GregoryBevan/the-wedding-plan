@@ -286,7 +286,7 @@ const loadInvitation = async () => {
     initialLabel.value = invitation.label.trim();
     initialDescription.value = invitation.description.trim();
     invitationGuests.value = invitation.guests;
-    selectedGuestIds.value = invitation.guests.map(guest => guest.id);
+    selectedGuestIds.value = invitation.guests.map((guest) => guest.id);
     initialGuestIds.value = invitation.guests.map((guest) => guest.id);
   } catch (error: unknown) {
     loadInvitationErrorMessage.value = error instanceof Error
