@@ -67,8 +67,14 @@
 
           <div v-if="guests.length === 0 && !normalizedSearchQuery" class="space-y-2 text-sm text-text/70" data-test="empty-no-guests-available">
             <p>No guests available yet.</p>
-            <RouterLink :to="{ name: BACKOFFICE_ROUTE_NAMES.guestAdd }" class="text-primary underline" data-test="create-guest-link">
-              Create your first guest
+            <RouterLink
+              :to="{ name: BACKOFFICE_ROUTE_NAMES.guestAdd }"
+              aria-label="Create guest"
+              class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              data-test="create-guest-link"
+              title="Create guest"
+            >
+              <img :src="addGuestIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
             </RouterLink>
           </div>
           <p
@@ -115,6 +121,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import addGuestIcon from '../assets/icons/add-guest.svg';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 import { listGuests, type GuestResponse } from '../services/guestApi';
 import { createInvitation } from '../services/invitationApi';

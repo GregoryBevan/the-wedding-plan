@@ -165,6 +165,61 @@ test.describe('Invitation edit', () => {
     await expect(page).toHaveURL(`/invitations/${invitationId}/edit`);
   });
 
+  test('loads selectable guests using unassigned availability filter', async ({ page }) => {
+    await allowAuthorizedSession(page);
+
+    const invitationId = 'inv-unassigned-filter';
+    let guestAvailability: string | null = null;
+
+    await page.route('**/api/invitations/inv-unassigned-filter', async (route) => {
+      await fulfillJson(route, {
+        id: invitationId,
+        version: 1,
+        creationDate: '2026-07-03T10:00:00Z',
+        updateDate: '2026-07-03T10:00:00Z',
+        label: 'Family table',
+        description: 'Main family table',
+        guests: [
+          {
+            id: 'guest-1',
+            firstName: 'Alice',
+            lastName: 'Martin',
+            email: 'alice@example.com'
+          }
+        ],
+        guestCount: 1
+      });
+    });
+
+    await page.route('**/api/guests*', async (route) => {
+      const requestUrl = new URL(route.request().url());
+      guestAvailability = requestUrl.searchParams.get('availability');
+
+      await fulfillJson(route, {
+        items: [
+          {
+            id: 'guest-1',
+            version: 1,
+            creationDate: '2026-06-25T00:00:00Z',
+            updateDate: '2026-06-25T00:00:00Z',
+            firstName: 'Alice',
+            lastName: 'Martin',
+            email: 'alice@example.com'
+          }
+        ],
+        page: 0,
+        size: 20,
+        totalItems: 1,
+        totalPages: 1
+      });
+    });
+
+    await page.goto(`/invitations/${invitationId}/edit`);
+
+    await expect(page.getByRole('heading', { name: 'Edit invitation' })).toBeVisible({ timeout: 10000 });
+    await expect.poll(() => guestAvailability).toBe('unassigned');
+  });
+
   test('shows validation error when no guests are selected', async ({ page }) => {
     await allowAuthorizedSession(page);
 
