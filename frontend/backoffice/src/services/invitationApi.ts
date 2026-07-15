@@ -148,8 +148,12 @@ export const updateInvitation = async (id: string, payload: UpdateInvitationPayl
       throw new Error(body?.message ?? 'Invitation not found.');
     }
 
+    if (response.status === 400) {
+      throw new Error(body?.message ?? 'Invalid invitation data.');
+    }
+
     if (response.status === 409) {
-      throw new Error(body?.message ?? 'Some guests are already assigned to another invitation. Please refresh and try again.');
+      throw new Error(body?.message ?? 'This invitation has been modified elsewhere. Please reload and try again.');
     }
 
     throw new Error(body?.message ?? 'Unable to update invitation at the moment.');
