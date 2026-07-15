@@ -78,7 +78,8 @@ class InvitationEndpoint(
                 ?.let { command ->
                     when (val result = invitationUpdater.update(command)) {
                         is UpdateInvitationResult.Updated -> ServerResponse.ok().body(result.invitation.toResponse())
-                        is UpdateInvitationResult.VersionConflict -> ServerResponse.status(HttpStatus.CONFLICT).build()
+                        is UpdateInvitationResult.VersionConflict -> ServerResponse.status(HttpStatus.CONFLICT)
+                            .body(mapOf("message" to "This invitation has been modified elsewhere. Please reload and try again."))
                         is UpdateInvitationResult.NotFound -> ServerResponse.notFound().build()
                         is UpdateInvitationResult.MissingGuests -> ServerResponse.badRequest().body(
                             MissingInvitationGuestsResponse(message = "At least one guest is required.")
