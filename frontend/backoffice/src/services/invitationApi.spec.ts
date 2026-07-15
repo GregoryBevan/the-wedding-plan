@@ -176,7 +176,7 @@ describe('invitationApi', () => {
     })).rejects.toThrow(invitationNotFoundMessage);
   });
 
-  it('throws dedicated conflict message when update endpoint returns 409 without body message', async () => {
+  it('throws version conflict message when update endpoint returns 409 without body message', async () => {
     mockFetchResponse({ ok: false, status: 409 });
 
     await expect(updateInvitation('inv-1', {
@@ -184,7 +184,7 @@ describe('invitationApi', () => {
       label: 'Updated Family table',
       description: 'Updated main family table',
       guestIds: ['guest-1']
-    })).rejects.toThrow(invitationConflictMessage);
+    })).rejects.toThrow(invitationVersionConflictMessage);
   });
 });
 
