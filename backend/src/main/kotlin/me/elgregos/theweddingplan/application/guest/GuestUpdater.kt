@@ -1,13 +1,12 @@
 package me.elgregos.theweddingplan.application.guest
 
-import me.elgregos.theweddingplan.domain.guest.GuestId
 import me.elgregos.theweddingplan.domain.guest.Guests
 import org.springframework.stereotype.Service
 
 @Service
 class GuestUpdater(private val guests: Guests) {
 
-    fun update(id: GuestId, command: UpdateGuestCommand): UpdateGuestResult =
+    fun update(command: UpdateGuestCommand): UpdateGuestResult =
         with(command) {
             guests.findById(id)
                 ?.let { existingGuest ->

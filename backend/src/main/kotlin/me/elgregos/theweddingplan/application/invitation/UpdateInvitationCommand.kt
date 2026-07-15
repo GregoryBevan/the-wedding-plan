@@ -7,7 +7,8 @@ import me.elgregos.theweddingplan.domain.invitation.InvitationId
 import me.elgregos.theweddingplan.domain.shared.Dates
 
 data class UpdateInvitationCommand(
-    val invitationId: InvitationId,
+    val id: InvitationId,
+    val version: Long,
     val label: String,
     val description: String,
     val guestIds: Set<GuestId>,

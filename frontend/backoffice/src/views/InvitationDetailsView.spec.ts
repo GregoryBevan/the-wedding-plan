@@ -33,6 +33,13 @@ describe('InvitationDetailsView', () => {
           })
         },
         {
+          path: '/invitations/:id/edit',
+          name: BACKOFFICE_ROUTE_NAMES.invitationEdit,
+          component: defineComponent({
+            template: '<div>edit invitation view</div>'
+          })
+        },
+        {
           path: '/invitations/:id',
           name: BACKOFFICE_ROUTE_NAMES.invitationDetails,
           component: InvitationDetailsView

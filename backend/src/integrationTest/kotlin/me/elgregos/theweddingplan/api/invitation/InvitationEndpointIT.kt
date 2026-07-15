@@ -1,10 +1,17 @@
 package me.elgregos.theweddingplan.api.invitation
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.prop
 import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
-import me.elgregos.theweddingplan.api.guest.AddGuestRequest
-import me.elgregos.theweddingplan.api.guest.GuestResponse
+import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.activeGuest
+import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.aliceSmith
+import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.archivedGuest
+import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.beforeUpdate
+import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.bobJohnson
+import me.elgregos.theweddingplan.api.guest.GuestApiTestHelper.createGuest
+import me.elgregos.theweddingplan.api.invitation.InvitationApiTestHelper.createInvitation
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.bridesMaidInvitation
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,57 +30,44 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
     @Test
     fun `should create invitation with multiple active guests`() {
         val csrf = authenticatedCsrfContext("gregory@example.com")
-        val firstGuest = createGuest(csrf, "Alice")
-        val secondGuest = createGuest(csrf, "Bob")
+        val firstGuest = createGuest(restTestClient, csrf, aliceSmith)
+        val secondGuest = createGuest(restTestClient, csrf, bobJohnson)
         val initialCount = invitationCount()
-
-        val createdInvitation = restTestClient.post().uri("/api/invitations")
-            .header(HttpHeaders.COOKIE, csrf.cookies)
-            .header("X-XSRF-TOKEN", csrf.csrfToken)
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(
-                AddInvitationRequest(
-                    label = "Family table",
-                    description = "Main family invitation for the front row table.",
-                    guestIds = listOf(firstGuest.id, secondGuest.id),
-                )
+        val createdInvitation = createInvitation(
+            restTestClient, csrf, AddInvitationRequest(
+                label = "Family table",
+                guestIds = listOf(firstGuest.id, secondGuest.id),
+                description = "Main family invitation for the front row table."
             )
-            .exchange()
-            .expectStatus().isCreated
-            .expectBody(InvitationResponse::class.java)
-            .returnResult()
-            .responseBody
-            ?: error("Expected created invitation in response body")
+        )
 
-        assertThat(createdInvitation.label).isEqualTo("Family table")
-        assertThat(createdInvitation.description).isEqualTo("Main family invitation for the front row table.")
-        assertThat(createdInvitation.guestCount).isEqualTo(2)
-        assertThat(createdInvitation.guests.map { it.id }.toSet()).isEqualTo(setOf(firstGuest.id, secondGuest.id))
+        assertThat(createdInvitation).all {
+            prop(InvitationResponse::label).isEqualTo("Family table")
+            prop(InvitationResponse::description).isEqualTo("Main family invitation for the front row table.")
+            prop(InvitationResponse::guestCount).isEqualTo(2)
+            assertThat(createdInvitation.guests.map { it.id }.toSet()).isEqualTo(setOf(firstGuest.id, secondGuest.id))
+        }
+
         assertThat(invitationCount()).isEqualTo(initialCount + 1)
     }
 
     @Test
     fun `should return bad request when invitation includes archived guest`() {
         val csrf = authenticatedCsrfContext("gregory@example.com")
-        val activeGuest = createGuest(csrf, "Active")
-        val archivedGuest = createGuest(csrf, "Archived")
+        val activeGuest = createGuest(restTestClient, csrf, activeGuest)
+        val archivedGuest = createGuest(restTestClient, csrf, archivedGuest)
 
         archiveGuest(archivedGuest.id)
 
-        restTestClient.post().uri("/api/invitations")
-            .header(HttpHeaders.COOKIE, csrf.cookies)
-            .header("X-XSRF-TOKEN", csrf.csrfToken)
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(
-                AddInvitationRequest(
-                    label = "Invalid invitation",
-                    guestIds = listOf(activeGuest.id, archivedGuest.id),
-                    description = "Invitation with an archived guest."
-                )
+        authenticatedJsonPost(
+            csrf = csrf,
+            uri = "/api/invitations",
+            body = AddInvitationRequest(
+                label = "Invalid invitation",
+                guestIds = listOf(activeGuest.id, archivedGuest.id),
+                description = "Invitation with an archived guest."
             )
-            .exchange()
+        )
             .expectStatus().isBadRequest
             .expectBody()
             .jsonPath("$.message").isEqualTo("Some guests were not found or are archived.")
@@ -85,19 +79,15 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
     fun `should return bad request when invitation has no guests`() {
         val csrf = authenticatedCsrfContext("gregory@example.com")
 
-        restTestClient.post().uri("/api/invitations")
-            .header(HttpHeaders.COOKIE, csrf.cookies)
-            .header("X-XSRF-TOKEN", csrf.csrfToken)
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(
-                AddInvitationRequest(
-                    label = "No guests",
-                    guestIds = emptyList(),
-                    description = "No guests."
-                )
+        authenticatedJsonPost(
+            csrf = csrf,
+            uri = "/api/invitations",
+            body = AddInvitationRequest(
+                label = "No guests",
+                guestIds = emptyList(),
+                description = "No guests."
             )
-            .exchange()
+        )
             .expectStatus().isBadRequest
             .expectBody()
             .jsonPath("$.message").isEqualTo("At least one guest is required.")
@@ -107,19 +97,15 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
     fun `should return conflict when invitation includes a guest already assigned to another invitation`() {
         val csrf = authenticatedCsrfContext("gregory@example.com")
 
-        restTestClient.post().uri("/api/invitations")
-            .header(HttpHeaders.COOKIE, csrf.cookies)
-            .header("X-XSRF-TOKEN", csrf.csrfToken)
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(
-                AddInvitationRequest(
-                    label = "Duplicate guest invitation",
-                    guestIds = listOf(janeDoe.id.toString()),
-                    description = "Should fail because guest is already assigned."
-                )
+        authenticatedJsonPost(
+            csrf = csrf,
+            uri = "/api/invitations",
+            body = AddInvitationRequest(
+                label = "Duplicate guest invitation",
+                guestIds = listOf(janeDoe.id.toString()),
+                description = "Should fail because guest is already assigned."
             )
-            .exchange()
+        )
             .expectStatus().isEqualTo(HttpStatus.CONFLICT)
             .expectBody()
             .jsonPath("$.message").isEqualTo("Some guests are already assigned to another invitation.")
@@ -172,25 +158,109 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
             .expectHeader().valueMatches(HttpHeaders.LOCATION, ".*/oauth2/authorization/google")
     }
 
-    private fun createGuest(csrf: CsrfContext, namePrefix: String): GuestResponse =
-        restTestClient.post().uri("/api/guests")
-            .header(HttpHeaders.COOKIE, csrf.cookies)
-            .header("X-XSRF-TOKEN", csrf.csrfToken)
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(
-                AddGuestRequest(
-                    firstName = "$namePrefix-${UUID.randomUUID()}",
-                    lastName = "Guest",
-                    email = "${namePrefix.lowercase()}-${UUID.randomUUID()}@example.com",
-                )
+    @Test
+    fun `should update invitation label and description`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+        val guest = createGuest(restTestClient, csrf, beforeUpdate)
+
+        val invitation = createInvitation(
+            restTestClient, csrf, AddInvitationRequest(
+                label = "Family table",
+                description = "Initial description",
+                guestIds = listOf(guest.id)
             )
-            .exchange()
-            .expectStatus().isCreated
-            .expectBody(GuestResponse::class.java)
+        )
+
+        val updated = authenticatedJsonPut(
+            csrf = csrf,
+            uri = "/api/invitations/${invitation.id}",
+            body = UpdateInvitationRequest(
+                version = invitation.version,
+                label = "Updated table",
+                description = "Updated description",
+                guestIds = listOf(guest.id),
+            )
+        )
+            .expectStatus().isOk
+            .expectBody(InvitationResponse::class.java)
             .returnResult()
             .responseBody
-            ?: error("Expected created guest in response body")
+            ?: error("Expected updated invitation in response body")
+
+        assertThat(updated).all {
+            prop(InvitationResponse::label).isEqualTo("Updated table")
+            prop(InvitationResponse::description).isEqualTo("Updated description")
+            prop(InvitationResponse::guestCount).isEqualTo(1)
+        }
+    }
+
+    @Test
+    fun `should return conflict when updating invitation with stale version`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+        val guest = createGuest(restTestClient, csrf, beforeUpdate)
+
+        val invitation = createInvitation(
+            restTestClient, csrf, AddInvitationRequest(
+                label = "Family table",
+                description = "Initial description",
+                guestIds = listOf(guest.id)
+            )
+        )
+
+        authenticatedJsonPut(
+            csrf = csrf,
+            uri = "/api/invitations/${invitation.id}",
+            body = UpdateInvitationRequest(
+                version = invitation.version + 1,
+                label = "Updated table",
+                description = "Updated description",
+                guestIds = listOf(guest.id),
+            )
+        )
+            .expectStatus().isEqualTo(HttpStatus.CONFLICT)
+    }
+
+    @Test
+    fun `should return not found when updating unknown invitation id`() {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+        val guest = createGuest(restTestClient, csrf, beforeUpdate)
+
+        authenticatedJsonPut(
+            csrf = csrf,
+            uri = "/api/invitations/${UUID.randomUUID()}",
+            body = UpdateInvitationRequest(
+                version = 1,
+                label = "Updated table",
+                description = "Updated description",
+                guestIds = listOf(guest.id),
+            )
+        )
+            .expectStatus().isNotFound
+    }
+
+    private fun authenticatedJsonPost(
+        csrf: CsrfContext,
+        uri: String,
+        body: Any,
+    ) = restTestClient.post().uri(uri)
+        .header(HttpHeaders.COOKIE, csrf.cookies)
+        .header("X-XSRF-TOKEN", csrf.csrfToken)
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .body(body)
+        .exchange()
+
+    private fun authenticatedJsonPut(
+        csrf: CsrfContext,
+        uri: String,
+        body: Any,
+    ) = restTestClient.put().uri(uri)
+        .header(HttpHeaders.COOKIE, csrf.cookies)
+        .header("X-XSRF-TOKEN", csrf.csrfToken)
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .body(body)
+        .exchange()
 
     private fun archiveGuest(id: String) {
         jdbcTemplate.update(

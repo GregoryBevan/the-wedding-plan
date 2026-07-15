@@ -15,20 +15,25 @@ class InvitationUpdater(
 ) {
 
     fun update(command: UpdateInvitationCommand): UpdateInvitationResult =
-        // Prefer explicit, easy-to-read control flow over nested scope functions
-        invitations.findById(command.invitationId)?.let { currentInvitation ->
-            if (command.guestIds.isEmpty()) return UpdateInvitationResult.MissingGuests
-
-            val activeGuests = guests.findByIds(command.guestIds)
-
-            val invalid = invalidGuestIds(command, activeGuests)
-            if (invalid.isNotEmpty()) return UpdateInvitationResult.InvalidGuests(invalid)
-
-            val alreadyAssigned = alreadyAssignedGuestIds(command, currentInvitation)
-            if (alreadyAssigned.isNotEmpty()) return UpdateInvitationResult.AlreadyAssignedGuests(alreadyAssigned)
-
-            return updateInvitation(command, currentInvitation, activeGuests)
-        } ?: UpdateInvitationResult.NotFound
+        with(command) {
+            invitations.findById(id)
+                ?.let { existingInvitation ->
+                    when {
+                        existingInvitation.version != version -> UpdateInvitationResult.VersionConflict
+                        guestIds.isEmpty() -> UpdateInvitationResult.MissingGuests
+                        else -> guests.findByIds(guestIds)
+                            .let { activeGuests ->
+                                invalidGuestIds(this, activeGuests)
+                                    .takeIf { it.isNotEmpty() }
+                                    ?.let { UpdateInvitationResult.InvalidGuests(it) }
+                                    ?: alreadyAssignedGuestIds(command, existingInvitation)
+                                        .takeIf { it.isNotEmpty() }
+                                        ?.let { UpdateInvitationResult.AlreadyAssignedGuests(it) }
+                                    ?: updateInvitation(command, existingInvitation, activeGuests)
+                            }
+                    }
+                } ?: UpdateInvitationResult.NotFound
+        }
 
     private fun updateInvitation(
         command: UpdateInvitationCommand,

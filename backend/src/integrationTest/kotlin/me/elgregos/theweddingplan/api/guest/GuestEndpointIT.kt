@@ -5,6 +5,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
 import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.charlieDavis
+import me.elgregos.theweddingplan.api.guest.GuestApiTestHelper.createGuest
 import me.elgregos.theweddingplan.api.guest.UpdateGuestRequestFixtures.johnDoeUpdated
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
@@ -183,7 +184,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             lastName = "Candidate",
             email = "trash-${UUID.randomUUID()}@example.com"
         )
-        val createdGuest = createGuest(csrf, guestToArchive)
+        val createdGuest = createGuest(restTestClient, csrf, guestToArchive)
 
         restTestClient.delete().uri("/api/guests/${createdGuest.id}")
             .header(HttpHeaders.COOKIE, csrf.cookies)
@@ -213,7 +214,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             lastName = "Guest",
             email = "lookup-${UUID.randomUUID()}@example.com"
         )
-        val createdGuest = createGuest(csrf, uniqueGuest)
+        val createdGuest = createGuest(restTestClient, csrf, uniqueGuest)
 
         restTestClient.get().uri("/api/guests/${createdGuest.id}")
             .header(HttpHeaders.COOKIE, csrf.cookies)
@@ -257,7 +258,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             lastName = "Update",
             email = "before-${UUID.randomUUID()}@example.com"
         )
-        val createdGuest = createGuest(csrf, guestToUpdate)
+        val createdGuest = createGuest(restTestClient, csrf, guestToUpdate)
         val updateRequest = johnDoeUpdated.copy(version = createdGuest.version)
 
         val updatedGuest = restTestClient.put().uri("/api/guests/${createdGuest.id}")
@@ -293,7 +294,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             lastName = "Archive",
             email = "archive-${UUID.randomUUID()}@example.com"
         )
-        val createdGuest = createGuest(csrf, guestToArchive)
+        val createdGuest = createGuest(restTestClient, csrf, guestToArchive)
 
         restTestClient.delete().uri("/api/guests/${createdGuest.id}")
             .header(HttpHeaders.COOKIE, csrf.cookies)
@@ -344,7 +345,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             lastName = "Archived",
             email = "already-archived-${UUID.randomUUID()}@example.com"
         )
-        val createdGuest = createGuest(csrf, guestToArchive)
+        val createdGuest = createGuest(restTestClient, csrf, guestToArchive)
 
         restTestClient.delete().uri("/api/guests/${createdGuest.id}")
             .header(HttpHeaders.COOKIE, csrf.cookies)
@@ -373,7 +374,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             lastName = "Update",
             email = "before-${UUID.randomUUID()}@example.com"
         )
-        val createdGuest = createGuest(csrf, guestToUpdate)
+        val createdGuest = createGuest(restTestClient, csrf, guestToUpdate)
         val staleUpdateRequest = johnDoeUpdated.copy(version = Long.MAX_VALUE)
 
         restTestClient.put().uri("/api/guests/${createdGuest.id}")
@@ -424,7 +425,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             lastName = "Restore",
             email = "restore-${UUID.randomUUID()}@example.com"
         )
-        val createdGuest = createGuest(csrf, guestToRestore)
+        val createdGuest = createGuest(restTestClient, csrf, guestToRestore)
 
         markGuestAsArchived(createdGuest.id)
 
@@ -466,7 +467,7 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             lastName = "Active",
             email = "active-${UUID.randomUUID()}@example.com"
         )
-        val createdGuest = createGuest(csrf, activeGuest)
+        val createdGuest = createGuest(restTestClient, csrf, activeGuest)
 
         restTestClient.post().uri("/api/guests/${createdGuest.id}/restoration")
             .header(HttpHeaders.COOKIE, csrf.cookies)
@@ -484,19 +485,6 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
     private fun guestCount() =
         jdbcTemplate.queryForObject("select count(*) from guest where deletion_date is null", Int::class.java) ?: 0
 
-    private fun createGuest(csrf: CsrfContext, request: AddGuestRequest): GuestResponse =
-        restTestClient.post().uri("/api/guests")
-            .header(HttpHeaders.COOKIE, csrf.cookies)
-            .header("X-XSRF-TOKEN", csrf.csrfToken)
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(request)
-            .exchange()
-            .expectStatus().isCreated
-            .expectBody(GuestResponse::class.java)
-            .returnResult()
-            .responseBody
-            ?: error("Expected created guest in response body")
 
     private fun persistedGuestById(id: String): PersistedGuestRecord =
         jdbcTemplate.queryForObject(

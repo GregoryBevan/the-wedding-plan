@@ -32,9 +32,7 @@ class GuestUpdaterTest {
         every { guests.findById(guest.id) } returns guest
         every { guests.update(any(), guest.version) } answers { firstArg() }
 
-        val result = guestUpdater.update(guest.id, command)
-
-        val updatedGuest = (result as UpdateGuestResult.Updated).guest
+        val updatedGuest = (guestUpdater.update(command) as UpdateGuestResult.Updated).guest
 
         assertThat(updatedGuest).all {
             prop(Guest::id).isEqualTo(guest.id)
@@ -52,9 +50,7 @@ class GuestUpdaterTest {
         val command = johnDoeUpdatedCommand.copy(version = 1L)
         every { guests.findById(guestId) } returns null
 
-        val result = guestUpdater.update(guestId, command)
-
-        assertThat(result).isEqualTo(UpdateGuestResult.NotFound)
+        assertThat(guestUpdater.update(command)).isEqualTo(UpdateGuestResult.NotFound)
     }
 
     @Test
@@ -63,9 +59,7 @@ class GuestUpdaterTest {
         val command = johnDoeUpdatedCommand.copy(version = guest.version + 1)
         every { guests.findById(guest.id) } returns guest
 
-        val result = guestUpdater.update(guest.id, command)
-
-        assertThat(result).isEqualTo(UpdateGuestResult.VersionConflict)
+        assertThat(guestUpdater.update(command)).isEqualTo(UpdateGuestResult.VersionConflict)
     }
 
     @Test
@@ -75,9 +69,7 @@ class GuestUpdaterTest {
         every { guests.findById(guest.id) } returns guest
         every { guests.update(any(), guest.version) } returns null
 
-        val result = guestUpdater.update(guest.id, command)
-
-        assertThat(result).isEqualTo(UpdateGuestResult.VersionConflict)
+        assertThat(guestUpdater.update(command)).isEqualTo(UpdateGuestResult.VersionConflict)
     }
 
     @Test
@@ -85,9 +77,7 @@ class GuestUpdaterTest {
         val command = johnDoeUpdatedCommand.copy(version = johnDoeArchived.version)
         every { guests.findById(johnDoeArchived.id) } returns null
 
-        val result = guestUpdater.update(johnDoeArchived.id, command)
-
-        assertThat(result).isEqualTo(UpdateGuestResult.NotFound)
+        assertThat(guestUpdater.update(command)).isEqualTo(UpdateGuestResult.NotFound)
     }
 }
 

@@ -82,16 +82,14 @@
           >
             <img :src="viewInvitationIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
           </RouterLink>
-          <button
+          <RouterLink
+            :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationEdit, params: { id: invitation.id } }"
             aria-label="Edit invitation"
-            class="inline-flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-full bg-primary text-white opacity-60"
-            type="button"
-            disabled
-            aria-disabled="true"
-            title="Coming soon"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            title="Edit"
           >
             <img :src="editInvitationIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
-          </button>
+          </RouterLink>
         </div>
       </article>
     </div>

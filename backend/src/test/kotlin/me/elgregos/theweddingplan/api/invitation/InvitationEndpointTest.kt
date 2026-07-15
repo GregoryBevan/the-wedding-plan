@@ -9,6 +9,7 @@ import me.elgregos.theweddingplan.application.invitation.InvitationAdder
 import me.elgregos.theweddingplan.application.invitation.InvitationGetter
 import me.elgregos.theweddingplan.application.invitation.InvitationLister
 import me.elgregos.theweddingplan.application.invitation.InvitationUpdater
+import me.elgregos.theweddingplan.application.invitation.UpdateInvitationResult
 import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
 import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.brideFamilyInvitation
 import me.elgregos.theweddingplan.domain.invitation.InvitationId
@@ -27,6 +28,8 @@ class InvitationEndpointTest {
     private lateinit var invitationUpdater: InvitationUpdater
     private lateinit var invitationEndpoint: InvitationEndpoint
 
+    private val invitationGuestIds = brideFamilyInvitation.guests.map { it.id.toString() }
+
     @BeforeTest
     fun setUp() {
         invitationAdder = mockk()
@@ -34,6 +37,23 @@ class InvitationEndpointTest {
         invitationGetter = mockk()
         invitationUpdater = mockk()
         invitationEndpoint = InvitationEndpoint(invitationAdder, invitationLister, invitationGetter, invitationUpdater)
+    }
+
+    private fun updateInvitationRequest(
+        label: String = brideFamilyInvitation.label,
+        description: String = brideFamilyInvitation.description,
+        guestIds: List<String> = invitationGuestIds,
+        version: Long = brideFamilyInvitation.version,
+    ) = UpdateInvitationRequest(
+        version = version,
+        label = label,
+        description = description,
+        guestIds = guestIds,
+    )
+
+    private fun mockUpdateRequest(request: ServerRequest, invitationId: InvitationId, payload: UpdateInvitationRequest) {
+        every { request.pathVariable("id") } returns invitationId.toString()
+        every { request.body(UpdateInvitationRequest::class.java) } returns payload
     }
 
     @Test
@@ -224,6 +244,66 @@ class InvitationEndpointTest {
         every { invitationGetter.get(invitationId) } returns null
 
         assertThat(invitationEndpoint.getInvitation(request).statusCode()).isEqualTo(HttpStatus.NOT_FOUND)
+    }
+
+    @Test
+    fun `should update invitation`() {
+        val request = mockk<ServerRequest>()
+        val invitationId = brideFamilyInvitation.id
+        val payload = updateInvitationRequest(
+            label = "Updated family table",
+            description = "Updated description",
+        )
+
+        mockUpdateRequest(request, invitationId, payload)
+        every { invitationUpdater.update(payload.toCommandOrNull(invitationId)!!) } returns UpdateInvitationResult.Updated(
+            brideFamilyInvitation.copy(label = "Updated family table", description = "Updated description")
+        )
+
+        assertThat(invitationEndpoint.updateInvitation(request).statusCode()).isEqualTo(HttpStatus.OK)
+    }
+
+    @Test
+    fun `should return conflict when update version conflicts`() {
+        val request = mockk<ServerRequest>()
+        val invitationId = brideFamilyInvitation.id
+        val payload = updateInvitationRequest()
+
+        mockUpdateRequest(request, invitationId, payload)
+        every { invitationUpdater.update(payload.toCommandOrNull(invitationId)!!) } returns UpdateInvitationResult.VersionConflict
+
+        assertThat(invitationEndpoint.updateInvitation(request).statusCode()).isEqualTo(HttpStatus.CONFLICT)
+    }
+
+    @Test
+    fun `should return not found when update invitation id does not exist`() {
+        val request = mockk<ServerRequest>()
+        val invitationId = brideFamilyInvitation.id
+        val payload = updateInvitationRequest()
+
+        mockUpdateRequest(request, invitationId, payload)
+        every { invitationUpdater.update(payload.toCommandOrNull(invitationId)!!) } returns UpdateInvitationResult.NotFound
+
+        assertThat(invitationEndpoint.updateInvitation(request).statusCode()).isEqualTo(HttpStatus.NOT_FOUND)
+    }
+
+    @Test
+    fun `should return bad request when update label is blank`() {
+        val request = mockk<ServerRequest>()
+        val payload = updateInvitationRequest(label = "   ")
+
+        mockUpdateRequest(request, brideFamilyInvitation.id, payload)
+
+        assertThat(invitationEndpoint.updateInvitation(request).statusCode()).isEqualTo(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    fun `should return bad request for malformed invitation id on update`() {
+        val request = mockk<ServerRequest>()
+
+        every { request.pathVariable("id") } returns johnDoe.id.toString().replace('-', 'x')
+
+        assertThat(invitationEndpoint.updateInvitation(request).statusCode()).isEqualTo(HttpStatus.BAD_REQUEST)
     }
 }
 

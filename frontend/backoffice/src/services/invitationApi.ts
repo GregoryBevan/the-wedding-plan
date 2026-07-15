@@ -2,6 +2,7 @@ import { getApiBaseUrl, readCookie } from './http';
 
 export interface InvitationResponse {
   id: string;
+  version: number;
   creationDate: string;
   updateDate: string;
   label: string;
@@ -26,6 +27,13 @@ export interface InvitationPageResponse {
 }
 
 export interface CreateInvitationPayload {
+  label: string;
+  description: string;
+  guestIds: string[];
+}
+
+export interface UpdateInvitationPayload {
+  version: number;
   label: string;
   description: string;
   guestIds: string[];
@@ -111,6 +119,44 @@ export const createInvitation = async (payload: CreateInvitationPayload): Promis
     }
 
     throw new Error(body?.message ?? 'Unable to create invitation at the moment.');
+  }
+
+  return response.json() as Promise<InvitationResponse>;
+};
+
+export const updateInvitation = async (id: string, payload: UpdateInvitationPayload): Promise<InvitationResponse> => {
+  const csrfToken = readCookie('XSRF-TOKEN');
+  const headers = new Headers({
+    'Content-Type': 'application/json'
+  });
+
+  if (csrfToken) {
+    headers.set('X-XSRF-TOKEN', csrfToken);
+  }
+
+  const response = await fetch(`${invitationApiBaseUrl}/invitations/${id}`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers,
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null) as { message?: string } | null;
+
+    if (response.status === 404) {
+      throw new Error(body?.message ?? 'Invitation not found.');
+    }
+
+    if (response.status === 400) {
+      throw new Error(body?.message ?? 'Invalid invitation data.');
+    }
+
+    if (response.status === 409) {
+      throw new Error(body?.message ?? 'This invitation has been modified elsewhere. Please reload and try again.');
+    }
+
+    throw new Error(body?.message ?? 'Unable to update invitation at the moment.');
   }
 
   return response.json() as Promise<InvitationResponse>;

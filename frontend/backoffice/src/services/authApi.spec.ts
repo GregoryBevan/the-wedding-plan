@@ -1,20 +1,22 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getAuthStatus, getGoogleLoginUrl, logout } from './authApi';
+import { clearCsrfCookie, getFirstRequest, mockFetchResponse, setCsrfCookie } from '../testFixtures/httpTestHelpers';
 
 describe('authApi', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    clearCsrfCookie();
   });
 
   it('retrieves auth status from backend', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    const fetchMock = mockFetchResponse({
       ok: true,
-      json: async () => ({
+      body: {
         isAuthenticated: true,
         email: 'allowed@example.com',
         isAuthorized: true
-      })
-    } as Response);
+      }
+    });
 
     const result = await getAuthStatus();
 
@@ -29,14 +31,14 @@ describe('authApi', () => {
   });
 
   it('maps backend boolean fields without is-prefix', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    mockFetchResponse({
       ok: true,
-      json: async () => ({
+      body: {
         authenticated: true,
         email: 'allowed@example.com',
         authorized: true
-      })
-    } as Response);
+      }
+    });
 
     const result = await getAuthStatus();
 
@@ -52,18 +54,13 @@ describe('authApi', () => {
   });
 
   it('calls backend logout endpoint', async () => {
-    Object.defineProperty(document, 'cookie', {
-      configurable: true,
-      value: 'XSRF-TOKEN=test-csrf-token'
-    });
+    setCsrfCookie();
 
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true
-    } as Response);
+    const fetchMock = mockFetchResponse({ ok: true });
 
     await logout();
 
-    const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const [url, options] = getFirstRequest(fetchMock);
 
     expect(url).toBe('http://localhost:8080/auth/logout');
     expect(options.method).toBe('POST');

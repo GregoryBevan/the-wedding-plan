@@ -7,21 +7,24 @@ import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.brideFami
 
 object UpdateInvitationCommandFixtures {
     val brideFamily = UpdateInvitationCommand(
-        invitationId = brideFamilyInvitation.id,
+        id = brideFamilyInvitation.id,
+        version = brideFamilyInvitation.version,
         label = "Bride Family Updated",
         description = "Bride family invitation updated",
         guestIds = setOf(johnDoe.id),
     )
 
     val mixedGuests = UpdateInvitationCommand(
-        invitationId = brideFamilyInvitation.id,
+        id = brideFamilyInvitation.id,
+        version = brideFamilyInvitation.version,
         label = "Mixed guests",
         description = "Mixed guests invitation",
         guestIds = setOf(johnDoe.id, janeDoe.id),
     )
 
     val missingGuests = UpdateInvitationCommand(
-        invitationId = brideFamilyInvitation.id,
+        id = brideFamilyInvitation.id,
+        version = brideFamilyInvitation.version,
         label = "Missing guests",
         description = "Missing guests invitation",
         guestIds = setOf(
@@ -31,7 +34,8 @@ object UpdateInvitationCommandFixtures {
     )
 
     val noGuest = UpdateInvitationCommand(
-        invitationId = brideFamilyInvitation.id,
+        id = brideFamilyInvitation.id,
+        version = brideFamilyInvitation.version,
         label = "No guests",
         description = "No guests",
         guestIds = emptySet(),

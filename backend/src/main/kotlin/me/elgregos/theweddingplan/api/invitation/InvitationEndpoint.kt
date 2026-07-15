@@ -30,7 +30,8 @@ class InvitationEndpoint(
     fun listInvitations(request: ServerRequest): ServerResponse =
         request.intQueryParam("page", default = 0)?.takeIf { it >= 0 }?.let { page ->
             request.intQueryParam("size", default = 20)?.takeIf { it > 0 }?.let { size ->
-                ServerResponse.ok().body(invitationLister.list(InvitationListCriteria(page = page, size = size)).toResponse())
+                ServerResponse.ok()
+                    .body(invitationLister.list(InvitationListCriteria(page = page, size = size)).toResponse())
             }
         } ?: ServerResponse.badRequest().build()
 
@@ -39,16 +40,20 @@ class InvitationEndpoint(
             .toCommandOrNull()
             ?.let { command ->
                 when (val result = invitationAdder.add(command)) {
-                    is AddInvitationResult.Added -> ServerResponse.status(HttpStatus.CREATED).body(result.invitation.toResponse())
+                    is AddInvitationResult.Added -> ServerResponse.status(HttpStatus.CREATED)
+                        .body(result.invitation.toResponse())
+
                     is AddInvitationResult.MissingGuests -> ServerResponse.badRequest().body(
                         MissingInvitationGuestsResponse(message = "At least one guest is required.")
                     )
+
                     is AddInvitationResult.InvalidGuests -> ServerResponse.badRequest().body(
                         InvalidInvitationGuestsResponse(
                             message = "Some guests were not found or are archived.",
                             guestIds = result.guestIds.map(GuestId::toString).sorted(),
                         )
                     )
+
                     is AddInvitationResult.AlreadyAssignedGuests -> ServerResponse.status(HttpStatus.CONFLICT).body(
                         AlreadyAssignedInvitationGuestsResponse(
                             message = "Some guests are already assigned to another invitation.",
@@ -73,22 +78,27 @@ class InvitationEndpoint(
                 ?.let { command ->
                     when (val result = invitationUpdater.update(command)) {
                         is UpdateInvitationResult.Updated -> ServerResponse.ok().body(result.invitation.toResponse())
+                        is UpdateInvitationResult.VersionConflict -> ServerResponse.status(HttpStatus.CONFLICT)
+                            .body(mapOf("message" to "This invitation has been modified elsewhere. Please reload and try again."))
                         is UpdateInvitationResult.NotFound -> ServerResponse.notFound().build()
                         is UpdateInvitationResult.MissingGuests -> ServerResponse.badRequest().body(
                             MissingInvitationGuestsResponse(message = "At least one guest is required.")
                         )
+
                         is UpdateInvitationResult.InvalidGuests -> ServerResponse.badRequest().body(
                             InvalidInvitationGuestsResponse(
                                 message = "Some guests were not found or are archived.",
                                 guestIds = result.guestIds.map(GuestId::toString).sorted(),
                             )
                         )
-                        is UpdateInvitationResult.AlreadyAssignedGuests -> ServerResponse.status(HttpStatus.CONFLICT).body(
-                            AlreadyAssignedInvitationGuestsResponse(
-                                message = "Some guests are already assigned to another invitation.",
-                                guestIds = result.guestIds.map(GuestId::toString).sorted(),
+
+                        is UpdateInvitationResult.AlreadyAssignedGuests -> ServerResponse.status(HttpStatus.CONFLICT)
+                            .body(
+                                AlreadyAssignedInvitationGuestsResponse(
+                                    message = "Some guests are already assigned to another invitation.",
+                                    guestIds = result.guestIds.map(GuestId::toString).sorted(),
+                                )
                             )
-                        )
                     }
                 } ?: ServerResponse.badRequest().build()
         } ?: ServerResponse.badRequest().build()
@@ -97,6 +107,7 @@ class InvitationEndpoint(
 
 data class InvitationResponse(
     val id: String,
+    val version: Long,
     val creationDate: String,
     val updateDate: String,
     val label: String,
@@ -127,6 +138,7 @@ data class AddInvitationRequest(
 )
 
 data class UpdateInvitationRequest(
+    val version: Long,
     val label: String,
     val description: String,
     val guestIds: List<String>,
@@ -173,7 +185,8 @@ internal fun UpdateInvitationRequest.toCommandOrNull(id: InvitationId): UpdateIn
         .toSet()
 
     return UpdateInvitationCommand(
-        invitationId = id,
+        id = id,
+        version = version,
         label = normalizedLabel,
         description = description.trim(),
         guestIds = parsedGuestIds,
@@ -182,6 +195,7 @@ internal fun UpdateInvitationRequest.toCommandOrNull(id: InvitationId): UpdateIn
 
 internal fun Invitation.toResponse() = InvitationResponse(
     id = id.toString(),
+    version = version,
     creationDate = creationDate.toString(),
     updateDate = updateDate.toString(),
     label = label,

@@ -50,6 +50,13 @@ describe('InvitationsListView', () => {
           })
         },
         {
+          path: '/invitations/:id/edit',
+          name: BACKOFFICE_ROUTE_NAMES.invitationEdit,
+          component: defineComponent({
+            template: '<div>edit invitation view</div>'
+          })
+        },
+        {
           path: '/guests/new',
           name: BACKOFFICE_ROUTE_NAMES.guestAdd,
           component: defineComponent({
@@ -80,6 +87,7 @@ describe('InvitationsListView', () => {
       items: [
         {
           id: 'inv-1',
+          version: 1,
           creationDate: '2026-07-01T10:45:28Z',
           updateDate: '2026-07-01T10:45:28Z',
           label: 'Family table',
@@ -122,12 +130,10 @@ describe('InvitationsListView', () => {
     expect(wrapper.text()).not.toContain('alice@example.com');
     expect(wrapper.text()).not.toContain('bob@example.com');
     expect(cards[0].findAll('[data-test="invitation-card-guest-item"]')).toHaveLength(2);
-    const actionButtons = cards[0].findAll('button');
-    const viewLink = cards[0].get('a');
-
-    expect(actionButtons).toHaveLength(1);
-    expect(actionButtons[0].attributes('disabled')).toBeDefined();
-    expect(viewLink.attributes('href')).toBe('/invitations/inv-1');
+    const links = cards[0].findAll('a');
+    expect(links).toHaveLength(2);
+    expect(links[0].attributes('href')).toBe('/invitations/inv-1'); // View link
+    expect(links[1].attributes('href')).toBe('/invitations/inv-1/edit'); // Edit link
     expect(listGuestsMock).not.toHaveBeenCalled();
   });
 
