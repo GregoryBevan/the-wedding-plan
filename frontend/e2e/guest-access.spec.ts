@@ -15,7 +15,7 @@ test.describe('Guest access invitation page', () => {
           { firstName: 'Alice', lastName: 'Martin' },
           { firstName: 'Bob', lastName: 'Martin' }
         ]
-      });
+      }, 200, { 'access-control-allow-origin': '*' });
     });
 
     await page.goto(`${PUBLIC_BASE_URL}/guest-access/${VALID_TOKEN}`);
