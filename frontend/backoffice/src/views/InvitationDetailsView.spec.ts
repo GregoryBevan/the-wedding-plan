@@ -96,6 +96,7 @@ describe('InvitationDetailsView', () => {
 
     expect(backSpy).toHaveBeenCalled();
     expect(router.currentRoute.value.path).toBe('/invitations');
+  });
 
   it('renders invitation details', async () => {
     getInvitationByIdMock.mockResolvedValue({
