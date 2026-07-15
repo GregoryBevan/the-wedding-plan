@@ -4,7 +4,7 @@ import { clearCsrfCookie, expectCsrfHeader, getFirstRequest, mockFetchResponse, 
 
 const invitationNotFoundMessage = 'Invitation not found.';
 const invitationConflictMessage = 'Some guests are already assigned to another invitation. Please refresh and try again.';
-
+const invitationVersionConflictMessage = 'This invitation has been modified elsewhere. Please reload and try again.';
 const invitationResponse = {
   id: 'inv-1',
   version: 1,
