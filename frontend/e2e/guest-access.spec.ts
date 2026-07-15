@@ -28,7 +28,7 @@ test.describe('Guest access invitation page', () => {
 
   test('shows a not-found message for an unknown token', async ({ page }) => {
     await page.route('**/guest-access/invitations/**', async (route) => {
-      await fulfillJson(route, {}, 404);
+      await fulfillJson(route, {}, 404, { 'access-control-allow-origin': '*' });
     });
 
     await page.goto(`${PUBLIC_BASE_URL}/guest-access/${VALID_TOKEN}`);
