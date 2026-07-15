@@ -86,10 +86,16 @@
             <span class="text-sm text-text">{{ guest.firstName }} {{ guest.lastName }} - {{ guest.email }}</span>
           </label>
 
-          <div v-if="guests.length === 0 && !normalizedSearchQuery" class="space-y-2 text-sm text-text/70" data-test="empty-no-guests-available">
+          <div v-if="filteredGuests.length === 0 && !normalizedSearchQuery" class="space-y-2 text-sm text-text/70" data-test="empty-no-guests-available">
             <p>No guests available yet.</p>
-            <RouterLink :to="{ name: BACKOFFICE_ROUTE_NAMES.guestAdd }" class="text-primary underline" data-test="create-guest-link">
-              Create your first guest
+            <RouterLink
+              :to="{ name: BACKOFFICE_ROUTE_NAMES.guestAdd }"
+              aria-label="Create guest"
+              class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              data-test="create-guest-link"
+              title="Create guest"
+            >
+              <img :src="addGuestIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
             </RouterLink>
           </div>
           <p
@@ -136,10 +142,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import addGuestIcon from '../assets/icons/add-guest.svg';
 import backIcon from '../assets/icons/back.svg';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 import { listGuests, type GuestResponse } from '../services/guestApi';
-import { getInvitationById, updateInvitation, type InvitationResponse } from '../services/invitationApi';
+import { getInvitationById, updateInvitation, type InvitationGuestResponse, type InvitationResponse } from '../services/invitationApi';
 
 const router = useRouter();
 const route = useRoute();
@@ -148,6 +155,7 @@ const invitationId = computed(() => String(route.params.id ?? ''));
 
 const invitationVersion = ref<number>(0);
 const guests = ref<GuestResponse[]>([]);
+const invitationGuests = ref<InvitationGuestResponse[]>([]);
 const selectedGuestIds = ref<string[]>([]);
 const label = ref('');
 const description = ref('');
@@ -172,8 +180,33 @@ const GUEST_SEARCH_DEBOUNCE_MS = 300;
 const hasMoreGuests = computed(() => guestPage.value + 1 < totalGuestPages.value);
 const normalizedSearchQuery = computed(() => searchQuery.value.trim());
 
+const guestMatchesSearch = (guest: InvitationGuestResponse | GuestResponse, query: string) => {
+  const normalizedGuest = `${guest.firstName} ${guest.lastName} ${guest.email}`.toLowerCase();
+  return normalizedGuest.includes(query.toLowerCase());
+};
+
+const mergeDisplayedGuests = (loadedGuests: GuestResponse[], currentInvitationGuests: InvitationGuestResponse[]) => {
+  const byId = new Map<string, GuestResponse | InvitationGuestResponse>();
+
+  currentInvitationGuests.forEach((guest) => {
+    byId.set(guest.id, guest);
+  });
+
+  loadedGuests.forEach((guest) => {
+    byId.set(guest.id, guest);
+  });
+
+  return Array.from(byId.values());
+};
+
 const filteredGuests = computed(() => {
-  return guests.value;
+  const mergedGuests = mergeDisplayedGuests(guests.value, invitationGuests.value);
+
+  if (!normalizedSearchQuery.value) {
+    return mergedGuests;
+  }
+
+  return mergedGuests.filter((guest) => guestMatchesSearch(guest, normalizedSearchQuery.value));
 });
 
 const loadInvitation = async () => {
@@ -190,6 +223,7 @@ const loadInvitation = async () => {
     invitationVersion.value = invitation.version;
     label.value = invitation.label;
     description.value = invitation.description;
+    invitationGuests.value = invitation.guests;
     selectedGuestIds.value = invitation.guests.map(guest => guest.id);
   } catch (error: unknown) {
     loadInvitationErrorMessage.value = error instanceof Error
@@ -238,7 +272,7 @@ const loadGuests = async ({ reset = false }: { reset?: boolean } = {}) => {
       page: pageToLoad,
       size: GUEST_PAGE_SIZE,
       status: 'active',
-      availability: undefined,
+      availability: 'unassigned',
       search: normalizedSearch || undefined
     });
 

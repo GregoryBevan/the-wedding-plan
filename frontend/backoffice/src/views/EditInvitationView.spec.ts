@@ -466,7 +466,43 @@ describe('EditInvitationView', () => {
     expect(wrapper.find('[data-test="empty-no-search-match"]').exists()).toBe(false);
   });
 
-  it('loads guests with availability filter set to undefined for edit', async () => {
+  it('keeps current invitation guests visible when unassigned list is empty', async () => {
+    getInvitationByIdMock.mockResolvedValue({
+      id: 'inv-1',
+      version: 1,
+      creationDate: '2026-07-03T10:00:00Z',
+      updateDate: '2026-07-03T10:00:00Z',
+      label: 'Family table',
+      description: 'Main family table',
+      guests: [
+        {
+          id: 'guest-assigned-to-current',
+          firstName: 'Alice',
+          lastName: 'Martin',
+          email: 'alice@example.com'
+        }
+      ],
+      guestCount: 1
+    });
+
+    listGuestsMock.mockResolvedValue({
+      items: [],
+      page: 0,
+      size: 10,
+      totalItems: 0,
+      totalPages: 0
+    });
+
+    const { wrapper } = await mountView();
+
+    expect(wrapper.text()).toContain('Alice Martin - alice@example.com');
+    expect(wrapper.find('[data-test="empty-no-guests-available"]').exists()).toBe(false);
+
+    const checkbox = wrapper.get('[data-test="guest-checkbox"]');
+    expect((checkbox.element as HTMLInputElement).checked).toBe(true);
+  });
+
+  it('loads guests with availability filter set to unassigned for edit', async () => {
     getInvitationByIdMock.mockResolvedValue({
       id: 'inv-1',
       version: 1,
@@ -509,7 +545,7 @@ describe('EditInvitationView', () => {
       page: 0,
       size: 10,
       status: 'active',
-      availability: undefined,
+      availability: 'unassigned',
       search: undefined
     });
   });
@@ -568,7 +604,7 @@ describe('EditInvitationView', () => {
       vi.advanceTimersByTime(301);
       await flushPromises();
 
-      expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10, status: 'active', availability: undefined, search: 'zzz-does-not-match' });
+      expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10, status: 'active', availability: 'unassigned', search: 'zzz-does-not-match' });
       expect(wrapper.get('[data-test="empty-no-search-match"]').text()).toContain('No guests match your search.');
       expect(wrapper.find('[data-test="empty-no-guests-available"]').exists()).toBe(false);
     } finally {
@@ -643,8 +679,8 @@ describe('EditInvitationView', () => {
     await container.trigger('scroll');
     await flushPromises();
 
-    expect(listGuestsMock).toHaveBeenNthCalledWith(1, { page: 0, size: 10, status: 'active', availability: undefined, search: undefined });
-    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 1, size: 10, status: 'active', availability: undefined, search: undefined });
+    expect(listGuestsMock).toHaveBeenNthCalledWith(1, { page: 0, size: 10, status: 'active', availability: 'unassigned', search: undefined });
+    expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 1, size: 10, status: 'active', availability: 'unassigned', search: undefined });
     expect(wrapper.text()).toContain('Alice Martin');
     expect(wrapper.text()).toContain('Zoe Durand');
   });
