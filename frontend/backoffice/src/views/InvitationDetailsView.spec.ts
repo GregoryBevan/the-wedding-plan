@@ -87,12 +87,15 @@ describe('InvitationDetailsView', () => {
     });
 
     const { wrapper, router } = await mountView({ previousPath: '/invitations' });
+    const backSpy = vi.spyOn(router, 'back');
+
+    window.history.replaceState({ back: '/invitations' }, '');
 
     await wrapper.get('[data-test="back-invitation-details"]').trigger('click');
     await flushPromises();
 
+    expect(backSpy).toHaveBeenCalled();
     expect(router.currentRoute.value.path).toBe('/invitations');
-  });
 
   it('renders invitation details', async () => {
     getInvitationByIdMock.mockResolvedValue({
