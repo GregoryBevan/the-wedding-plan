@@ -159,7 +159,7 @@ test.describe('Invitation edit', () => {
     const labelInput = page.locator('input[id="invitation-label"]');
     await labelInput.fill('   ', { timeout: 10000 });
 
-    await page.getByRole('button', { name: /Update invitation/ }).click();
+    await expect(page.getByRole('button', { name: /Update invitation/ })).toBeDisabled();
 
     await expect(page.locator('[data-test="invitation-validation-error"]')).toContainText('Label is required.', { timeout: 5000 });
     await expect(page).toHaveURL(`/invitations/${invitationId}/edit`);
@@ -270,7 +270,7 @@ test.describe('Invitation edit', () => {
 
     await page.locator('input[type="checkbox"]').first().uncheck({ timeout: 10000 });
 
-    await page.getByRole('button', { name: /Update invitation/ }).click();
+    await expect(page.getByRole('button', { name: /Update invitation/ })).toBeDisabled();
 
     await expect(page.locator('[data-test="invitation-validation-error"]')).toContainText('Select at least one guest.', { timeout: 5000 });
     await expect(page).toHaveURL(`/invitations/${invitationId}/edit`);
@@ -340,8 +340,7 @@ test.describe('Invitation edit', () => {
 
     await expect(page.getByRole('heading', { name: 'Edit invitation' })).toBeVisible({ timeout: 10000 });
 
-    const cancelLink = page.locator('a').filter({ hasText: 'Cancel' }).first();
-    await cancelLink.click();
+    await page.getByRole('button', { name: 'Cancel' }).click();
 
     await expect(page).toHaveURL(`/invitations/${invitationId}`, { timeout: 10000 });
   });

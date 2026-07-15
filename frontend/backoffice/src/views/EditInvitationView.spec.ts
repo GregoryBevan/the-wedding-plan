@@ -33,7 +33,13 @@ describe('EditInvitationView', () => {
     vi.clearAllMocks();
   });
 
-  const mountView = async (invitationId = 'inv-1') => {
+  const mountView = async ({
+    invitationId = 'inv-1',
+    previousPath
+  }: {
+    invitationId?: string;
+    previousPath?: string;
+  } = {}) => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
@@ -59,6 +65,11 @@ describe('EditInvitationView', () => {
       ]
     });
 
+    if (previousPath) {
+      await router.push(previousPath);
+      await router.isReady();
+    }
+
     await router.push(`/invitations/${invitationId}/edit`);
     await router.isReady();
 
@@ -74,6 +85,106 @@ describe('EditInvitationView', () => {
 
     return { wrapper, router };
   };
+
+  it('navigates back in history when clicking back button', async () => {
+    getInvitationByIdMock.mockResolvedValue({
+      id: 'inv-1',
+      version: 1,
+      creationDate: '2026-07-03T10:00:00Z',
+      updateDate: '2026-07-03T10:00:00Z',
+      label: 'Family table',
+      description: 'Main family table',
+      guests: [],
+      guestCount: 0
+    });
+    listGuestsMock.mockResolvedValue({
+      items: [],
+      page: 0,
+      size: 10,
+      totalItems: 0,
+      totalPages: 0
+    });
+
+    const { wrapper, router } = await mountView({ previousPath: '/invitations/inv-1' });
+
+    await wrapper.get('[data-test="back-edit-invitation"]').trigger('click');
+    await flushPromises();
+
+    expect(router.currentRoute.value.path).toBe('/invitations/inv-1');
+  });
+
+  it('navigates back in history when clicking cancel button', async () => {
+    getInvitationByIdMock.mockResolvedValue({
+      id: 'inv-1',
+      version: 1,
+      creationDate: '2026-07-03T10:00:00Z',
+      updateDate: '2026-07-03T10:00:00Z',
+      label: 'Family table',
+      description: 'Main family table',
+      guests: [],
+      guestCount: 0
+    });
+    listGuestsMock.mockResolvedValue({
+      items: [],
+      page: 0,
+      size: 10,
+      totalItems: 0,
+      totalPages: 0
+    });
+
+    const { wrapper, router } = await mountView({ previousPath: '/invitations/inv-1' });
+
+    await wrapper.get('[data-test="cancel-edit-invitation"]').trigger('click');
+    await flushPromises();
+
+    expect(router.currentRoute.value.path).toBe('/invitations/inv-1');
+  });
+
+  it('navigates back in history after successful update', async () => {
+    getInvitationByIdMock.mockResolvedValue({
+      id: 'inv-1',
+      version: 1,
+      creationDate: '2026-07-03T10:00:00Z',
+      updateDate: '2026-07-03T10:00:00Z',
+      label: 'Family table',
+      description: 'Main family table',
+      guests: [
+        {
+          id: 'guest-1',
+          firstName: 'Alice',
+          lastName: 'Martin',
+          email: 'alice@example.com'
+        }
+      ],
+      guestCount: 1
+    });
+    listGuestsMock.mockResolvedValue({
+      items: [
+        {
+          id: 'guest-1',
+          version: 1,
+          creationDate: '2026-07-03T10:00:00Z',
+          updateDate: '2026-07-03T10:00:00Z',
+          firstName: 'Alice',
+          lastName: 'Martin',
+          email: 'alice@example.com'
+        }
+      ],
+      page: 0,
+      size: 10,
+      totalItems: 1,
+      totalPages: 1
+    });
+    updateInvitationMock.mockResolvedValue({ id: 'inv-1' });
+
+    const { wrapper, router } = await mountView({ previousPath: '/invitations/inv-1' });
+
+    await wrapper.get('[data-test="invitation-label-input"]').setValue('Family table updated');
+    await wrapper.get('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(router.currentRoute.value.path).toBe('/invitations/inv-1');
+  });
 
   it('loads existing invitation data and allows editing', async () => {
     getInvitationByIdMock.mockResolvedValue({
@@ -237,7 +348,10 @@ describe('EditInvitationView', () => {
 
     expect(wrapper.get('[data-test="invitation-load-error"]').text()).toContain('Invitation not found.');
 
-    await wrapper.find('button').trigger('click');
+    const retryButton = wrapper.findAll('button').find((button) => button.text().includes('Try again'));
+    expect(retryButton).toBeDefined();
+
+    await retryButton!.trigger('click');
     await flushPromises();
 
     expect(getInvitationByIdMock).toHaveBeenCalledTimes(2);
@@ -840,6 +954,10 @@ describe('EditInvitationView', () => {
 
     const submitButton = wrapper.get('[data-test="update-invitation-submit"]');
 
+    expect(submitButton.attributes('disabled')).toBeDefined();
+
+    await wrapper.get('[data-test="invitation-label-input"]').setValue('Family table updated');
+
     await wrapper.get('form').trigger('submit.prevent');
     await flushPromises();
 
@@ -853,6 +971,57 @@ describe('EditInvitationView', () => {
 
     resolveUpdate();
     await flushPromises();
+  });
+
+  it('keeps submit disabled when form is unchanged or invalid', async () => {
+    getInvitationByIdMock.mockResolvedValue({
+      id: 'inv-1',
+      version: 1,
+      creationDate: '2026-07-03T10:00:00Z',
+      updateDate: '2026-07-03T10:00:00Z',
+      label: 'Family table',
+      description: 'Main family table',
+      guests: [
+        {
+          id: 'guest-1',
+          firstName: 'Alice',
+          lastName: 'Martin',
+          email: 'alice@example.com'
+        }
+      ],
+      guestCount: 1
+    });
+    listGuestsMock.mockResolvedValue({
+      items: [
+        {
+          id: 'guest-1',
+          version: 1,
+          creationDate: '2026-07-03T10:00:00Z',
+          updateDate: '2026-07-03T10:00:00Z',
+          firstName: 'Alice',
+          lastName: 'Martin',
+          email: 'alice@example.com'
+        }
+      ],
+      page: 0,
+      size: 10,
+      totalItems: 1,
+      totalPages: 1
+    });
+
+    const { wrapper } = await mountView();
+    const submitButton = wrapper.get('[data-test="update-invitation-submit"]');
+
+    expect(submitButton.attributes('disabled')).toBeDefined();
+
+    await wrapper.get('[data-test="invitation-label-input"]').setValue('   ');
+    expect(submitButton.attributes('disabled')).toBeDefined();
+
+    await wrapper.get('[data-test="invitation-label-input"]').setValue('Family table updated');
+    expect(submitButton.attributes('disabled')).toBeUndefined();
+
+    await wrapper.get('[data-test="guest-checkbox"]').setValue(false);
+    expect(submitButton.attributes('disabled')).toBeDefined();
   });
 });
 

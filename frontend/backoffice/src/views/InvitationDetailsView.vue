@@ -1,14 +1,16 @@
 <template>
   <section>
     <header class="relative mb-6 flex items-center justify-center">
-      <RouterLink
-        :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationList }"
+      <button
         aria-label="Back to invitations"
         class="absolute left-0 inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        data-test="back-invitation-details"
+        type="button"
         title="Back"
+        @click="navigateBack"
       >
         <img :src="backIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
-      </RouterLink>
+      </button>
       <h2 class="text-center text-3xl font-light tracking-wide text-text">Invitation details</h2>
     </header>
 
@@ -83,12 +85,13 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import backIcon from '../assets/icons/back.svg';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 import { getInvitationById, type InvitationResponse } from '../services/invitationApi';
 
 const route = useRoute();
+const router = useRouter();
 
 const invitationId = computed(() => String(route.params.id ?? ''));
 const invitation = ref<InvitationResponse | null>(null);
@@ -101,6 +104,15 @@ const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
 });
 
 const formatDateTime = (isoDate: string) => dateTimeFormatter.format(new Date(isoDate));
+
+const navigateBack = async () => {
+  if (window.history.state?.back) {
+    router.back();
+    return;
+  }
+
+  await router.push({ name: BACKOFFICE_ROUTE_NAMES.invitationList });
+};
 
 const loadInvitation = async () => {
   if (!invitationId.value) {
