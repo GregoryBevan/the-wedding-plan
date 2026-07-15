@@ -77,7 +77,7 @@ describe('CreateInvitationView', () => {
     vi.clearAllMocks();
   });
 
-  const mountView = async () => {
+  const mountView = async ({ previousPath }: { previousPath?: string } = {}) => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
@@ -103,6 +103,11 @@ describe('CreateInvitationView', () => {
       ]
     });
 
+    if (previousPath) {
+      await router.push(previousPath);
+      await router.isReady();
+    }
+
     await router.push('/invitations/new');
     await router.isReady();
 
@@ -118,6 +123,17 @@ describe('CreateInvitationView', () => {
 
     return { wrapper, router };
   };
+
+  it('navigates back in history when clicking cancel', async () => {
+    listGuestsMock.mockResolvedValue(buildGuestPage());
+
+    const { wrapper, router } = await mountView({ previousPath: '/invitations' });
+
+    await wrapper.get('[data-test="cancel-create-invitation"]').trigger('click');
+    await flushPromises();
+
+    expect(router.currentRoute.value.path).toBe('/invitations');
+  });
 
   it('submits successfully and navigates back to invitation list', async () => {
     listGuestsMock.mockResolvedValue(buildGuestPage());

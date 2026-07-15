@@ -1,14 +1,16 @@
 <template>
   <section class="mx-auto max-w-3xl">
     <header class="relative mb-6 flex items-center justify-center">
-      <RouterLink
-        :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationDetails, params: { id: invitationId } }"
+      <button
         aria-label="Back to invitation details"
         class="absolute left-0 inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        data-test="back-edit-invitation"
+        type="button"
         title="Back"
+        @click="navigateBack"
       >
         <img :src="backIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
-      </RouterLink>
+      </button>
       <h2 class="text-center text-3xl font-light tracking-wide text-text">Edit invitation</h2>
     </header>
 
@@ -112,22 +114,24 @@
         </div>
       </div>
 
-      <p v-if="validationErrorMessage" class="text-sm text-red-700" data-test="invitation-validation-error">
-        {{ validationErrorMessage }}
+      <p v-if="displayedValidationError" class="text-sm text-red-700" data-test="invitation-validation-error">
+        {{ displayedValidationError }}
       </p>
       <p v-if="submitErrorMessage" class="text-sm text-red-700" data-test="invitation-submit-error">
         {{ submitErrorMessage }}
       </p>
 
       <div class="flex gap-3 pt-2">
-        <RouterLink
-          :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationDetails, params: { id: invitationId } }"
+        <button
           class="flex-1 rounded border border-secondary px-4 py-3 text-center text-sm transition hover:bg-secondary/20"
+          data-test="cancel-edit-invitation"
+          type="button"
+          @click="navigateBack"
         >
           Cancel
-        </RouterLink>
+        </button>
         <button
-          :disabled="isSubmitting"
+          :disabled="isSubmitDisabled"
           class="flex-1 rounded bg-primary px-4 py-3 text-sm text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           data-test="update-invitation-submit"
           type="submit"
@@ -154,6 +158,9 @@ const route = useRoute();
 const invitationId = computed(() => String(route.params.id ?? ''));
 
 const invitationVersion = ref<number>(0);
+const initialLabel = ref('');
+const initialDescription = ref('');
+const initialGuestIds = ref<string[]>([]);
 const guests = ref<GuestResponse[]>([]);
 const invitationGuests = ref<InvitationGuestResponse[]>([]);
 const selectedGuestIds = ref<string[]>([]);
@@ -179,6 +186,47 @@ const GUEST_SEARCH_DEBOUNCE_MS = 300;
 
 const hasMoreGuests = computed(() => guestPage.value + 1 < totalGuestPages.value);
 const normalizedSearchQuery = computed(() => searchQuery.value.trim());
+const normalizedLabel = computed(() => label.value.trim());
+const normalizedDescription = computed(() => description.value.trim());
+
+const normalizeGuestIds = (guestIds: string[]) => Array.from(new Set(guestIds)).sort();
+
+const hasGuestSelectionChanged = computed(() => {
+  const currentGuestIds = normalizeGuestIds(selectedGuestIds.value);
+  const initialIds = normalizeGuestIds(initialGuestIds.value);
+
+  if (currentGuestIds.length !== initialIds.length) {
+    return true;
+  }
+
+  return currentGuestIds.some((guestId, index) => guestId !== initialIds[index]);
+});
+
+const hasFormChanged = computed(() => {
+  return normalizedLabel.value !== initialLabel.value
+    || normalizedDescription.value !== initialDescription.value
+    || hasGuestSelectionChanged.value;
+});
+
+const currentValidationError = computed(() => {
+  if (normalizedLabel.value.length === 0) {
+    return 'Label is required.';
+  }
+
+  if (selectedGuestIds.value.length === 0) {
+    return 'Select at least one guest.';
+  }
+
+  return '';
+});
+
+const isSubmitDisabled = computed(() => {
+  return isSubmitting.value
+    || !hasFormChanged.value
+    || currentValidationError.value.length > 0;
+});
+
+const displayedValidationError = computed(() => currentValidationError.value);
 
 const guestMatchesSearch = (guest: InvitationGuestResponse | GuestResponse, query: string) => {
   const normalizedGuest = `${guest.firstName} ${guest.lastName} ${guest.email}`.toLowerCase();
@@ -199,6 +247,7 @@ const mergeDisplayedGuests = (loadedGuests: GuestResponse[], currentInvitationGu
   return Array.from(byId.values());
 };
 
+
 const filteredGuests = computed(() => {
   const mergedGuests = mergeDisplayedGuests(guests.value, invitationGuests.value);
 
@@ -208,6 +257,15 @@ const filteredGuests = computed(() => {
 
   return mergedGuests.filter((guest) => guestMatchesSearch(guest, normalizedSearchQuery.value));
 });
+
+const navigateBack = async () => {
+  if (router.options.history.state.back != null) {
+    router.back();
+    return;
+  }
+
+  await router.push({ name: BACKOFFICE_ROUTE_NAMES.invitationDetails, params: { id: invitationId.value } });
+};
 
 const loadInvitation = async () => {
   if (!invitationId.value) {
@@ -223,8 +281,11 @@ const loadInvitation = async () => {
     invitationVersion.value = invitation.version;
     label.value = invitation.label;
     description.value = invitation.description;
+    initialLabel.value = invitation.label.trim();
+    initialDescription.value = invitation.description.trim();
     invitationGuests.value = invitation.guests;
-    selectedGuestIds.value = invitation.guests.map(guest => guest.id);
+    selectedGuestIds.value = invitation.guests.map((guest) => guest.id);
+    initialGuestIds.value = invitation.guests.map((guest) => guest.id);
   } catch (error: unknown) {
     loadInvitationErrorMessage.value = error instanceof Error
       ? error.message
@@ -347,13 +408,12 @@ const handleSubmit = async () => {
   validationErrorMessage.value = '';
   submitErrorMessage.value = '';
 
-  if (label.value.trim().length === 0) {
-    validationErrorMessage.value = 'Label is required.';
+  if (currentValidationError.value) {
+    validationErrorMessage.value = currentValidationError.value;
     return;
   }
 
-  if (selectedGuestIds.value.length === 0) {
-    validationErrorMessage.value = 'Select at least one guest.';
+  if (!hasFormChanged.value) {
     return;
   }
 
@@ -362,12 +422,12 @@ const handleSubmit = async () => {
   try {
     await updateInvitation(invitationId.value, {
       version: invitationVersion.value,
-      label: label.value.trim(),
-      description: description.value.trim(),
+      label: normalizedLabel.value,
+      description: normalizedDescription.value,
       guestIds: selectedGuestIds.value
     });
 
-    await router.push({ name: BACKOFFICE_ROUTE_NAMES.invitationDetails, params: { id: invitationId.value } });
+    await navigateBack();
   } catch (error: unknown) {
     submitErrorMessage.value = error instanceof Error
       ? error.message

@@ -21,7 +21,13 @@ describe('InvitationDetailsView', () => {
     vi.clearAllMocks();
   });
 
-  const mountView = async (initialPath = '/invitations/inv-1') => {
+  const mountView = async ({
+    initialPath = '/invitations/inv-1',
+    previousPath
+  }: {
+    initialPath?: string;
+    previousPath?: string;
+  } = {}) => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
@@ -47,6 +53,11 @@ describe('InvitationDetailsView', () => {
       ]
     });
 
+    if (previousPath) {
+      await router.push(previousPath);
+      await router.isReady();
+    }
+
     await router.push(initialPath);
     await router.isReady();
 
@@ -60,8 +71,32 @@ describe('InvitationDetailsView', () => {
 
     await flushPromises();
 
-    return { wrapper };
+    return { wrapper, router };
   };
+
+  it('navigates back in history when clicking back button', async () => {
+    getInvitationByIdMock.mockResolvedValue({
+      id: 'inv-1',
+      version: 1,
+      creationDate: '2026-07-03T10:00:00Z',
+      updateDate: '2026-07-04T10:00:00Z',
+      label: 'Family table',
+      description: 'Main family table',
+      guests: [],
+      guestCount: 0
+    });
+
+    const { wrapper, router } = await mountView({ previousPath: '/invitations' });
+    const backSpy = vi.spyOn(router, 'back');
+
+    window.history.replaceState({ back: '/invitations' }, '');
+
+    await wrapper.get('[data-test="back-invitation-details"]').trigger('click');
+    await flushPromises();
+
+    expect(backSpy).toHaveBeenCalled();
+    expect(router.currentRoute.value.path).toBe('/invitations');
+  });
 
   it('renders invitation details', async () => {
     getInvitationByIdMock.mockResolvedValue({
@@ -127,7 +162,7 @@ describe('InvitationDetailsView', () => {
   it('renders error state when loading invitation fails', async () => {
     getInvitationByIdMock.mockRejectedValue(new Error('Invitation not found.'));
 
-    const { wrapper } = await mountView('/invitations/inv-404');
+    const { wrapper } = await mountView({ initialPath: '/invitations/inv-404' });
 
     expect(wrapper.get('[data-test="invitation-details-error"]').text()).toBe('Invitation not found.');
     expect(wrapper.find('[data-test="invitation-details-card"]').exists()).toBe(false);

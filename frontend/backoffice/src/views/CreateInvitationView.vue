@@ -99,12 +99,14 @@
       </p>
 
       <div class="flex gap-3 pt-2">
-        <RouterLink
-          :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationList }"
+        <button
           class="flex-1 rounded border border-secondary px-4 py-3 text-center text-sm transition hover:bg-secondary/20"
+          data-test="cancel-create-invitation"
+          type="button"
+          @click="navigateBack"
         >
           Cancel
-        </RouterLink>
+        </button>
         <button
           :disabled="isSubmitting"
           class="flex-1 rounded bg-primary px-4 py-3 text-sm text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
@@ -154,6 +156,15 @@ const normalizedSearchQuery = computed(() => searchQuery.value.trim());
 const filteredGuests = computed(() => {
   return guests.value;
 });
+
+const navigateBack = async () => {
+  if (router.options.history.state.back != null) {
+    router.back();
+    return;
+  }
+
+  await router.push({ name: BACKOFFICE_ROUTE_NAMES.invitationList });
+};
 
 const loadGuests = async ({ reset = false }: { reset?: boolean } = {}) => {
   guestLoadErrorMessage.value = '';
