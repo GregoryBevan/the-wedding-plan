@@ -249,24 +249,6 @@ const mergeDisplayedGuests = (loadedGuests: GuestResponse[], currentInvitationGu
   return Array.from(byId.values());
 };
 
-const guestMatchesSearch = (guest: InvitationGuestResponse | GuestResponse, query: string) => {
-  const normalizedGuest = `${guest.firstName} ${guest.lastName} ${guest.email}`.toLowerCase();
-  return normalizedGuest.includes(query.toLowerCase());
-};
-
-const mergeDisplayedGuests = (loadedGuests: GuestResponse[], currentInvitationGuests: InvitationGuestResponse[]) => {
-  const byId = new Map<string, GuestResponse | InvitationGuestResponse>();
-
-  currentInvitationGuests.forEach((guest) => {
-    byId.set(guest.id, guest);
-  });
-
-  loadedGuests.forEach((guest) => {
-    byId.set(guest.id, guest);
-  });
-
-  return Array.from(byId.values());
-};
 
 const filteredGuests = computed(() => {
   const mergedGuests = mergeDisplayedGuests(guests.value, invitationGuests.value);
@@ -301,6 +283,8 @@ const loadInvitation = async () => {
     invitationVersion.value = invitation.version;
     label.value = invitation.label;
     description.value = invitation.description;
+    initialLabel.value = invitation.label.trim();
+    initialDescription.value = invitation.description.trim();
     invitationGuests.value = invitation.guests;
     selectedGuestIds.value = invitation.guests.map(guest => guest.id);
     initialGuestIds.value = invitation.guests.map((guest) => guest.id);
