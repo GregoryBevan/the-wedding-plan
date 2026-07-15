@@ -261,7 +261,7 @@ const filteredGuests = computed(() => {
 });
 
 const navigateBack = async () => {
-  if (window.history.state?.back) {
+  if (router.options.history.state.back != null) {
     router.back();
     return;
   }
