@@ -13,13 +13,7 @@ object InvitationApiTestHelper {
             .header("X-XSRF-TOKEN", csrf.csrfToken)
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON)
-            .body(
-                AddInvitationRequest(
-                    label = "Family table",
-                    description = "Main family invitation for the front row table.",
-                    guestIds = request.guestIds,
-                )
-            )
+            .body(request)
             .exchange()
             .expectStatus().isCreated
             .expectBody(InvitationResponse::class.java)
