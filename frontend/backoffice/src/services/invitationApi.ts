@@ -50,10 +50,15 @@ type RawInvitationPageResponse = Omit<InvitationPageResponse, 'items'> & {
   items: RawInvitationResponse[];
 };
 
-const normalizeInvitation = (invitation: RawInvitationResponse): InvitationResponse => ({
-  ...invitation,
-  accessToken: invitation.accessToken ?? invitation.access_token ?? invitation.accesstoken ?? ''
-});
+const normalizeInvitation = (invitation: RawInvitationResponse): InvitationResponse => {
+  const accessToken = invitation.accessToken ?? invitation.access_token ?? invitation.accesstoken;
+  if (!accessToken) {
+    throw new Error('Invitation access token missing in API response.');
+  }
+
+  const { access_token, accesstoken, ...rest } = invitation;
+  return { ...rest, accessToken };
+};
 
 const normalizeInvitationPage = (page: RawInvitationPageResponse): InvitationPageResponse => ({
   ...page,
