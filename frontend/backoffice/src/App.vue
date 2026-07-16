@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-screen flex-col bg-background p-8 font-serif" data-test="backoffice-shell">
+  <div class="flex h-screen flex-col overflow-hidden bg-background p-8 font-serif" data-test="backoffice-shell">
     <header class="relative z-30 mb-5 flex shrink-0 items-center justify-center border-b border-secondary pb-3">
       <div class="flex items-center space-x-3">
         <img src="./assets/logo.svg" alt="Wedding Logo" class="w-14 h-14" />
@@ -15,7 +15,7 @@
         />
       </div>
     </header>
-    <div class="mx-auto flex w-full max-w-6xl flex-1 items-stretch gap-6" data-test="backoffice-content-shell">
+    <div class="mx-auto flex min-h-0 w-full max-w-6xl flex-1 items-stretch gap-6" data-test="backoffice-content-shell">
       <aside
         v-if="isProtectedRoute"
         class="w-64 shrink-0 rounded-xl border border-secondary/20 bg-white p-5 text-text shadow-lg"
@@ -24,7 +24,7 @@
         <BackofficeSidebar />
       </aside>
 
-      <main class="relative z-0 min-w-0 flex-1 rounded-xl border border-secondary/20 bg-white p-8 text-text shadow-lg" data-test="backoffice-main">
+      <main class="relative z-0 h-full min-h-0 min-w-0 flex-1 overflow-auto rounded-xl border border-secondary/20 bg-white p-8 text-text shadow-lg" data-test="backoffice-main">
         <RouterView />
       </main>
     </div>

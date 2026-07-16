@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "type": "module",
   "scripts": {
     "dev:public": "vite public --config vite.config.ts",
@@ -17,6 +17,7 @@
     "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
+    "qrcode.vue": "^3.10.0",
     "vue": "^3.5.38",
     "vue-router": "^4.6.3"
   },

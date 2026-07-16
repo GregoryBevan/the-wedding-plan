@@ -56,7 +56,7 @@
       <article
         v-for="invitation in invitationPage.items"
         :key="invitation.id"
-        class="flex h-full flex-col rounded-xl border border-secondary/30 bg-white p-4 shadow-sm"
+        class="flex h-full min-w-0 flex-col rounded-xl border border-secondary/30 bg-white p-4 shadow-sm"
         data-test="invitation-card"
       >
         <h3 class="mb-3 text-lg font-medium text-text" data-test="invitation-card-label">{{ invitation.label }}</h3>
@@ -73,23 +73,30 @@
           </li>
         </ul>
 
-        <div class="mt-auto flex items-center justify-end gap-2 pt-2">
-          <RouterLink
-            :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationDetails, params: { id: invitation.id } }"
-            aria-label="View invitation"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            title="View"
-          >
-            <img :src="viewInvitationIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
-          </RouterLink>
-          <RouterLink
-            :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationEdit, params: { id: invitation.id } }"
-            aria-label="Edit invitation"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            title="Edit"
-          >
-            <img :src="editInvitationIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
-          </RouterLink>
+        <div class="mt-auto space-y-3 pt-2">
+          <InvitationQrCodePanel
+            :guest-access-url="buildGuestAccessUrl(invitation.accessToken)"
+            :invitation-label="invitation.label"
+          />
+
+          <div class="flex items-center justify-end gap-2">
+            <RouterLink
+              :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationDetails, params: { id: invitation.id } }"
+              aria-label="View invitation"
+              class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              title="View"
+            >
+              <img :src="viewInvitationIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
+            </RouterLink>
+            <RouterLink
+              :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationEdit, params: { id: invitation.id } }"
+              aria-label="Edit invitation"
+              class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              title="Edit"
+            >
+              <img :src="editInvitationIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
+            </RouterLink>
+          </div>
         </div>
       </article>
     </div>
@@ -98,10 +105,12 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import InvitationQrCodePanel from '../components/InvitationQrCodePanel.vue';
 import addInvitationIcon from '../assets/icons/add-invitation.svg';
 import editInvitationIcon from '../assets/icons/edit.svg';
 import viewInvitationIcon from '../assets/icons/view.svg';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
+import { buildGuestAccessUrl } from '../services/guestAccessUrl';
 import { listGuests } from '../services/guestApi';
 import { listInvitations, type InvitationPageResponse } from '../services/invitationApi';
 

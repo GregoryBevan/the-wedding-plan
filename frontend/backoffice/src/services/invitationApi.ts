@@ -2,6 +2,7 @@ import { getApiBaseUrl, readCookie } from './http';
 
 export interface InvitationResponse {
   id: string;
+  accessToken: string;
   version: number;
   creationDate: string;
   updateDate: string;
@@ -39,6 +40,31 @@ export interface UpdateInvitationPayload {
   guestIds: string[];
 }
 
+type RawInvitationResponse = Omit<InvitationResponse, 'accessToken'> & {
+  accessToken?: string;
+  access_token?: string;
+  accesstoken?: string;
+};
+
+type RawInvitationPageResponse = Omit<InvitationPageResponse, 'items'> & {
+  items: RawInvitationResponse[];
+};
+
+const normalizeInvitation = (invitation: RawInvitationResponse): InvitationResponse => {
+  const accessToken = invitation.accessToken ?? invitation.access_token ?? invitation.accesstoken;
+  if (!accessToken) {
+    throw new Error('Invitation access token missing in API response.');
+  }
+
+  const { access_token, accesstoken, ...rest } = invitation;
+  return { ...rest, accessToken };
+};
+
+const normalizeInvitationPage = (page: RawInvitationPageResponse): InvitationPageResponse => ({
+  ...page,
+  items: page.items.map(normalizeInvitation)
+});
+
 export const getInvitationById = async (id: string): Promise<InvitationResponse> => {
   const csrfToken = readCookie('XSRF-TOKEN');
   const headers = new Headers();
@@ -61,7 +87,9 @@ export const getInvitationById = async (id: string): Promise<InvitationResponse>
     throw new Error('Unable to retrieve invitation details at the moment.');
   }
 
-  return response.json() as Promise<InvitationResponse>;
+  const invitation = await response.json() as RawInvitationResponse;
+
+  return normalizeInvitation(invitation);
 };
 
 const invitationApiBaseUrl = getApiBaseUrl({ includeApiPath: true });
@@ -91,7 +119,9 @@ export const listInvitations = async (
     throw new Error('Unable to retrieve invitations at the moment.');
   }
 
-  return response.json() as Promise<InvitationPageResponse>;
+  const invitationPage = await response.json() as RawInvitationPageResponse;
+
+  return normalizeInvitationPage(invitationPage);
 };
 
 export const createInvitation = async (payload: CreateInvitationPayload): Promise<InvitationResponse> => {
@@ -121,7 +151,9 @@ export const createInvitation = async (payload: CreateInvitationPayload): Promis
     throw new Error(body?.message ?? 'Unable to create invitation at the moment.');
   }
 
-  return response.json() as Promise<InvitationResponse>;
+  const invitation = await response.json() as RawInvitationResponse;
+
+  return normalizeInvitation(invitation);
 };
 
 export const updateInvitation = async (id: string, payload: UpdateInvitationPayload): Promise<InvitationResponse> => {
@@ -159,7 +191,9 @@ export const updateInvitation = async (id: string, payload: UpdateInvitationPayl
     throw new Error(body?.message ?? 'Unable to update invitation at the moment.');
   }
 
-  return response.json() as Promise<InvitationResponse>;
+  const invitation = await response.json() as RawInvitationResponse;
+
+  return normalizeInvitation(invitation);
 };
 
 

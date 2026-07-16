@@ -125,6 +125,7 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
             .expectBody()
             .jsonPath("$.items.length()").value<Int> { assertThat(it > 0).isEqualTo(true) }
             .jsonPath("$.items[0].id").exists()
+            .jsonPath("$.items[0].accessToken").exists()
             .jsonPath("$.items[0].guestCount").exists()
             .jsonPath("$.items[0].guests.length()").isEqualTo(1)
             .jsonPath("$.items[0].guests[0].id").isEqualTo("${janeDoe.id}")
@@ -143,6 +144,7 @@ class InvitationEndpointIT : AbstractEndpointIntegrationTest() {
             .expectStatus().isOk
             .expectBody()
             .jsonPath("$.id").isEqualTo("${bridesMaidInvitation.id}")
+            .jsonPath("$.accessToken").isEqualTo(bridesMaidInvitation.accessToken.value)
             .jsonPath("$.label").isEqualTo("Bridesmaid")
             .jsonPath("$.guestCount").isEqualTo(1)
             .jsonPath("$.guests.length()").isEqualTo(1)
