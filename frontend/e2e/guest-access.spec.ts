@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { fulfillJson } from './fixtures/httpHelpers';
+import { UI_TIMEOUT_MS } from './fixtures/timeouts';
 
 const PUBLIC_BASE_URL = 'http://127.0.0.1:4174';
 const VALID_TOKEN = '957f8251-f50b-48ca-9cd1-998e71ffd2e9';
@@ -20,7 +21,7 @@ test.describe('Guest access invitation page', () => {
 
     await page.goto(`${PUBLIC_BASE_URL}/guest-access/${VALID_TOKEN}`);
 
-    await expect(page.getByRole('heading', { name: 'Famille Martin' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Famille Martin' })).toBeVisible({ timeout: UI_TIMEOUT_MS });
     await expect(page.getByText('Alice Martin')).toBeVisible();
     await expect(page.getByText('Bob Martin')).toBeVisible();
     await expect(page.getByText(/2 (invités|guests)/i)).toBeVisible();
@@ -33,7 +34,7 @@ test.describe('Guest access invitation page', () => {
 
     await page.goto(`${PUBLIC_BASE_URL}/guest-access/${VALID_TOKEN}`);
 
-    await expect(page.getByText(/introuvable|could not be found/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/introuvable|could not be found/i)).toBeVisible({ timeout: UI_TIMEOUT_MS });
     await expect(page.getByRole('button', { name: /Réessayer|Try again/i })).toBeVisible();
   });
 
