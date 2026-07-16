@@ -77,6 +77,7 @@ describe('InvitationDetailsView', () => {
   it('navigates back in history when clicking back button', async () => {
     getInvitationByIdMock.mockResolvedValue({
       id: 'inv-1',
+      accessToken: 'token-invitation-1234567890',
       version: 1,
       creationDate: '2026-07-03T10:00:00Z',
       updateDate: '2026-07-04T10:00:00Z',
@@ -101,6 +102,7 @@ describe('InvitationDetailsView', () => {
   it('renders invitation details', async () => {
     getInvitationByIdMock.mockResolvedValue({
       id: 'inv-1',
+      accessToken: 'token-invitation-1234567890',
       creationDate: '2026-07-03T10:00:00Z',
       updateDate: '2026-07-04T10:00:00Z',
       label: 'Family table',
@@ -137,6 +139,9 @@ describe('InvitationDetailsView', () => {
     );
     expect(wrapper.find('[data-test="invitation-details-guests-empty"]').exists()).toBe(false);
     expect(wrapper.find('[data-test="invitation-details-guests-list"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="invitation-qr-panel"]').exists()).toBe(true);
+    expect(wrapper.get('[data-test="invitation-qr-url"]').text()).toContain('token-invitation-1234567890');
+    expect(wrapper.get('[data-test="invitation-qr-url"]').attributes('href')).toContain('/guest-access/token-invitation-1234567890');
     expect(wrapper.findAll('[data-test="invitation-details-guest-item"]')).toHaveLength(2);
     expect(wrapper.text()).toContain('Alice Martin (alice@example.com)');
     expect(wrapper.text()).toContain('Bob Durand (bob@example.com)');
@@ -145,6 +150,7 @@ describe('InvitationDetailsView', () => {
   it('renders empty guest list state', async () => {
     getInvitationByIdMock.mockResolvedValue({
       id: 'inv-1',
+      accessToken: 'token-invitation-1234567890',
       creationDate: '2026-07-03T10:00:00Z',
       updateDate: '2026-07-04T10:00:00Z',
       label: 'Family table',

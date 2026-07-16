@@ -69,6 +69,13 @@
         </ul>
       </div>
 
+      <InvitationQrCodePanel
+        :guest-access-url="buildGuestAccessUrl(invitation.accessToken)"
+        :invitation-label="invitation.label"
+        :preview-size="80"
+        class="mt-6"
+      />
+
       <div class="mt-6 flex gap-3">
         <RouterLink
           :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationEdit, params: { id: invitation.id } }"
@@ -86,8 +93,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import InvitationQrCodePanel from '../components/InvitationQrCodePanel.vue';
 import backIcon from '../assets/icons/back.svg';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
+import { buildGuestAccessUrl } from '../services/guestAccessUrl';
 import { getInvitationById, type InvitationResponse } from '../services/invitationApi';
 
 const route = useRoute();

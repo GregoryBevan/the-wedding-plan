@@ -60,6 +60,7 @@ class InvitationEndpointTest {
     fun `should map invitation to response`() {
         val response = brideFamilyInvitation.toResponse()
 
+        assertThat(response.accessToken).isEqualTo(brideFamilyInvitation.accessToken.value)
         assertThat(response.label).isEqualTo(brideFamilyInvitation.label)
         assertThat(response.description).isEqualTo(brideFamilyInvitation.description)
         assertThat(response.guests.map{it.id}).isEqualTo(brideFamilyInvitation.guests.map { "${it.id}" })

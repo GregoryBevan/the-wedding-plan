@@ -107,6 +107,7 @@ class InvitationEndpoint(
 
 data class InvitationResponse(
     val id: String,
+    val accessToken: String,
     val version: Long,
     val creationDate: String,
     val updateDate: String,
@@ -195,6 +196,7 @@ internal fun UpdateInvitationRequest.toCommandOrNull(id: InvitationId): UpdateIn
 
 internal fun Invitation.toResponse() = InvitationResponse(
     id = id.toString(),
+    accessToken = accessToken.value,
     version = version,
     creationDate = creationDate.toString(),
     updateDate = updateDate.toString(),

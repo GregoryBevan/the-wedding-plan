@@ -87,6 +87,7 @@ describe('InvitationsListView', () => {
       items: [
         {
           id: 'inv-1',
+          accessToken: 'token-invitation-1234567890',
           version: 1,
           creationDate: '2026-07-01T10:45:28Z',
           updateDate: '2026-07-01T10:45:28Z',
@@ -125,15 +126,18 @@ describe('InvitationsListView', () => {
     expect(wrapper.find('table').exists()).toBe(false);
     expect(wrapper.text()).toContain('Family table');
     expect(wrapper.text()).toContain('2 guests');
+    expect(wrapper.find('[data-test="invitation-qr-panel"]').exists()).toBe(true);
+    expect(wrapper.get('[data-test="invitation-qr-url"]').text()).toContain('token-invitation-1234567890');
+    expect(wrapper.get('[data-test="invitation-qr-url"]').attributes('href')).toContain('/guest-access/token-invitation-1234567890');
     expect(wrapper.text()).toContain('Alice Martin');
     expect(wrapper.text()).toContain('Bob Durand');
     expect(wrapper.text()).not.toContain('alice@example.com');
     expect(wrapper.text()).not.toContain('bob@example.com');
     expect(cards[0].findAll('[data-test="invitation-card-guest-item"]')).toHaveLength(2);
-    const links = cards[0].findAll('a');
-    expect(links).toHaveLength(2);
-    expect(links[0].attributes('href')).toBe('/invitations/inv-1'); // View link
-    expect(links[1].attributes('href')).toBe('/invitations/inv-1/edit'); // Edit link
+    const viewLink = cards[0].get('a[aria-label="View invitation"]');
+    const editLink = cards[0].get('a[aria-label="Edit invitation"]');
+    expect(viewLink.attributes('href')).toBe('/invitations/inv-1');
+    expect(editLink.attributes('href')).toBe('/invitations/inv-1/edit');
     expect(listGuestsMock).not.toHaveBeenCalled();
   });
 

@@ -94,6 +94,34 @@ describe('invitationApi', () => {
     expectCsrfHeader(options);
   });
 
+  it('maps snake_case access token from backend response', async () => {
+    mockFetchResponse({
+      ok: true,
+      body: {
+        ...invitationResponse,
+        access_token: 'token-from-snake-case'
+      }
+    });
+
+    const invitation = await getInvitationById('inv-1');
+
+    expect(invitation.accessToken).toBe('token-from-snake-case');
+  });
+
+  it('maps lowercase accesstoken from backend response', async () => {
+    mockFetchResponse({
+      ok: true,
+      body: {
+        ...invitationResponse,
+        accesstoken: 'token-from-lowercase-field'
+      }
+    });
+
+    const invitation = await getInvitationById('inv-1');
+
+    expect(invitation.accessToken).toBe('token-from-lowercase-field');
+  });
+
   it('throws not found message when details endpoint returns 404', async () => {
     mockFetchResponse({ ok: false, status: 404 });
 
