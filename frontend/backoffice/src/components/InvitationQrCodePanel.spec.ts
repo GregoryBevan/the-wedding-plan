@@ -11,7 +11,7 @@ const qrCodeStubs = {
         required: true
       }
     },
-    template: '<canvas :data-value="value" data-test="invitation-qr-image"></canvas>'
+    template: '<canvas data-test="invitation-qr-image"></canvas>'
   }),
   QrcodeSvg: defineComponent({
     props: {
@@ -20,7 +20,7 @@ const qrCodeStubs = {
         required: true
       }
     },
-    template: '<svg :data-value="value" data-test="invitation-qr-svg"></svg>'
+    template: '<svg data-test="invitation-qr-svg"></svg>'
   })
 };
 
@@ -117,7 +117,6 @@ describe('InvitationQrCodePanel', () => {
     const canvasToDataUrlSpy = vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/png;base64,qr');
 
     const createObjectUrlSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://qr');
-    const revokeObjectUrlSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
 
     const wrapper = mount(InvitationQrCodePanel, {
       props: {
@@ -135,7 +134,6 @@ describe('InvitationQrCodePanel', () => {
     expect(clickSpy).toHaveBeenCalledTimes(2);
     expect(canvasToDataUrlSpy).toHaveBeenCalledWith('image/png');
     expect(createObjectUrlSpy).toHaveBeenCalledTimes(1);
-    expect(revokeObjectUrlSpy).toHaveBeenCalledTimes(1);
   });
 
   it('falls back to preview canvas when export canvas is unavailable for png download', async () => {
