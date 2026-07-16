@@ -35,7 +35,7 @@
         :style="qrPreviewStyle"
         data-test="invitation-qr-image"
       />
-      <p v-else class="text-xs text-text/60" data-test="invitation-qr-loading">Generating QR code...</p>
+      <p v-else class="text-xs text-text/60" data-test="invitation-qr-preview-unavailable">QR code preview unavailable.</p>
     </div>
 
     <div ref="qrSvgContainer" class="hidden" aria-hidden="true">
