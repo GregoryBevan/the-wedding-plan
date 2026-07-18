@@ -1,7 +1,7 @@
 package me.elgregos.theweddingplan.application.guest
 
-import me.elgregos.theweddingplan.domain.guest.GuestListCriteria
-import me.elgregos.theweddingplan.domain.guest.Guests
+import me.elgregos.theweddingplan.domain.guest.entity.GuestListCriteria
+import me.elgregos.theweddingplan.domain.guest.repository.Guests
 import org.springframework.stereotype.Service
 
 @Service

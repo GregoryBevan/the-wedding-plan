@@ -1,6 +1,6 @@
 package me.elgregos.theweddingplan.api.guest
 
-import me.elgregos.theweddingplan.domain.guest.GuestFixtures
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures
 
 object GuestResponseFixtures {
     val johnDoe = GuestResponse(

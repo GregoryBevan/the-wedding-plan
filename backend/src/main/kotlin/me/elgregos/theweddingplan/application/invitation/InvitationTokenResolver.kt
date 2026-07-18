@@ -1,7 +1,7 @@
 package me.elgregos.theweddingplan.application.invitation
 
-import me.elgregos.theweddingplan.domain.invitation.InvitationAccessToken
-import me.elgregos.theweddingplan.domain.invitation.Invitations
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationAccessToken
+import me.elgregos.theweddingplan.domain.invitation.repository.Invitations
 import org.springframework.stereotype.Service
 
 @Service

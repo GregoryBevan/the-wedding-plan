@@ -4,10 +4,10 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
-import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.brideFamilyInvitation
-import me.elgregos.theweddingplan.domain.invitation.InvitationListCriteria
-import me.elgregos.theweddingplan.domain.invitation.InvitationPage
-import me.elgregos.theweddingplan.domain.invitation.Invitations
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.brideFamilyInvitation
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationListCriteria
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationPage
+import me.elgregos.theweddingplan.domain.invitation.repository.Invitations
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

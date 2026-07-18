@@ -6,11 +6,12 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.prop
 import io.mockk.every
 import io.mockk.mockk
-import me.elgregos.theweddingplan.application.guest.UpdateGuestCommandFixtures.johnDoeUpdated as johnDoeUpdatedCommand
-import me.elgregos.theweddingplan.domain.guest.Guest
-import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoeArchived
-import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
-import me.elgregos.theweddingplan.domain.guest.Guests
+import me.elgregos.theweddingplan.application.guest.result.UpdateGuestResult
+import me.elgregos.theweddingplan.application.guest.command.UpdateGuestCommandFixtures.johnDoeUpdated as johnDoeUpdatedCommand
+import me.elgregos.theweddingplan.domain.guest.entity.Guest
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoeArchived
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
+import me.elgregos.theweddingplan.domain.guest.repository.Guests
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

@@ -1,6 +1,8 @@
 package me.elgregos.theweddingplan.api.invitation
 
 import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest.CsrfContext
+import me.elgregos.theweddingplan.api.invitation.request.AddInvitationRequest
+import me.elgregos.theweddingplan.api.invitation.response.InvitationResponse
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.client.RestTestClient

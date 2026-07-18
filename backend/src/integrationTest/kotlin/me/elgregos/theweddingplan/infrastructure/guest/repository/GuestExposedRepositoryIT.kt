@@ -1,0 +1,262 @@
+package me.elgregos.theweddingplan.infrastructure.guest.repository
+
+import assertk.assertThat
+import assertk.assertions.containsAtLeast
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
+import assertk.assertions.isNotNull
+import assertk.assertions.isNull
+import assertk.assertions.isTrue
+import me.elgregos.theweddingplan.AbstractIntegrationTest
+import me.elgregos.theweddingplan.domain.guest.entity.Guest
+import me.elgregos.theweddingplan.domain.guest.entity.GuestAvailability
+import me.elgregos.theweddingplan.domain.guest.entity.GuestStatus
+import me.elgregos.theweddingplan.domain.guest.entity.GuestListCriteria
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.liamMiller
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.liamMillerUpdated
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.noahAnderson
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.noahAndersonUpdated
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.ryanEvans
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.joyceClement
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.julianneWhitaker
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.martinLaval
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.pierrePonce
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.restoreCandidate
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.sarahMills
+import me.elgregos.theweddingplan.domain.guest.entity.GuestId
+import me.elgregos.theweddingplan.domain.guest.entity.GuestPage
+import me.elgregos.theweddingplan.domain.shared.Dates
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.jdbc.core.JdbcTemplate
+import java.util.*
+import kotlin.test.Test
+import kotlin.uuid.toJavaUuid
+
+class GuestExposedRepositoryIT : AbstractIntegrationTest() {
+
+    @Autowired
+    private lateinit var guestsRepository: GuestExposedRepository
+
+    @Autowired
+    private lateinit var jdbcTemplate: JdbcTemplate
+
+    @Test
+    fun `should insert a new guest`() {
+        val initialCount = guestCount()
+        val guest = GuestFixtures.emmaWilson
+
+        guestsRepository.add(guest)
+
+        val count = guestCount()
+        val persistedGuest = guestById(guest.id)
+
+        assertThat(count).isEqualTo(initialCount + 1)
+        assertThat(persistedGuest).isEqualTo(guest)
+    }
+
+    @Test
+    fun `should update an existing guest`() {
+        guestsRepository.add(liamMiller)
+
+        guestsRepository.update(liamMillerUpdated, expectedVersion = liamMiller.version)
+
+        assertThat(guestById(liamMillerUpdated.id)).isEqualTo(liamMillerUpdated)
+    }
+
+    @Test
+    fun `should return null when expected version does not match`() {
+        guestsRepository.add(noahAnderson)
+
+        val result = guestsRepository.update(noahAndersonUpdated, expectedVersion = noahAndersonUpdated.version + 5)
+        val persistedGuest = guestById(noahAndersonUpdated.id)
+
+        assertThat(result).isNull()
+        assertThat(persistedGuest).isEqualTo(noahAnderson)
+    }
+
+    @Test
+    fun `should return null when trying to update an archived guest`() {
+        guestsRepository.add(pierrePonce)
+        markAsArchived(pierrePonce)
+
+        val result = guestsRepository.update(
+            pierrePonce.copy(firstName = "Updated"),
+            expectedVersion = pierrePonce.version,
+        )
+
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `should list all guests`() {
+        val guests = guestsRepository.list(GuestListCriteria(page = 0, size = 5, status = GuestStatus.ACTIVE))
+
+        assertThat(guests.items).containsAtLeast(johnDoe, janeDoe)
+    }
+
+    @Test
+    fun `should list only active guests`() {
+        guestsRepository.add(joyceClement)
+        markAsArchived(joyceClement)
+
+        val guests = guestsRepository.list(GuestListCriteria(status = GuestStatus.ACTIVE))
+
+        assertThat(guests.items.any { it.id == joyceClement.id }).isFalse()
+    }
+
+    @Test
+    fun `should list only archived guests from trash query`() {
+        val activeGuest = ryanEvans
+        guestsRepository.add(activeGuest)
+        val archivedGuest = julianneWhitaker
+        guestsRepository.add(archivedGuest)
+        markAsArchived(archivedGuest)
+
+        val archivedGuests = guestsRepository.list(GuestListCriteria(status = GuestStatus.ARCHIVED))
+
+        assertThat(archivedGuests.items.any { it.id == archivedGuest.id }).isTrue()
+        assertThat(archivedGuests.items.any { it.id == activeGuest.id }).isFalse()
+    }
+
+    @Test
+    fun `should list guests with pagination`() {
+        val totalGuests = guestCount()
+
+        val firstPage = guestsRepository.list(GuestListCriteria(page = 0, size = 1))
+        val secondPage = guestsRepository.list(GuestListCriteria(page = 1, size = 1))
+
+        assertThat(firstPage.items).isEqualTo(listOf(johnDoe))
+        assertPageMetadata(page = 0, totalGuests = totalGuests, result = firstPage)
+
+        assertThat(secondPage.items).isEqualTo(listOf(janeDoe))
+        assertPageMetadata(page = 1, totalGuests = totalGuests, result = secondPage)
+    }
+
+    @Test
+    fun `should filter guests by search query`() {
+        val guests = guestsRepository.list(
+            GuestListCriteria(
+                page = 0,
+                size = 10,
+                status = GuestStatus.ACTIVE,
+                search = "john",
+            )
+        )
+
+        assertThat(guests.items).isEqualTo(listOf(johnDoe))
+    }
+
+    @Test
+    fun `should list only unassigned guests when availability is unassigned`() {
+        val guests = guestsRepository.list(
+            GuestListCriteria(
+                status = GuestStatus.ACTIVE,
+                availability = GuestAvailability.UNASSIGNED,
+                page = 0,
+                size = 200,
+            )
+        )
+
+        assertThat(guests.items.any { it.id == janeDoe.id }).isFalse()
+        assertThat(guests.items.any { it.id == johnDoe.id }).isTrue()
+    }
+
+    @Test
+    fun `should find guest by id`() {
+        val guest = guestsRepository.findById(johnDoe.id)
+
+        assertThat(guest).isEqualTo(johnDoe)
+    }
+
+    @Test
+    fun `should return empty set when find by ids receives empty input`() {
+        val guests = guestsRepository.findByIds(emptySet())
+
+        assertThat(guests).isEqualTo(emptySet())
+    }
+
+    @Test
+    fun `should return null for an archived guest`() {
+        guestsRepository.add(martinLaval)
+        markAsArchived(martinLaval)
+
+        assertThat(guestsRepository.findById(martinLaval.id)).isNull()
+    }
+
+    @Test
+    fun `should restore an archived guest`() {
+        guestsRepository.add(restoreCandidate)
+        markAsArchived(restoreCandidate)
+
+        val archivedGuest = guestById(restoreCandidate.id)
+        val restoredGuest = guestsRepository.restore(archivedGuest.restore(now = Dates.nowUtcMillis()), expectedVersion = archivedGuest.version)
+        val found = guestsRepository.findById(restoreCandidate.id)
+
+        assertThat(restoredGuest).isNotNull()
+        assertThat(found).isNotNull()
+        assertThat(found?.deletionDate).isNull()
+    }
+
+    @Test
+    fun `should return null when guest id does not exist`() {
+        val missingGuest = guestsRepository.findById(GuestId.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99"))
+
+        assertThat(missingGuest).isNull()
+    }
+
+    @Test
+    fun `should persist deletion date when guest is marked as archived`() {
+        guestsRepository.add(sarahMills)
+
+        markAsArchived(sarahMills)
+        val archivedGuest = guestById(sarahMills.id)
+
+        assertThat(archivedGuest.deletionDate).isNotNull()
+    }
+
+    private fun guestCount() =
+        jdbcTemplate.queryForObject(
+            "select count(*) from guest where deletion_date is null",
+            Int::class.java
+        ) ?: 0
+
+    private fun guestById(guestId: GuestId): Guest =
+        jdbcTemplate.queryForObject(
+            """
+            select id, version, creation_date, update_date, deletion_date, first_name, last_name, email
+            from guest
+            where id = ?
+            """.trimIndent(),
+            { rs, _ ->
+                Guest(
+                    id = GuestId.fromString(rs.getObject("id", UUID::class.java).toString()),
+                    version = rs.getLong("version"),
+                    creationDate = rs.getTimestamp("creation_date").toLocalDateTime(),
+                    updateDate = rs.getTimestamp("update_date").toLocalDateTime(),
+                    deletionDate = rs.getTimestamp("deletion_date")?.toLocalDateTime(),
+                    firstName = rs.getString("first_name"),
+                    lastName = rs.getString("last_name"),
+                    email = rs.getString("email")
+                )
+            },
+            guestId.value.toJavaUuid()
+        )
+
+    private fun markAsArchived(guest: Guest) {
+        guestsRepository.update(
+            guest.markAsArchived(now = Dates.nowUtcMillis()),
+            expectedVersion = guest.version,
+        )
+    }
+
+    private fun assertPageMetadata(page: Int, size: Int = 1, totalGuests: Int, result: GuestPage) {
+        assertThat(result.page).isEqualTo(page)
+        assertThat(result.size).isEqualTo(size)
+        assertThat(result.totalItems).isEqualTo(totalGuests.toLong())
+        assertThat(result.totalPages).isEqualTo(totalGuests)
+    }
+}
+

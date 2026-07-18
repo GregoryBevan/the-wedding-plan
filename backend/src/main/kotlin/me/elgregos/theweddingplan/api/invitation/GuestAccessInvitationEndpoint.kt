@@ -1,8 +1,8 @@
 package me.elgregos.theweddingplan.api.invitation
 
 import me.elgregos.theweddingplan.api.common.invitationAccessTokenPathParam
+import me.elgregos.theweddingplan.api.invitation.response.toPublicResponse
 import me.elgregos.theweddingplan.application.invitation.InvitationTokenResolver
-import me.elgregos.theweddingplan.domain.invitation.Invitation
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.function.ServerRequest
 import org.springframework.web.servlet.function.ServerResponse
@@ -20,32 +20,6 @@ class GuestAccessInvitationEndpoint(private val invitationTokenResolver: Invitat
             }
             ?: ServerResponse.badRequest().build()
 }
-
-data class PublicInvitationResponse(
-    val label: String,
-    val description: String,
-    val guests: List<PublicInvitationGuestResponse>,
-    val guestCount: Int,
-)
-
-data class PublicInvitationGuestResponse(
-    val firstName: String,
-    val lastName: String,
-)
-
-internal fun Invitation.toPublicResponse() = PublicInvitationResponse(
-    label = label,
-    description = description,
-    guests = guests
-        .sortedBy { it.id.toString() }
-        .map {
-            PublicInvitationGuestResponse(
-                firstName = it.firstName,
-                lastName = it.lastName,
-            )
-        },
-    guestCount = guests.size,
-)
 
 
 

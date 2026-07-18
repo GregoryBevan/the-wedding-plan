@@ -6,6 +6,7 @@ export interface GuestInvitationResponse {
 }
 
 export interface GuestInvitationPerson {
+  id: string;
   firstName: string;
   lastName: string;
 }

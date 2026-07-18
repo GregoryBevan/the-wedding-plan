@@ -1,10 +1,10 @@
 package me.elgregos.theweddingplan.api.common
 
-import me.elgregos.theweddingplan.domain.guest.GuestStatus
-import me.elgregos.theweddingplan.domain.guest.GuestAvailability
-import me.elgregos.theweddingplan.domain.guest.GuestId
-import me.elgregos.theweddingplan.domain.invitation.InvitationAccessToken
-import me.elgregos.theweddingplan.domain.invitation.InvitationId
+import me.elgregos.theweddingplan.domain.guest.entity.GuestStatus
+import me.elgregos.theweddingplan.domain.guest.entity.GuestAvailability
+import me.elgregos.theweddingplan.domain.guest.entity.GuestId
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationAccessToken
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationId
 import org.springframework.web.servlet.function.ServerRequest
 
 private const val STATUS_PARAM_NAME = "status"
@@ -20,14 +20,19 @@ internal fun ServerRequest.availabilityQueryParam(): GuestAvailability? =
     queryParamOrNull(AVAILABILITY_PARAM_NAME)?.toGuestAvailability()
         ?: if (param(AVAILABILITY_PARAM_NAME).isEmpty) GuestAvailability.ALL else null
 
-internal fun ServerRequest.guestIdPathParam(): GuestId? =
-    GuestId.fromStringOrNull(pathVariable("id"))
+internal fun ServerRequest.guestIdPathParam(name: String = "id"): GuestId? =
+    GuestId.fromStringOrNull(pathVariable(name))
 
 internal fun ServerRequest.invitationIdPathParam(): InvitationId? =
     InvitationId.fromStringOrNull(pathVariable("id"))
 
 internal fun ServerRequest.invitationAccessTokenPathParam() =
     InvitationAccessToken.fromStringOrNull(pathVariable("token"))
+
+internal fun ServerRequest.clientAddress() =
+    remoteAddress()
+        .map { it.address?.hostAddress ?: it.hostString }
+        .orElseGet { servletRequest().remoteAddr ?: "unknown" }
 
 private fun ServerRequest.queryParamOrNull(name: String) =
     param(name).orElse(null)
@@ -37,5 +42,3 @@ private fun String.toGuestStatus() =
 
 private fun String.toGuestAvailability() =
     GuestAvailability.entries.firstOrNull { it.name.equals(this, ignoreCase = true) }
-
-

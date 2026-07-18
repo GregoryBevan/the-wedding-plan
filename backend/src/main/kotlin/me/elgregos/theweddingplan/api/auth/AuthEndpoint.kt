@@ -1,5 +1,6 @@
 package me.elgregos.theweddingplan.api.auth
 
+import me.elgregos.theweddingplan.api.common.clientAddress
 import me.elgregos.theweddingplan.infrastructure.config.AuthProperties
 import org.springframework.http.HttpStatus
 import org.springframework.security.oauth2.core.user.OAuth2User
@@ -14,8 +15,7 @@ class AuthEndpoint(
 ) {
 
     fun me(request: ServerRequest): ServerResponse {
-        val client = request.servletRequest().remoteAddr ?: "unknown"
-        val decision = authRateLimiter.check(client)
+        val decision = authRateLimiter.check(request.clientAddress())
 
         if (!decision.allowed) {
             return ServerResponse.status(HttpStatus.TOO_MANY_REQUESTS)

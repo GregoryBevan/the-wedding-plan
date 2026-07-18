@@ -7,8 +7,8 @@ import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
 import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.charlieDavis
 import me.elgregos.theweddingplan.api.guest.GuestApiTestHelper.createGuest
 import me.elgregos.theweddingplan.api.guest.UpdateGuestRequestFixtures.johnDoeUpdated
-import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
-import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType

@@ -13,8 +13,8 @@ test.describe('Guest access invitation page', () => {
         description: 'Nous serions ravis de vous compter parmi nous.',
         guestCount: 2,
         guests: [
-          { firstName: 'Alice', lastName: 'Martin' },
-          { firstName: 'Bob', lastName: 'Martin' }
+          { id: 'guest-1', firstName: 'Alice', lastName: 'Martin' },
+          { id: 'guest-2', firstName: 'Bob', lastName: 'Martin' }
         ]
       }, 200, { 'access-control-allow-origin': '*' });
     });
