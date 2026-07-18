@@ -12,8 +12,11 @@ import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.beforeUpdate
 import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.bobJohnson
 import me.elgregos.theweddingplan.api.guest.GuestApiTestHelper.createGuest
 import me.elgregos.theweddingplan.api.invitation.InvitationApiTestHelper.createInvitation
-import me.elgregos.theweddingplan.domain.guest.GuestFixtures.janeDoe
-import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.bridesMaidInvitation
+import me.elgregos.theweddingplan.api.invitation.request.AddInvitationRequest
+import me.elgregos.theweddingplan.api.invitation.request.UpdateInvitationRequest
+import me.elgregos.theweddingplan.api.invitation.response.InvitationResponse
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.bridesMaidInvitation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus

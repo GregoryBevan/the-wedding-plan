@@ -1,0 +1,16 @@
+package me.elgregos.theweddingplan.infrastructure.invitation.repository
+
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.javatime.datetime
+
+object InvitationTable : Table("invitation") {
+    val id = uuid("id")
+    val version = long("version")
+    val creationDate = datetime("creation_date")
+    val updateDate = datetime("update_date")
+    val label = text("label")
+    val description = text("description")
+    val accessToken = text("access_token")
+    override val primaryKey = PrimaryKey(id)
+}
+

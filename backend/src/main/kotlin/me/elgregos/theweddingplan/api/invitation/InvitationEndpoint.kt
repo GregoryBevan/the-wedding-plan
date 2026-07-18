@@ -1,20 +1,21 @@
 package me.elgregos.theweddingplan.api.invitation
 
-import me.elgregos.theweddingplan.application.invitation.AddInvitationCommand
-import me.elgregos.theweddingplan.application.invitation.AddInvitationResult
+import me.elgregos.theweddingplan.api.common.intQueryParam
+import me.elgregos.theweddingplan.api.common.invitationIdPathParam
+import me.elgregos.theweddingplan.api.invitation.request.AddInvitationRequest
+import me.elgregos.theweddingplan.api.invitation.request.UpdateInvitationRequest
+import me.elgregos.theweddingplan.api.invitation.response.AlreadyAssignedInvitationGuestsResponse
+import me.elgregos.theweddingplan.api.invitation.response.InvalidInvitationGuestsResponse
+import me.elgregos.theweddingplan.api.invitation.response.MissingInvitationGuestsResponse
+import me.elgregos.theweddingplan.api.invitation.response.toResponse
 import me.elgregos.theweddingplan.application.invitation.InvitationAdder
 import me.elgregos.theweddingplan.application.invitation.InvitationGetter
 import me.elgregos.theweddingplan.application.invitation.InvitationLister
 import me.elgregos.theweddingplan.application.invitation.InvitationUpdater
-import me.elgregos.theweddingplan.application.invitation.UpdateInvitationCommand
-import me.elgregos.theweddingplan.application.invitation.UpdateInvitationResult
-import me.elgregos.theweddingplan.api.common.intQueryParam
-import me.elgregos.theweddingplan.api.common.invitationIdPathParam
-import me.elgregos.theweddingplan.domain.guest.GuestId
-import me.elgregos.theweddingplan.domain.invitation.Invitation
-import me.elgregos.theweddingplan.domain.invitation.InvitationId
-import me.elgregos.theweddingplan.domain.invitation.InvitationListCriteria
-import me.elgregos.theweddingplan.domain.invitation.InvitationPage
+import me.elgregos.theweddingplan.application.invitation.result.AddInvitationResult
+import me.elgregos.theweddingplan.application.invitation.result.UpdateInvitationResult
+import me.elgregos.theweddingplan.domain.guest.entity.GuestId
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationListCriteria
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.function.ServerRequest
@@ -105,121 +106,4 @@ class InvitationEndpoint(
 }
 
 
-data class InvitationResponse(
-    val id: String,
-    val accessToken: String,
-    val version: Long,
-    val creationDate: String,
-    val updateDate: String,
-    val label: String,
-    val description: String,
-    val guests: List<InvitationGuestResponse>,
-    val guestCount: Int,
-)
-
-data class InvitationGuestResponse(
-    val id: String,
-    val firstName: String,
-    val lastName: String,
-    val email: String,
-)
-
-data class InvitationPageResponse(
-    val items: List<InvitationResponse>,
-    val page: Int,
-    val size: Int,
-    val totalItems: Long,
-    val totalPages: Int,
-)
-
-data class AddInvitationRequest(
-    val label: String,
-    val description: String,
-    val guestIds: List<String>,
-)
-
-data class UpdateInvitationRequest(
-    val version: Long,
-    val label: String,
-    val description: String,
-    val guestIds: List<String>,
-)
-
-data class InvalidInvitationGuestsResponse(
-    val message: String,
-    val guestIds: List<String>,
-)
-
-data class AlreadyAssignedInvitationGuestsResponse(
-    val message: String,
-    val guestIds: List<String>,
-)
-
-data class MissingInvitationGuestsResponse(val message: String)
-
-internal fun AddInvitationRequest.toCommandOrNull(): AddInvitationCommand? {
-    val normalizedLabel = label.trim()
-    if (normalizedLabel.isEmpty()) return null
-
-    val parsedGuestIds = guestIds
-        .map(String::trim)
-        .filter(String::isNotEmpty)
-        .map { runCatching { GuestId.fromString(it) }.getOrNull() ?: return null }
-        .toSet()
-
-
-    return AddInvitationCommand(
-        label = normalizedLabel,
-        description = description.trim(),
-        guestIds = parsedGuestIds,
-    )
-}
-
-internal fun UpdateInvitationRequest.toCommandOrNull(id: InvitationId): UpdateInvitationCommand? {
-    val normalizedLabel = label.trim()
-    if (normalizedLabel.isEmpty()) return null
-
-    val parsedGuestIds = guestIds
-        .map(String::trim)
-        .filter(String::isNotEmpty)
-        .map { runCatching { GuestId.fromString(it) }.getOrNull() ?: return null }
-        .toSet()
-
-    return UpdateInvitationCommand(
-        id = id,
-        version = version,
-        label = normalizedLabel,
-        description = description.trim(),
-        guestIds = parsedGuestIds,
-    )
-}
-
-internal fun Invitation.toResponse() = InvitationResponse(
-    id = id.toString(),
-    accessToken = accessToken.value,
-    version = version,
-    creationDate = creationDate.toString(),
-    updateDate = updateDate.toString(),
-    label = label,
-    description = description,
-    guests = guests
-        .sortedBy { it.id.toString() }
-        .map {
-            InvitationGuestResponse(
-                id = it.id.toString(),
-                firstName = it.firstName,
-                lastName = it.lastName,
-                email = it.email,
-            )
-        },
-    guestCount = guests.size,
-)
-
-internal fun InvitationPage.toResponse() = InvitationPageResponse(
-    items = items.map(Invitation::toResponse),
-    page = page,
-    size = size,
-    totalItems = totalItems,
-    totalPages = totalPages,
-)
 

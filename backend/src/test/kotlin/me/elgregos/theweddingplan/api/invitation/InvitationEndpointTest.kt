@@ -4,16 +4,20 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
-import me.elgregos.theweddingplan.application.invitation.AddInvitationResult
+import me.elgregos.theweddingplan.api.invitation.request.AddInvitationRequest
+import me.elgregos.theweddingplan.api.invitation.request.UpdateInvitationRequest
+import me.elgregos.theweddingplan.api.invitation.response.toResponse
+import me.elgregos.theweddingplan.application.invitation.result.AddInvitationResult
 import me.elgregos.theweddingplan.application.invitation.InvitationAdder
 import me.elgregos.theweddingplan.application.invitation.InvitationGetter
 import me.elgregos.theweddingplan.application.invitation.InvitationLister
 import me.elgregos.theweddingplan.application.invitation.InvitationUpdater
-import me.elgregos.theweddingplan.application.invitation.UpdateInvitationResult
-import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
-import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.brideFamilyInvitation
-import me.elgregos.theweddingplan.domain.invitation.InvitationId
-import me.elgregos.theweddingplan.domain.invitation.InvitationPage
+import me.elgregos.theweddingplan.application.invitation.result.UpdateInvitationResult
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.brideFamilyInvitation
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationId
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationListCriteria
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationPage
 import org.springframework.http.HttpStatus
 import org.springframework.web.servlet.function.ServerRequest
 import java.util.*
@@ -88,7 +92,7 @@ class InvitationEndpointTest {
         val payload = AddInvitationRequest(
             label = "No guests",
             guestIds = emptyList(),
-            description =   "An invitation with no guests"
+            description = "An invitation with no guests"
         )
 
         every { request.body(AddInvitationRequest::class.java) } returns payload
@@ -103,7 +107,7 @@ class InvitationEndpointTest {
         val payload = AddInvitationRequest(
             label = "   ",
             guestIds = listOf(brideFamilyInvitation.guests.first().id.toString()),
-            description =   "An invitation with no guests"
+            description = "An invitation with no guests"
         )
 
         every { request.body(AddInvitationRequest::class.java) } returns payload
@@ -117,7 +121,7 @@ class InvitationEndpointTest {
         val payload = AddInvitationRequest(
             label = "Family table",
             guestIds = listOf("not-a-uuid"),
-            description =   "An invitation with invalid guest id"
+            description = "An invitation with invalid guest id"
         )
 
         every { request.body(AddInvitationRequest::class.java) } returns payload
@@ -172,7 +176,7 @@ class InvitationEndpointTest {
 
         every { request.param("page") } returns Optional.empty()
         every { request.param("size") } returns Optional.empty()
-        every { invitationLister.list(me.elgregos.theweddingplan.domain.invitation.InvitationListCriteria(page = 0, size = 20)) } returns invitationPage
+        every { invitationLister.list(InvitationListCriteria(page = 0, size = 20)) } returns invitationPage
 
         assertThat(invitationEndpoint.listInvitations(request).statusCode()).isEqualTo(HttpStatus.OK)
     }

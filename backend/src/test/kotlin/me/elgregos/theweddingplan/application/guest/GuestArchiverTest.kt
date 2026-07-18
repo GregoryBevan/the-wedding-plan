@@ -4,9 +4,10 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
-import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoe
-import me.elgregos.theweddingplan.domain.guest.GuestFixtures.johnDoeArchived
-import me.elgregos.theweddingplan.domain.guest.Guests
+import me.elgregos.theweddingplan.application.guest.result.ArchiveGuestResult
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoeArchived
+import me.elgregos.theweddingplan.domain.guest.repository.Guests
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

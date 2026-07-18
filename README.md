@@ -44,6 +44,7 @@ Set these variables in Render dashboard (or through Blueprint secrets), never in
 - `POSTGRES_DB`
 - `POSTGRES_USER`
 - `POSTGRES_PASSWORD`
+- `SERVER_FORWARD_HEADERS_STRATEGY` (set to `framework` only when requests always come through a trusted proxy that strips/overwrites `Forwarded`/`X-Forwarded-*` headers; otherwise keep default `none`)
 
 ### 3) OAuth callback
 
@@ -61,4 +62,4 @@ In Google OAuth app settings, configure callback URL:
 - Never commit `.env` production secrets.
 - Keep all credentials in Render secret environment variables.
 - Avoid printing sensitive env vars in logs, CI summaries, or scripts.
-
+- For IP-based protections (rate limiting), do not trust forwarded headers unless your ingress/proxy sanitizes them.

@@ -5,9 +5,11 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.prop
 import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
-import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.bridesMaidInvitation
-import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.malformedToken
-import me.elgregos.theweddingplan.domain.invitation.InvitationFixtures.unknownToken
+import me.elgregos.theweddingplan.api.invitation.response.PublicInvitationGuestResponse
+import me.elgregos.theweddingplan.api.invitation.response.PublicInvitationResponse
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.bridesMaidInvitation
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.malformedToken
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.unknownToken
 import org.springframework.http.MediaType
 import kotlin.test.Test
 
@@ -28,6 +30,7 @@ class GuestAccessInvitationEndpointIT : AbstractEndpointIntegrationTest() {
             .sortedBy { "${it.id}" }
             .map {
                 PublicInvitationGuestResponse(
+                    id = "${it.id}",
                     firstName = it.firstName,
                     lastName = it.lastName,
                 )

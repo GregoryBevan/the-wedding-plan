@@ -4,11 +4,13 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
-import me.elgregos.theweddingplan.domain.guest.GuestStatus
-import me.elgregos.theweddingplan.domain.guest.GuestId
-import me.elgregos.theweddingplan.domain.invitation.InvitationId
+import me.elgregos.theweddingplan.domain.guest.entity.GuestStatus
+import me.elgregos.theweddingplan.domain.guest.entity.GuestId
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationId
 import org.springframework.web.servlet.function.ServerRequest
+import java.net.InetSocketAddress
 import java.util.Optional
+import jakarta.servlet.http.HttpServletRequest
 import kotlin.test.Test
 
 class ServerRequestExtensionsTest {
@@ -78,6 +80,16 @@ class ServerRequestExtensionsTest {
     }
 
     @Test
+    fun `should parse guest id from custom path variable name`() {
+        val request = mockk<ServerRequest>()
+        val guestId = GuestId.fromString("019f70eb-f060-7d9f-8dd8-f9caeca9d078")
+
+        every { request.pathVariable("guestId") } returns guestId.toString()
+
+        assertThat(request.guestIdPathParam("guestId")).isEqualTo(guestId)
+    }
+
+    @Test
     fun `should return null when guest id path param has surrounding spaces`() {
         val request = mockk<ServerRequest>()
 
@@ -95,5 +107,37 @@ class ServerRequestExtensionsTest {
 
         assertThat(request.invitationIdPathParam()).isEqualTo(invitationId)
     }
-}
 
+    @Test
+    fun `should resolve client address from server request remote address`() {
+        val request = mockk<ServerRequest>()
+
+        every { request.remoteAddress() } returns Optional.of(InetSocketAddress("203.0.113.11", 443))
+
+        assertThat(request.clientAddress()).isEqualTo("203.0.113.11")
+    }
+
+    @Test
+    fun `should fallback to servlet remote addr when server request remote address is missing`() {
+        val request = mockk<ServerRequest>()
+        val servletRequest = mockk<HttpServletRequest>()
+
+        every { request.remoteAddress() } returns Optional.empty()
+        every { request.servletRequest() } returns servletRequest
+        every { servletRequest.remoteAddr } returns "198.51.100.77"
+
+        assertThat(request.clientAddress()).isEqualTo("198.51.100.77")
+    }
+
+    @Test
+    fun `should fallback to unknown when no address can be resolved`() {
+        val request = mockk<ServerRequest>()
+        val servletRequest = mockk<HttpServletRequest>()
+
+        every { request.remoteAddress() } returns Optional.empty()
+        every { request.servletRequest() } returns servletRequest
+        every { servletRequest.remoteAddr } returns null
+
+        assertThat(request.clientAddress()).isEqualTo("unknown")
+    }
+}

@@ -1,0 +1,17 @@
+package me.elgregos.theweddingplan.domain.guest.repository
+
+import me.elgregos.theweddingplan.domain.guest.entity.Guest
+import me.elgregos.theweddingplan.domain.guest.entity.GuestId
+import me.elgregos.theweddingplan.domain.guest.entity.GuestListCriteria
+import me.elgregos.theweddingplan.domain.guest.entity.GuestPage
+
+interface Guests {
+
+    fun add(guest: Guest): Guest
+    fun update(guest: Guest, expectedVersion: Long): Guest?
+    fun findById(id: GuestId): Guest?
+    fun findByIds(ids: Set<GuestId>): Set<Guest>
+    fun findArchivedById(id: GuestId): Guest?
+    fun restore(guest: Guest, expectedVersion: Long): Guest?
+    fun list(criteria: GuestListCriteria): GuestPage
+}

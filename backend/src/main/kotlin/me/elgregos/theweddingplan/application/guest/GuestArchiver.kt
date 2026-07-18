@@ -1,7 +1,8 @@
 package me.elgregos.theweddingplan.application.guest
 
-import me.elgregos.theweddingplan.domain.guest.GuestId
-import me.elgregos.theweddingplan.domain.guest.Guests
+import me.elgregos.theweddingplan.application.guest.result.ArchiveGuestResult
+import me.elgregos.theweddingplan.domain.guest.entity.GuestId
+import me.elgregos.theweddingplan.domain.guest.repository.Guests
 import org.springframework.stereotype.Service
 
 @Service
