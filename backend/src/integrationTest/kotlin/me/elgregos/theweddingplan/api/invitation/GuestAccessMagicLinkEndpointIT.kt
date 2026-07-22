@@ -16,6 +16,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
+import kotlin.text.Regex
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -41,8 +42,8 @@ class GuestAccessMagicLinkEndpointIT : AbstractEndpointIntegrationTest() {
         val payload = waitForMailpitMessagePayload()
 
         assertTrue(payload.contains(janeDoe.email))
-        assertTrue(payload.contains(bridesMaidInvitation.accessToken.value))
         assertTrue(payload.contains("/guest-access/${bridesMaidInvitation.accessToken.value}/guests/${janeDoe.id}"))
+        assertTrue(payload.contains("Thecla"))
     }
 
     @Test
@@ -102,7 +103,7 @@ class GuestAccessMagicLinkEndpointIT : AbstractEndpointIntegrationTest() {
 
     private fun waitForMailpitMessagePayload(): String {
         val httpClient = HttpClient.newHttpClient()
-        val request = HttpRequest.newBuilder()
+        val messagesRequest = HttpRequest.newBuilder()
             .uri(URI.create("${mailpitApiBaseUrl()}/api/v1/messages"))
             .GET()
             .build()
@@ -113,12 +114,35 @@ class GuestAccessMagicLinkEndpointIT : AbstractEndpointIntegrationTest() {
             .atMost(Duration.ofSeconds(3))
             .pollInterval(Duration.ofMillis(200))
             .until {
-                val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-                val containsToken = response.statusCode() == 200 && response.body().contains(bridesMaidInvitation.accessToken.value)
-                if (containsToken) payload = response.body()
-                containsToken
+                val messagesResponse = httpClient.send(messagesRequest, HttpResponse.BodyHandlers.ofString())
+                if (messagesResponse.statusCode() != 200) return@until false
+
+                val messageIds = extractMessageIds(messagesResponse.body())
+                val fullPayload = messageIds
+                    .asSequence()
+                    .map { messageId -> fetchMailpitMessagePayload(httpClient, messageId) }
+                    .firstOrNull { it.contains(janeDoe.email) }
+
+                if (fullPayload != null) payload = fullPayload
+                fullPayload != null
             }
 
         return payload
+    }
+
+    private fun extractMessageIds(messagesPayload: String): List<String> =
+        Regex("\"ID\"\\s*:\\s*\"([^\"]+)\"")
+            .findAll(messagesPayload)
+            .map { it.groupValues[1] }
+            .toList()
+
+    private fun fetchMailpitMessagePayload(httpClient: HttpClient, messageId: String): String {
+        val messageRequest = HttpRequest.newBuilder()
+            .uri(URI.create("${mailpitApiBaseUrl()}/api/v1/message/$messageId"))
+            .GET()
+            .build()
+
+        val messageResponse = httpClient.send(messageRequest, HttpResponse.BodyHandlers.ofString())
+        return if (messageResponse.statusCode() == 200) messageResponse.body() else ""
     }
 }

@@ -29,6 +29,7 @@ class GuestMagicLinkRequester(
                     invitationId = invitation.id,
                     invitationAccessToken = invitation.accessToken,
                     guestId = guest.id,
+                    guestFirstName = guest.firstName,
                     guestEmail = guest.email,
                 )
             )

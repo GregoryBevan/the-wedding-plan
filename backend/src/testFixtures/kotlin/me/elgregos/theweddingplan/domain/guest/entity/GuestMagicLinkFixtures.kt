@@ -8,6 +8,7 @@ object GuestMagicLinkFixtures {
         invitationId = bridesMaidInvitation.id,
         invitationAccessToken = bridesMaidInvitation.accessToken,
         guestId = janeDoe.id,
+        guestFirstName = janeDoe.firstName,
         guestEmail = janeDoe.email,
     )
 }
