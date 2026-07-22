@@ -43,6 +43,7 @@ class GuestMagicLinkRequesterTest {
         assertThat(sentCommand.captured.invitationId).isEqualTo(InvitationFixtures.bridesMaidInvitation.id)
         assertThat(sentCommand.captured.invitationAccessToken).isEqualTo(InvitationFixtures.bridesMaidInvitation.accessToken)
         assertThat(sentCommand.captured.guestId).isEqualTo(GuestFixtures.janeDoe.id)
+        assertThat(sentCommand.captured.guestFirstName).isEqualTo(GuestFixtures.janeDoe.firstName)
         assertThat(sentCommand.captured.guestEmail).isEqualTo(GuestFixtures.janeDoe.email)
     }
 
