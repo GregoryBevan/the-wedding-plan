@@ -49,7 +49,7 @@ class GuestMagicLinkEmailTemplate {
                     <tr>
                       <td style="font-size:13px;color:#4b5563;line-height:1.5;">
                         Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur :<br/>
-                        <a href="$magicLinkUrl" style="color:#37474f;word-break:break-all;">$magicLinkUrl</a>
+                        <a href="${org.springframework.web.util.HtmlUtils.htmlEscape(magicLinkUrl)}" style="color:#37474f;word-break:break-all;">${org.springframework.web.util.HtmlUtils.htmlEscape(magicLinkUrl)}</a>
                       </td>
                     </tr>
                     <tr><td style="height:12px;"></td></tr>
