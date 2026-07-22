@@ -131,7 +131,7 @@ class GuestAccessMagicLinkEndpointIT : AbstractEndpointIntegrationTest() {
     }
 
     private fun extractMessageIds(messagesPayload: String): List<String> =
-        Regex("\"ID\":\"([^\"]+)\"")
+        Regex("\"ID\"\\s*:\\s*\"([^\"]+)\"")
             .findAll(messagesPayload)
             .map { it.groupValues[1] }
             .toList()
