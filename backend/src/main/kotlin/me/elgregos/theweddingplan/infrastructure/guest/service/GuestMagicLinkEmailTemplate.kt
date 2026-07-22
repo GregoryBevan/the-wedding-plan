@@ -33,7 +33,7 @@ class GuestMagicLinkEmailTemplate {
                     <tr><td style="height:16px;"></td></tr>
                     <tr>
                       <td style="font-size:16px;line-height:1.5;">
-                        Bonjour $guestFirstName,<br/><br/>
+                        Bonjour ${org.springframework.web.util.HtmlUtils.htmlEscape(guestFirstName)},<br/><br/>
                         Nous sommes heureux de vous inviter et ravis de vous partager votre lien sécurisé pour accéder à votre invitation.
                       </td>
                     </tr>
