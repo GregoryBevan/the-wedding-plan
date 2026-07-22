@@ -1,6 +1,7 @@
 package me.elgregos.theweddingplan.infrastructure.guest.service
 
 import org.springframework.stereotype.Component
+import org.springframework.web.util.HtmlUtils.htmlEscape
 
 @Component
 class GuestMagicLinkEmailTemplate {
@@ -33,14 +34,14 @@ class GuestMagicLinkEmailTemplate {
                     <tr><td style="height:16px;"></td></tr>
                     <tr>
                       <td style="font-size:16px;line-height:1.5;">
-                        Bonjour ${org.springframework.web.util.HtmlUtils.htmlEscape(guestFirstName)},<br/><br/>
+                        Bonjour ${htmlEscape(guestFirstName)},<br/><br/>
                         Nous sommes heureux de vous inviter et ravis de vous partager votre lien sécurisé pour accéder à votre invitation.
                       </td>
                     </tr>
                     <tr><td style="height:24px;"></td></tr>
                     <tr>
                       <td align="center">
-                        <a href="${org.springframework.web.util.HtmlUtils.htmlEscape(magicLinkUrl)}" style="display:inline-block;background:#37474f;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">
+                        <a href="${htmlEscape(magicLinkUrl)}" style="display:inline-block;background:#37474f;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">
                           Accéder à mon invitation
                         </a>
                       </td>
@@ -49,7 +50,7 @@ class GuestMagicLinkEmailTemplate {
                     <tr>
                       <td style="font-size:13px;color:#4b5563;line-height:1.5;">
                         Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur :<br/>
-                        <a href="${org.springframework.web.util.HtmlUtils.htmlEscape(magicLinkUrl)}" style="color:#37474f;word-break:break-all;">${org.springframework.web.util.HtmlUtils.htmlEscape(magicLinkUrl)}</a>
+                        <a href="${htmlEscape(magicLinkUrl)}" style="color:#37474f;word-break:break-all;">${htmlEscape(magicLinkUrl)}</a>
                       </td>
                     </tr>
                     <tr><td style="height:12px;"></td></tr>
