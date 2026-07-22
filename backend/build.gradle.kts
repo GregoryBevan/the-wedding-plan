@@ -12,7 +12,7 @@ plugins {
 
 
 group = "me.elgregoss"
-version = "0.0.22-SNAPSHOT"
+version = "0.0.23-SNAPSHOT"
 
 java {
     toolchain {
@@ -56,6 +56,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
     implementation(libs.exposed.spring.boot)
     implementation(libs.exposed.java.time)

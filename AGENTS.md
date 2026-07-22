@@ -33,6 +33,7 @@ This is a fullstack project.
   - Use `lateinit var` for top-level test variables and initialize them in a `@BeforeTest` function.
   - Structure test methods into three distinct blocks (Given, When, Then) separated by blank lines, without explicit
     comments.
+  - Try to make only one assertion per test method, unless multiple assertions are logically related.
   - Use static imports for assertions, fixtures, and common utilities to improve code readability.
   - Integration tests should extend `AbstractIntegrationTest` or `AbstractEndpointIntegrationTest` (located in `backend/src/integrationTest/kotlin/me/elgregos/theweddingplan/`) to inherit Testcontainers PostgreSQL setup with reusable containers.
 - **Coding Style**: For Kotlin development, adopt idiomatic Kotlin best practices: use concise syntax, favor functional

@@ -1,0 +1,74 @@
+info:
+  name: Get guest invitation detail
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{backend_url}}/guest-access/invitations/{{invitation_token}}"
+  headers:
+    - name: Accept
+      value: application/json
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        const rawSetCookie = res.headers['set-cookie'] || res.headers['Set-Cookie'] || [];
+
+        const normalizeSetCookies = (raw) => {
+          if (Array.isArray(raw)) return raw.filter(Boolean);
+          if (!raw) return [];
+          if (typeof raw !== 'string') return [String(raw)];
+          return raw
+            .split(/,(?=[^;]+=[^;]+)/g)
+            .map(v => v.trim())
+            .filter(Boolean);
+        };
+
+        const setCookies = normalizeSetCookies(rawSetCookie);
+
+        const body = res.body || {};
+        const firstGuestId = body?.guests?.[0]?.id;
+        if (firstGuestId) {
+          bru.setEnvVar('guestId', firstGuestId);
+        }
+
+        const existingCookieHeader = bru.getEnvVar('cookieHeader') || '';
+        const existingPairs = existingCookieHeader
+          .split(';')
+          .map(p => p.trim())
+          .filter(Boolean);
+
+        const cookies = new Map();
+
+        for (const pair of existingPairs) {
+          const idx = pair.indexOf('=');
+          if (idx > 0) cookies.set(pair.slice(0, idx), pair.slice(idx + 1));
+        }
+
+        for (const c of setCookies) {
+          const pair = c.split(';')[0];
+          const idx = pair.indexOf('=');
+          if (idx > 0) cookies.set(pair.slice(0, idx), pair.slice(idx + 1));
+        }
+
+        const mergedCookieHeader = Array.from(cookies.entries())
+          .map(([k, v]) => `${k}=${v}`)
+          .join('; ');
+
+        if (mergedCookieHeader) {
+          bru.setGlobalEnvVar('cookieHeader', mergedCookieHeader);
+        }
+
+        const rawToken = cookies.get('XSRF-TOKEN');
+        if (rawToken) {
+          bru.setGlobalEnvVar('xsrfToken', rawToken);
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

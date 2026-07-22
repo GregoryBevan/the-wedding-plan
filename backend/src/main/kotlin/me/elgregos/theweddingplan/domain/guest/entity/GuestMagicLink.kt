@@ -8,4 +8,6 @@ data class GuestMagicLink(
     val invitationAccessToken: InvitationAccessToken,
     val guestId: GuestId,
     val guestEmail: String,
-)
+) {
+    fun guestAccessPath() = "/guest-access/${invitationAccessToken.value}/guests/$guestId"
+}
