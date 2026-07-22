@@ -19,7 +19,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import java.net.URI
 
 @Configuration
-@EnableConfigurationProperties(CorsProperties::class, AuthProperties::class, AuthRateLimitProperties::class)
+@EnableConfigurationProperties(
+    CorsProperties::class,
+    AuthProperties::class,
+    AuthRateLimitProperties::class,
+    MailProperties::class,
+    GuestAccessProperties::class,
+)
 class SecurityConfig(
     private val corsProperties: CorsProperties,
     private val authProperties: AuthProperties,

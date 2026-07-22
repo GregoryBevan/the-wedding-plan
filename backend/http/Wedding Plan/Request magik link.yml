@@ -1,0 +1,43 @@
+info:
+  name: Request magik link
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{backend_url}}/guest-access/invitations/{{invitation_token}}/guests/{{guestId}}/magic-link-requests"
+  headers:
+    - name: Accept
+      value: application/json
+    - name: Content-Type
+      value: application/json
+    - name: X-XSRF-TOKEN
+      value: "{{xsrfToken}}"
+    - name: Cookie
+      value: "{{cookieHeader}}"
+  auth: inherit
+
+runtime:
+  variables:
+    - name: ""
+      value: ""
+  scripts:
+    - type: before-request
+      code: |-
+        const token = bru.getGlobalEnvVar('xsrfToken');
+        const cookies = bru.getGlobalEnvVar('cookieHeader');
+        const guestId = bru.getGlobalEnvVar('guestId');
+
+        if (!guestId) {
+          throw new Error('guestId is missing. Run "Get guest invitation detail" first.');
+        }
+
+        if (!token || !cookies) {
+          throw new Error('CSRF variables are missing. Run "Bootstrap csrf" before this request.');
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
