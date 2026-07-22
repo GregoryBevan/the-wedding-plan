@@ -40,7 +40,7 @@ class GuestMagicLinkEmailTemplate {
                     <tr><td style="height:24px;"></td></tr>
                     <tr>
                       <td align="center">
-                        <a href="$magicLinkUrl" style="display:inline-block;background:#37474f;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">
+                        <a href="${org.springframework.web.util.HtmlUtils.htmlEscape(magicLinkUrl)}" style="display:inline-block;background:#37474f;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">
                           Accéder à mon invitation
                         </a>
                       </td>
