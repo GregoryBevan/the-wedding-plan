@@ -12,7 +12,7 @@ class GuestMagicLinkTest {
         val path = bridesMaidToJane.guestAccessPath()
 
         assertThat(path).isEqualTo(
-            "/guest-access/${bridesMaidToJane.invitationAccessToken.value}/guests/${bridesMaidToJane.guestId}"
+            "/guest-access/magic-links/53c2efcd-b4fc-42f3-a73b-fadf3725af3f"
         )
     }
 }
