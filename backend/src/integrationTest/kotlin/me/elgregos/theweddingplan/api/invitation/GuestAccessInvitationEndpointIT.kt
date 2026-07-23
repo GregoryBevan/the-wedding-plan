@@ -59,6 +59,7 @@ class GuestAccessInvitationEndpointIT : AbstractEndpointIntegrationTest() {
             .exchange()
             .expectStatus().isBadRequest
     }
+
 }
 
 

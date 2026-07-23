@@ -1,6 +1,7 @@
 package me.elgregos.theweddingplan.infrastructure.guest.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import me.elgregos.theweddingplan.domain.guest.entity.Guest
 import me.elgregos.theweddingplan.domain.guest.entity.GuestMagicLink
 import me.elgregos.theweddingplan.domain.guest.service.GuestMagicLinkSender
 import me.elgregos.theweddingplan.infrastructure.config.GuestAccessProperties
@@ -24,18 +25,18 @@ class SmtpGuestMagicLinkSender(
     private val guestMagicLinkEmailTemplate: GuestMagicLinkEmailTemplate,
 ) : GuestMagicLinkSender {
 
-    override fun send(guestMagicLink: GuestMagicLink) {
+    override fun send(guestMagicLink: GuestMagicLink, guest: Guest) {
         val baseUrl = guestAccessProperties.baseUrl.trim().removeSuffix("/")
         val magicLinkUrl = "$baseUrl${guestMagicLink.guestAccessPath()}"
 
         val message = javaMailSender.createMimeMessage()
         MimeMessageHelper(message, true, Charsets.UTF_8.name()).apply {
             setFrom(mailProperties.from)
-            setTo(guestMagicLink.guestEmail)
+            setTo(guest.email)
             setSubject(guestMagicLinkEmailTemplate.subject())
             setText(
-                guestMagicLinkEmailTemplate.textBody(guestFirstName = guestMagicLink.guestFirstName, magicLinkUrl = magicLinkUrl),
-                guestMagicLinkEmailTemplate.htmlBody(guestFirstName = guestMagicLink.guestFirstName, magicLinkUrl = magicLinkUrl),
+                guestMagicLinkEmailTemplate.textBody(guestFirstName = guest.firstName, magicLinkUrl = magicLinkUrl),
+                guestMagicLinkEmailTemplate.htmlBody(guestFirstName = guest.firstName, magicLinkUrl = magicLinkUrl),
             )
         }
 

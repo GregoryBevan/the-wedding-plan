@@ -14,6 +14,7 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['backoffice/src/**/*.spec.ts', 'public/src/**/*.spec.ts'],
     globals: true,
+    setupFiles: ['./vitest.setup.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'json-summary', 'cobertura'],

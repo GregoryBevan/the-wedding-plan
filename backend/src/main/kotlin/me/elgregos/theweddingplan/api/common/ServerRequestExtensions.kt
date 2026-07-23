@@ -3,6 +3,7 @@ package me.elgregos.theweddingplan.api.common
 import me.elgregos.theweddingplan.domain.guest.entity.GuestStatus
 import me.elgregos.theweddingplan.domain.guest.entity.GuestAvailability
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
+import me.elgregos.theweddingplan.domain.guest.entity.GuestMagicLinkAccessToken
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationAccessToken
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationId
 import org.springframework.web.servlet.function.ServerRequest
@@ -28,6 +29,9 @@ internal fun ServerRequest.invitationIdPathParam(): InvitationId? =
 
 internal fun ServerRequest.invitationAccessTokenPathParam() =
     InvitationAccessToken.fromStringOrNull(pathVariable("token"))
+
+internal fun ServerRequest.magicLinkTokenPathParam() =
+    GuestMagicLinkAccessToken.fromStringOrNull(pathVariable("token"))
 
 internal fun ServerRequest.clientAddress() =
     remoteAddress()
