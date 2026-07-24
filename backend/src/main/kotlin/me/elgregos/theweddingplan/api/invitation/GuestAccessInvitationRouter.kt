@@ -11,7 +11,7 @@ class GuestAccessInvitationRouter(
 
     @Bean
     fun guestAccessInvitationRoute() = router {
-        "/guest-access/invitations".nest {
+        "/api/guest-access/invitations".nest {
             GET("/{token}", guestAccessInvitationEndpoint::resolveByAccessToken)
         }
     }

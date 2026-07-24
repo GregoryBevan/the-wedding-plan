@@ -17,7 +17,7 @@ class GuestAccessInvitationEndpointIT : AbstractEndpointIntegrationTest() {
 
     @Test
     fun `should resolve public invitation for a valid token`() {
-        val response = restTestClient.get().uri("/guest-access/invitations/${bridesMaidInvitation.accessToken.value}")
+        val response = restTestClient.get().uri("/api/guest-access/invitations/${bridesMaidInvitation.accessToken.value}")
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus().isOk
@@ -46,7 +46,7 @@ class GuestAccessInvitationEndpointIT : AbstractEndpointIntegrationTest() {
 
     @Test
     fun `should return not found when token does not match an invitation`() {
-        restTestClient.get().uri("/guest-access/invitations/$unknownToken")
+        restTestClient.get().uri("/api/guest-access/invitations/$unknownToken")
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus().isNotFound
@@ -54,7 +54,7 @@ class GuestAccessInvitationEndpointIT : AbstractEndpointIntegrationTest() {
 
     @Test
     fun `should return bad request for malformed token`() {
-        restTestClient.get().uri("/guest-access/invitations/$malformedToken")
+        restTestClient.get().uri("/api/guest-access/invitations/$malformedToken")
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus().isBadRequest

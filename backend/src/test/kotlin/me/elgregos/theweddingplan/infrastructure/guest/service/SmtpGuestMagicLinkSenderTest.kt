@@ -56,7 +56,7 @@ class SmtpGuestMagicLinkSenderTest {
         assertThat(bodyContent)
             .contains("Bonjour Jane")
         assertThat(bodyContent)
-            .contains("https://public.theweddingplan.app/guest-access/magic-links/53c2efcd-b4fc-42f3-a73b-fadf3725af3f")
+            .contains("https://public.theweddingplan.app/api/guest-access/magic-links/53c2efcd-b4fc-42f3-a73b-fadf3725af3f")
         assertThat(bodyContent)
             .contains("Accéder à mon invitation")
     }

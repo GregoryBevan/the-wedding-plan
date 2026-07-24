@@ -1,7 +1,15 @@
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+
 app:
   auth:
-    allowed-emails: ${APP_AUTH_ALLOWED_EMAILS:gregory@example.com,future-wife@example.com}
-    success-redirect-url: ${APP_AUTH_SUCCESS_REDIRECT_URL:http://localhost:5173}
+    success-redirect-url: http://localhost:5173
+  guest-access:
+    base-url: http://localhost:8080
+    guest-area-url: http://localhost:5174/guest-access/secured-area
   cors:
     allowed-origins:
       - http://localhost:5173

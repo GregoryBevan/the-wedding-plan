@@ -9,5 +9,5 @@ data class GuestMagicLink(
     val token: GuestMagicLinkAccessToken = GuestMagicLinkAccessToken(),
     val expiresAt: LocalDateTime
 ) {
-    fun guestAccessPath() = "/guest-access/magic-links/${token.value}"
+    fun guestAccessPath() = "/api/guest-access/magic-links/${token.value}"
 }

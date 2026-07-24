@@ -5,4 +5,5 @@ allowBuilds:
 
 overrides:
   js-beautify: ^2.0.3
+  postcss: '8.5.22'
 

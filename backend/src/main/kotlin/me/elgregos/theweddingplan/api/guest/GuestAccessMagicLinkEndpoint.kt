@@ -11,20 +11,24 @@ import me.elgregos.theweddingplan.application.guest.GuestMagicLinkVerifier
 import me.elgregos.theweddingplan.application.guest.GuestMagicLinkRequester
 import me.elgregos.theweddingplan.application.guest.command.RequestGuestMagicLinkCommand
 import me.elgregos.theweddingplan.application.guest.result.GuestMagicLinkVerificationResult
+import me.elgregos.theweddingplan.domain.guest.entity.GuestSession
+import me.elgregos.theweddingplan.domain.guest.service.GuestSessionTokens
 import me.elgregos.theweddingplan.infrastructure.config.GuestAccessProperties
+import me.elgregos.theweddingplan.infrastructure.guest.security.GUEST_SESSION_COOKIE
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseCookie
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.function.ServerRequest
 import org.springframework.web.servlet.function.ServerResponse
 import java.net.URI
 
-private const val GUEST_SESSION_GUEST_ID = "guestAccessGuestId"
-private const val GUEST_SESSION_INVITATION_ID = "guestAccessInvitationId"
 
 @Component
 class GuestAccessMagicLinkEndpoint(
     private val guestMagicLinkRequester: GuestMagicLinkRequester,
     private val guestMagicLinkVerifier: GuestMagicLinkVerifier,
+    private val guestSessionTokens: GuestSessionTokens,
     private val authRateLimiter: AuthRateLimiter,
     private val guestAccessProperties: GuestAccessProperties,
 ) {
@@ -52,13 +56,13 @@ class GuestAccessMagicLinkEndpoint(
 
         return when (val result = guestMagicLinkVerifier.verify(token)) {
             is GuestMagicLinkVerificationResult.Verified -> {
-                request.servletRequest().getSession(true).apply {
-                    maxInactiveInterval = guestAccessProperties.guestSessionTtlSeconds
-                    setAttribute(GUEST_SESSION_GUEST_ID, result.guestId.toString())
-                    setAttribute(GUEST_SESSION_INVITATION_ID, result.invitation.id.toString())
-                }
+                val sessionToken = guestSessionTokens.issue(
+                    GuestSession(guestId = result.guestId, invitationId = result.invitation.id)
+                )
 
-                ServerResponse.temporaryRedirect(URI.create(guestAccessProperties.guestAreaUrl)).build()
+                ServerResponse.temporaryRedirect(URI.create(guestAccessProperties.guestAreaUrl))
+                    .header(HttpHeaders.SET_COOKIE, guestSessionCookie(sessionToken).toString())
+                    .build()
             }
 
             GuestMagicLinkVerificationResult.InvalidOrExpiredOrUsedToken,
@@ -67,5 +71,14 @@ class GuestAccessMagicLinkEndpoint(
             -> ServerResponse.notFound().build()
         }
     }
+
+    private fun guestSessionCookie(token: String): ResponseCookie =
+        ResponseCookie.from(GUEST_SESSION_COOKIE, token)
+            .httpOnly(true)
+            .secure(guestAccessProperties.sessionCookieSecure)
+            .sameSite(guestAccessProperties.sessionCookieSameSite)
+            .path("/")
+            .maxAge(guestAccessProperties.guestSessionTtlSeconds.toLong())
+            .build()
 }
 

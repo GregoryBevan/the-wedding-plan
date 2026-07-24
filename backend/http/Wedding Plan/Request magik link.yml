@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: "{{backend_url}}/guest-access/invitations/{{invitation_token}}/guests/{{guestId}}/magic-link-requests"
+  url: "{{backend_url}}/api/guest-access/invitations/{{invitation_token}}/guests/{{guestId}}/magic-link-requests"
   headers:
     - name: Accept
       value: application/json

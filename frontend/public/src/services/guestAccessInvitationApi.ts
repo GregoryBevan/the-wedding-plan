@@ -1,3 +1,5 @@
+import { getApiBaseUrl } from './http';
+
 export interface GuestInvitationResponse {
   label: string;
   description: string;
@@ -21,27 +23,7 @@ export class GuestAccessInvitationApiError extends Error {
   }
 }
 
-const normalizeBaseUrl = (value: string) => value.replace(/\/+$/, '');
-
-const getApiBaseUrl = (): string => {
-  const envBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
-
-  if (envBaseUrl) {
-    return normalizeBaseUrl(envBaseUrl);
-  }
-
-  if (typeof window !== 'undefined' && window.location.origin) {
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:8080';
-    }
-
-    return normalizeBaseUrl(window.location.origin);
-  }
-
-  throw new Error('Missing API base URL configuration.');
-};
-
-const guestAccessApiBaseUrl = getApiBaseUrl();
+const guestAccessApiBaseUrl = getApiBaseUrl({ includeApiPath: true });
 
 export const resolveInvitationByToken = async (token: string): Promise<GuestInvitationResponse> => {
   const response = await fetch(`${guestAccessApiBaseUrl}/guest-access/invitations/${encodeURIComponent(token)}`, {

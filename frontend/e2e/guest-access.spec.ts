@@ -7,7 +7,7 @@ const VALID_TOKEN = '957f8251-f50b-48ca-9cd1-998e71ffd2e9';
 
 test.describe('Guest access invitation page', () => {
   test('reveals the invitation and its guests for a valid token', async ({ page }) => {
-    await page.route('**/guest-access/invitations/**', async (route) => {
+    await page.route('**/api/guest-access/invitations/**', async (route) => {
       await fulfillJson(route, {
         label: 'Famille Martin',
         description: 'Nous serions ravis de vous compter parmi nous.',
@@ -28,7 +28,7 @@ test.describe('Guest access invitation page', () => {
   });
 
   test('shows a not-found message for an unknown token', async ({ page }) => {
-    await page.route('**/guest-access/invitations/**', async (route) => {
+    await page.route('**/api/guest-access/invitations/**', async (route) => {
       await fulfillJson(route, {}, 404, { 'access-control-allow-origin': '*' });
     });
 
