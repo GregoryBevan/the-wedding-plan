@@ -1,5 +1,5 @@
 
-truncate table invitation_guest, invitation, guest cascade;
+truncate table guest_magic_link_token, invitation_guest, invitation, guest cascade;
 
 insert into guest (id, version, creation_date, update_date, first_name, last_name, email) values ('019e82e0-0cc1-727e-a483-947fea529ef3', 1, '2026-06-13 10:00:00', '2026-06-13 10:00:00', 'John', 'Doe', 'john.doe@example.com');
 insert into guest (id, version, creation_date, update_date, first_name, last_name, email) values ('019e8807-5321-75ed-8a40-99a73529e50f', 1, '2026-06-13 10:00:00', '2026-06-13 10:00:00', 'Jane', 'Doe', 'jane.doe@example.com');

@@ -11,6 +11,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestMagicLinkFixtures.bridesMaidToJane
 import me.elgregos.theweddingplan.infrastructure.config.GuestAccessProperties
 import me.elgregos.theweddingplan.infrastructure.config.MailProperties
@@ -42,7 +43,7 @@ class SmtpGuestMagicLinkSenderTest {
         every { javaMailSender.createMimeMessage() } returns MimeMessage(Session.getInstance(Properties()))
         every { javaMailSender.send(capture(messageSlot)) } returns Unit
 
-        smtpGuestMagicLinkSender.send(bridesMaidToJane)
+        smtpGuestMagicLinkSender.send(bridesMaidToJane, janeDoe)
 
         val sentMessage = messageSlot.captured
         val bodyContent = flattenMimeContent(sentMessage.content)
@@ -50,12 +51,12 @@ class SmtpGuestMagicLinkSenderTest {
         verify(exactly = 1) { javaMailSender.send(any<MimeMessage>()) }
         assertThat(sentMessage.from.map { it.toString() }).isEqualTo(listOf("no-reply@theweddingplan.app"))
         assertThat(sentMessage.getRecipients(Message.RecipientType.TO).map { it.toString() })
-            .isEqualTo(listOf(bridesMaidToJane.guestEmail))
+            .isEqualTo(listOf(janeDoe.email))
         assertThat(sentMessage.subject).isEqualTo("Thecla & Grégory - Votre invitation")
         assertThat(bodyContent)
-            .contains("Bonjour ${bridesMaidToJane.guestFirstName}")
+            .contains("Bonjour Jane")
         assertThat(bodyContent)
-            .contains("https://public.theweddingplan.app/guest-access/${bridesMaidToJane.invitationAccessToken.value}/guests/${bridesMaidToJane.guestId}")
+            .contains("https://public.theweddingplan.app/guest-access/magic-links/53c2efcd-b4fc-42f3-a73b-fadf3725af3f")
         assertThat(bodyContent)
             .contains("Accéder à mon invitation")
     }
@@ -65,7 +66,7 @@ class SmtpGuestMagicLinkSenderTest {
         every { javaMailSender.createMimeMessage() } returns MimeMessage(Session.getInstance(Properties()))
         every { javaMailSender.send(any<MimeMessage>()) } throws MailSendException("smtp down")
 
-        smtpGuestMagicLinkSender.send(bridesMaidToJane)
+        smtpGuestMagicLinkSender.send(bridesMaidToJane, janeDoe)
 
         verify(exactly = 1) { javaMailSender.send(any<MimeMessage>()) }
     }

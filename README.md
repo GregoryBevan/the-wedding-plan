@@ -47,6 +47,7 @@ Set these variables in Render dashboard (or through Blueprint secrets), never in
 - `APP_MAIL_FROM`
 - `APP_MAIL_ENABLED`
 - `APP_GUEST_ACCESS_BASE_URL`
+- `APP_GUEST_AREA_URL`
 - `SPRING_MAIL_HOST`
 - `SPRING_MAIL_PORT`
 - `SPRING_MAIL_USERNAME`
@@ -116,7 +117,7 @@ If step 2 is skipped, step 3 is expected to fail with `403` because CSRF/session
 - Open Mailpit UI: `http://localhost:8025`
 - Verify that a message is received for the selected guest.
 - Verify body contains a guest-scoped link:
-  - `/guest-access/{token}/guests/{guestId}`
+  - `/guest-access/magic-links/{token}`
 
 ### Security notes
 
