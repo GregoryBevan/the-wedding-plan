@@ -13,4 +13,6 @@ databaseChangeLog:
       file: classpath:db/changelog/006-enforce-unique-guest-assignment-in-invitation-guest.sql
   - include:
       file: classpath:db/changelog/007-add-invitation-access-token-column.sql
+  - include:
+      file: classpath:db/changelog/008-create-guest-magic-link-token-table.sql
 

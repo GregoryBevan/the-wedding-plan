@@ -1,8 +1,9 @@
 package me.elgregos.theweddingplan.domain.guest.service
 
+import me.elgregos.theweddingplan.domain.guest.entity.Guest
 import me.elgregos.theweddingplan.domain.guest.entity.GuestMagicLink
 
 interface GuestMagicLinkSender {
 
-    fun send(guestMagicLink: GuestMagicLink)
+    fun send(guestMagicLink: GuestMagicLink, guest: Guest)
 }

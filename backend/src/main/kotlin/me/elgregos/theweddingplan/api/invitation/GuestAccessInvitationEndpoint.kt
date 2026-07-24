@@ -8,7 +8,9 @@ import org.springframework.web.servlet.function.ServerRequest
 import org.springframework.web.servlet.function.ServerResponse
 
 @Component
-class GuestAccessInvitationEndpoint(private val invitationTokenResolver: InvitationTokenResolver) {
+class GuestAccessInvitationEndpoint(
+    private val invitationTokenResolver: InvitationTokenResolver,
+) {
 
     fun resolveByAccessToken(request: ServerRequest): ServerResponse =
         request.invitationAccessTokenPathParam()

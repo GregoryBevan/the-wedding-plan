@@ -44,7 +44,10 @@ app:
     from: ${APP_MAIL_FROM:no-reply@localhost}
     enabled: ${APP_MAIL_ENABLED:true}
   guest-access:
-    base-url: ${APP_GUEST_ACCESS_BASE_URL:http://localhost:5174}
+    base-url: ${APP_GUEST_ACCESS_BASE_URL:http://localhost:8080}
+    guest-area-url: ${APP_GUEST_AREA_URL:http://localhost:5174/guest-access/secured-area}
+    magic-link-ttl-seconds: ${APP_GUEST_ACCESS_MAGIC_LINK_TTL_SECONDS:900}
+    guest-session-ttl-seconds: ${APP_GUEST_ACCESS_GUEST_SESSION_TTL_SECONDS:1800}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS}
     allowed-origin-patterns: []
