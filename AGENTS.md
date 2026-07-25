@@ -15,9 +15,10 @@ This is a fullstack project.
 
 
 ## Backend
-- If java is not found
-  - `export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home"`
+- If java is not found (JDK is managed via SDKMAN on this machine):
+  - `export JAVA_HOME="$HOME/.sdkman/candidates/java/current"`
   - `export PATH="$JAVA_HOME/bin:/opt/homebrew/bin:$PATH"`
+  - Fallback if a system JDK is installed instead: `export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home"`
 - All backend code is located in the `backend` directory.
 - **Architecture**: Follows a DDD/Clean Architecture pattern with `api`, `application`, `domain`, and `infrastructure`
   packages. The `api` layer uses functional routing (Kotlin DSL).

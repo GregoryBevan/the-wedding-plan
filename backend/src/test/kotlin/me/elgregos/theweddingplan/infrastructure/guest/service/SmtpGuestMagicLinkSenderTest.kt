@@ -3,21 +3,21 @@ package me.elgregos.theweddingplan.infrastructure.guest.service
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo
-import jakarta.mail.Message
-import jakarta.mail.Session
-import jakarta.mail.internet.MimeMultipart
-import jakarta.mail.internet.MimeMessage
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import jakarta.mail.Message
+import jakarta.mail.Session
+import jakarta.mail.internet.MimeMessage
+import jakarta.mail.internet.MimeMultipart
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestMagicLinkFixtures.bridesMaidToJane
-import me.elgregos.theweddingplan.infrastructure.config.GuestAccessProperties
+import me.elgregos.theweddingplan.infrastructure.config.GuestAccessPropertiesFixtures.testGuestAccessProperties
 import me.elgregos.theweddingplan.infrastructure.config.MailProperties
 import org.springframework.mail.MailSendException
 import org.springframework.mail.javamail.JavaMailSender
-import java.util.Properties
+import java.util.*
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -31,7 +31,7 @@ class SmtpGuestMagicLinkSenderTest {
         javaMailSender = mockk(relaxed = true)
         smtpGuestMagicLinkSender = SmtpGuestMagicLinkSender(
             javaMailSender = javaMailSender,
-            guestAccessProperties = GuestAccessProperties(baseUrl = "https://public.theweddingplan.app"),
+            guestAccessProperties = testGuestAccessProperties.copy(baseUrl = "https://public.theweddingplan.app"),
             mailProperties = MailProperties(from = "no-reply@theweddingplan.app"),
             guestMagicLinkEmailTemplate = GuestMagicLinkEmailTemplate(),
         )
@@ -56,7 +56,7 @@ class SmtpGuestMagicLinkSenderTest {
         assertThat(bodyContent)
             .contains("Bonjour Jane")
         assertThat(bodyContent)
-            .contains("https://public.theweddingplan.app/guest-access/magic-links/53c2efcd-b4fc-42f3-a73b-fadf3725af3f")
+            .contains("https://public.theweddingplan.app/api/guest-access/magic-links/53c2efcd-b4fc-42f3-a73b-fadf3725af3f")
         assertThat(bodyContent)
             .contains("Accéder à mon invitation")
     }

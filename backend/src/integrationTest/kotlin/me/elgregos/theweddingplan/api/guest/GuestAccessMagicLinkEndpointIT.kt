@@ -61,7 +61,7 @@ class GuestAccessMagicLinkEndpointIT : AbstractEndpointIntegrationTest() {
         val payload = waitForMailpitMessagePayload()
 
         assertThat(payload).contains(janeDoe.email)
-        assertThat(Regex("/guest-access/magic-links/[0-9a-fA-F-]{36}").find(payload)).isNotNull()
+        assertThat(Regex("/api/guest-access/magic-links/[0-9a-fA-F-]{36}").find(payload)).isNotNull()
         assertThat(payload).contains("Thecla")
     }
 
@@ -69,39 +69,39 @@ class GuestAccessMagicLinkEndpointIT : AbstractEndpointIntegrationTest() {
     fun `should verify valid magic-link token and redirect to guest area with session`() {
         val token = createMagicLink(expiresAt = nowUtcMillis().plusMinutes(15))
 
-        val response = restTestClient.get().uri("/guest-access/magic-links/$token")
+        val response = restTestClient.get().uri("/api/guest-access/magic-links/$token")
             .exchange()
             .expectStatus().is3xxRedirection
             .expectHeader().valueEquals(HttpHeaders.LOCATION, "http://localhost:5174/guest-access/secured-area")
             .expectBody()
             .returnResult()
 
-        restTestClient.get().uri("/guest-access/magic-links/$token")
+        restTestClient.get().uri("/api/guest-access/magic-links/$token")
             .exchange()
             .expectStatus().isNotFound
 
         assertThat(consumedTokenCount(token)).isEqualTo(1)
         assertThat(
-            response.responseHeaders[HttpHeaders.SET_COOKIE].orEmpty().any { it.startsWith("JSESSIONID=") }).isTrue()
+            response.responseHeaders[HttpHeaders.SET_COOKIE].orEmpty().any { it.startsWith("guest_session=") }).isTrue()
     }
 
     @Test
     fun `should reject expired magic-link token verification`() {
         val token = createMagicLink(expiresAt = nowUtcMillis().minusSeconds(1))
 
-        val response = restTestClient.get().uri("/guest-access/magic-links/$token")
+        val response = restTestClient.get().uri("/api/guest-access/magic-links/$token")
             .exchange()
             .expectStatus().isNotFound
             .expectBody()
             .returnResult()
 
         assertThat(
-            response.responseHeaders[HttpHeaders.SET_COOKIE].orEmpty().any { it.startsWith("JSESSIONID=") }).isFalse()
+            response.responseHeaders[HttpHeaders.SET_COOKIE].orEmpty().any { it.startsWith("guest_session=") }).isFalse()
     }
 
     @Test
     fun `should return not found for malformed magic-link token`() {
-        restTestClient.get().uri("/guest-access/magic-links/not-a-uuid")
+        restTestClient.get().uri("/api/guest-access/magic-links/not-a-uuid")
             .exchange()
             .expectStatus().isNotFound
     }
@@ -113,7 +113,7 @@ class GuestAccessMagicLinkEndpointIT : AbstractEndpointIntegrationTest() {
             expiresAt = nowUtcMillis().plusMinutes(15),
         )
 
-        val response = restTestClient.get().uri("/guest-access/magic-links/$token")
+        val response = restTestClient.get().uri("/api/guest-access/magic-links/$token")
             .exchange()
             .expectStatus().isNotFound
             .expectBody()
@@ -121,7 +121,7 @@ class GuestAccessMagicLinkEndpointIT : AbstractEndpointIntegrationTest() {
 
         assertThat(consumedTokenCount(token)).isEqualTo(1)
         assertThat(
-            response.responseHeaders[HttpHeaders.SET_COOKIE].orEmpty().any { it.startsWith("JSESSIONID=") }).isFalse()
+            response.responseHeaders[HttpHeaders.SET_COOKIE].orEmpty().any { it.startsWith("guest_session=") }).isFalse()
     }
 
     @Test
@@ -172,7 +172,7 @@ class GuestAccessMagicLinkEndpointIT : AbstractEndpointIntegrationTest() {
     }
 
     private fun postMagicLinkRequest(csrf: CsrfContext, token: String, guestId: String) =
-        restTestClient.post().uri("/guest-access/invitations/$token/guests/$guestId/magic-link-requests")
+        restTestClient.post().uri("/api/guest-access/invitations/$token/guests/$guestId/magic-link-requests")
             .header(HttpHeaders.COOKIE, csrf.cookies)
             .header("X-XSRF-TOKEN", csrf.csrfToken)
             .contentType(MediaType.APPLICATION_JSON)

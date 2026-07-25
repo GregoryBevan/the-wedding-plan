@@ -19,7 +19,7 @@ import me.elgregos.theweddingplan.domain.guest.repository.GuestMagicLinkTokens
 import me.elgregos.theweddingplan.domain.guest.service.GuestMagicLinkSender
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures
 import me.elgregos.theweddingplan.domain.shared.Dates
-import me.elgregos.theweddingplan.infrastructure.config.GuestAccessProperties
+import me.elgregos.theweddingplan.infrastructure.config.GuestAccessPropertiesFixtures.testGuestAccessProperties
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -39,7 +39,7 @@ class GuestMagicLinkRequesterTest {
             invitationTokenResolver = invitationTokenResolver,
             guestMagicLinkTokens = guestMagicLinkTokens,
             guestMagicLinkSender = guestMagicLinkSender,
-            guestAccessProperties = GuestAccessProperties(magicLinkTtlSeconds = 900),
+            guestAccessProperties = testGuestAccessProperties,
         )
     }
 

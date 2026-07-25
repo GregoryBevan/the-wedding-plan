@@ -117,7 +117,7 @@ If step 2 is skipped, step 3 is expected to fail with `403` because CSRF/session
 - Open Mailpit UI: `http://localhost:8025`
 - Verify that a message is received for the selected guest.
 - Verify body contains a guest-scoped link:
-  - `/guest-access/magic-links/{token}`
+  - `/api/guest-access/magic-links/{token}`
 
 ### Security notes
 

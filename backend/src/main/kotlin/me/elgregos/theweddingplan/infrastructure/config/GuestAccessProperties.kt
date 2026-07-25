@@ -4,9 +4,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties("app.guest-access")
 data class GuestAccessProperties(
-    val baseUrl: String = "http://localhost:8080",
-    val guestAreaUrl: String = "http://localhost:5174/guest-access/secured-area",
+    val baseUrl: String,
+    val guestAreaUrl: String,
     val magicLinkTtlSeconds: Long = 900,
     val guestSessionTtlSeconds: Int = 1800,
+    val jwtSecret: String,
+    val sessionCookieSecure: Boolean = false,
+    val sessionCookieSameSite: String = "Lax",
 )
 

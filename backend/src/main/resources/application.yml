@@ -1,5 +1,11 @@
 server:
   forward-headers-strategy: ${SERVER_FORWARD_HEADERS_STRATEGY:none}
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: ${APP_SESSION_COOKIE_SAME_SITE:lax}
+        secure: ${APP_SESSION_COOKIE_SECURE:true}
 
 spring:
   datasource:
@@ -44,10 +50,13 @@ app:
     from: ${APP_MAIL_FROM:no-reply@localhost}
     enabled: ${APP_MAIL_ENABLED:true}
   guest-access:
-    base-url: ${APP_GUEST_ACCESS_BASE_URL:http://localhost:8080}
-    guest-area-url: ${APP_GUEST_AREA_URL:http://localhost:5174/guest-access/secured-area}
+    base-url: ${APP_GUEST_ACCESS_BASE_URL}
+    guest-area-url: ${APP_GUEST_AREA_URL}
     magic-link-ttl-seconds: ${APP_GUEST_ACCESS_MAGIC_LINK_TTL_SECONDS:900}
     guest-session-ttl-seconds: ${APP_GUEST_ACCESS_GUEST_SESSION_TTL_SECONDS:1800}
+    jwt-secret: ${APP_GUEST_ACCESS_JWT_SECRET}
+    session-cookie-secure: ${APP_GUEST_ACCESS_SESSION_COOKIE_SECURE:true}
+    session-cookie-same-site: ${APP_GUEST_ACCESS_SESSION_COOKIE_SAME_SITE:Lax}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS}
     allowed-origin-patterns: []

@@ -11,11 +11,11 @@ class GuestAccessRouter(
 
     @Bean
     fun guestAccessRoute() = router {
-        "/guest-access/magic-links".nest {
+        "/api/guest-access/magic-links".nest {
             GET("/{token}", guestAccessMagicLinkEndpoint::verifyMagicLink)
         }
 
-        POST("/guest-access/invitations/{token}/guests/{guestId}/magic-link-requests", guestAccessMagicLinkEndpoint::requestMagicLink)
+        POST("/api/guest-access/invitations/{token}/guests/{guestId}/magic-link-requests", guestAccessMagicLinkEndpoint::requestMagicLink)
     }
 }
 

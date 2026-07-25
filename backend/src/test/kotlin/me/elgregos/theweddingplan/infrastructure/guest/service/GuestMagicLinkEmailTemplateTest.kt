@@ -1,5 +1,6 @@
 package me.elgregos.theweddingplan.infrastructure.guest.service
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.contains
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
@@ -22,10 +23,12 @@ class GuestMagicLinkEmailTemplateTest {
 
         val textBody = guestMagicLinkEmailTemplate.textBody(janeDoe.firstName, magicLinkUrl)
 
-        assertThat(textBody).contains("Bonjour ${janeDoe.firstName}")
-        assertThat(textBody).contains("lien sécurisé")
-        assertThat(textBody).contains("heureux de vous inviter")
-        assertThat(textBody).contains(magicLinkUrl)
+        assertThat(textBody).all {
+            contains("Bonjour ${janeDoe.firstName}")
+            contains("lien sécurisé")
+            contains("heureux de vous inviter")
+            contains(magicLinkUrl)
+        }
     }
 
     @Test
@@ -34,11 +37,14 @@ class GuestMagicLinkEmailTemplateTest {
 
         val htmlBody = guestMagicLinkEmailTemplate.htmlBody(janeDoe.firstName, magicLinkUrl)
 
-        assertThat(htmlBody).contains("<html lang=\"fr\">")
-        assertThat(htmlBody).contains("Thecla & Grégory")
-        assertThat(htmlBody).contains("Bonjour ${janeDoe.firstName}")
-        assertThat(htmlBody).contains("Accéder à mon invitation")
-        assertThat(htmlBody).contains(magicLinkUrl)
+        assertThat(htmlBody).all {
+            contains("<html lang=\"fr\">")
+            contains("Thecla & Grégory")
+            contains("Bonjour ${janeDoe.firstName}")
+            contains("Accéder à mon invitation")
+            contains(magicLinkUrl)
+        }
+
     }
 }
 
