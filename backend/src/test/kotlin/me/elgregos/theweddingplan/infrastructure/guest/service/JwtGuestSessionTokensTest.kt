@@ -6,7 +6,7 @@ import assertk.assertions.isNull
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestSession
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.bridesMaidInvitation
-import me.elgregos.theweddingplan.infrastructure.config.GuestAccessProperties
+import me.elgregos.theweddingplan.infrastructure.config.GuestAccessPropertiesFixtures.testGuestAccessProperties
 import kotlin.test.Test
 
 class JwtGuestSessionTokensTest {
@@ -15,7 +15,7 @@ class JwtGuestSessionTokensTest {
 
     @Test
     fun `should issue a token that verifies back to the same guest session`() {
-        val jwtGuestSessionTokens = JwtGuestSessionTokens(GuestAccessProperties())
+        val jwtGuestSessionTokens = JwtGuestSessionTokens(testGuestAccessProperties)
 
         val token = jwtGuestSessionTokens.issue(guestSession)
 
@@ -24,15 +24,15 @@ class JwtGuestSessionTokensTest {
 
     @Test
     fun `should return null when token is malformed`() {
-        val jwtGuestSessionTokens = JwtGuestSessionTokens(GuestAccessProperties())
+        val jwtGuestSessionTokens = JwtGuestSessionTokens(testGuestAccessProperties)
 
         assertThat(jwtGuestSessionTokens.verify("not-a-jwt")).isNull()
     }
 
     @Test
     fun `should return null when token is signed with another secret`() {
-        val issuer = JwtGuestSessionTokens(GuestAccessProperties(jwtSecret = "issuer-secret-key-0123456789-abcdefgh"))
-        val verifier = JwtGuestSessionTokens(GuestAccessProperties(jwtSecret = "another-secret-key-0123456789-abcdefgh"))
+        val issuer = JwtGuestSessionTokens(testGuestAccessProperties.copy(jwtSecret = "issuer-secret-key-0123456789-abcdefgh"))
+        val verifier = JwtGuestSessionTokens(testGuestAccessProperties.copy(jwtSecret = "another-secret-key-0123456789-abcdefgh"))
 
         val token = issuer.issue(guestSession)
 

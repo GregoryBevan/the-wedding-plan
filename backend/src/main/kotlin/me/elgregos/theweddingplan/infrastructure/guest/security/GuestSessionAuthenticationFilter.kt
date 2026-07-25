@@ -5,12 +5,10 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import me.elgregos.theweddingplan.domain.guest.service.GuestSessionTokens
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
 const val GUEST_SESSION_COOKIE = "guest_session"
 
-@Component
 class GuestSessionAuthenticationFilter(
     private val guestSessionTokens: GuestSessionTokens,
 ) : OncePerRequestFilter() {

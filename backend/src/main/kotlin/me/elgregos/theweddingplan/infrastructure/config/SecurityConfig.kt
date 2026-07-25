@@ -22,6 +22,7 @@ import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import me.elgregos.theweddingplan.application.guest.GuestSessionAuthorizer
 import me.elgregos.theweddingplan.domain.guest.entity.GuestSession
+import me.elgregos.theweddingplan.domain.guest.service.GuestSessionTokens
 import me.elgregos.theweddingplan.infrastructure.guest.security.GuestSessionAuthenticationFilter
 import java.net.URI
 
@@ -63,7 +64,7 @@ class SecurityConfig(
     @Order(1)
     fun guestSecuredFilterChain(
         http: HttpSecurity,
-        guestSessionAuthenticationFilter: GuestSessionAuthenticationFilter,
+        guestSessionTokens: GuestSessionTokens,
         guestSessionAuthorizer: GuestSessionAuthorizer,
     ): SecurityFilterChain =
         http
@@ -71,7 +72,10 @@ class SecurityConfig(
             .csrf { it.spa() }
             .cors(Customizer.withDefaults())
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
-            .addFilterBefore(guestSessionAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterBefore(
+                GuestSessionAuthenticationFilter(guestSessionTokens),
+                UsernamePasswordAuthenticationFilter::class.java,
+            )
             .authorizeHttpRequests { auth ->
                 auth.anyRequest().access { authentication, _ ->
                     val principal = authentication.get().principal
