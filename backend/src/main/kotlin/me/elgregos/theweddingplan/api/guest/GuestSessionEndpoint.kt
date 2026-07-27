@@ -31,10 +31,11 @@ class GuestSessionEndpoint(
 
             GuestSessionResult.InvitationNotFound,
             GuestSessionResult.GuestNotInInvitation,
-            -> ServerResponse.status(HttpStatus.UNAUTHORIZED).build()
+            -> ServerResponse.status(HttpStatus.FORBIDDEN).build()
         }
     }
 }
+
 
 
 

@@ -62,17 +62,20 @@ describe('GuestAccessSecuredAreaView', () => {
 
     await flushPromises();
 
+    expect(wrapper.text()).toContain(t('securedArea.unverifiedTitle'));
     expect(wrapper.text()).toContain(t('securedArea.unverified'));
     expect(wrapper.text()).not.toContain(t('securedArea.rsvpComingSoon'));
   });
 
-  it('shows a retriable error when the session lookup fails', async () => {
+  it('shows a retriable error with the error title when the session lookup fails', async () => {
     fetchGuestSessionMock.mockRejectedValue(new Error('boom'));
     const wrapper = mountView();
 
     await flushPromises();
 
+    expect(wrapper.text()).toContain(t('securedArea.errorTitle'));
     expect(wrapper.text()).toContain(t('securedArea.error'));
+    expect(wrapper.text()).not.toContain(t('securedArea.unverifiedTitle'));
     expect(wrapper.find('button').exists()).toBe(true);
   });
 

@@ -23,6 +23,7 @@ type TranslationKey =
   | 'securedArea.rsvpComingSoon'
   | 'securedArea.unverifiedTitle'
   | 'securedArea.unverified'
+  | 'securedArea.errorTitle'
   | 'securedArea.error'
   | 'securedArea.restart';
 
@@ -50,6 +51,7 @@ const messages: Record<GuestAccessLocale, Record<TranslationKey, string>> = {
     'securedArea.rsvpComingSoon': 'Le formulaire de réponse arrive bientôt.',
     'securedArea.unverifiedTitle': 'Lien expiré ou invalide',
     'securedArea.unverified': 'Votre lien d\'accès a expiré ou n\'est plus valide. Demandez-en un nouveau depuis votre invitation.',
+    'securedArea.errorTitle': 'Une erreur est survenue',
     'securedArea.error': 'Impossible de vérifier votre session pour le moment.',
     'securedArea.restart': 'Recommencer',
   },
@@ -74,6 +76,7 @@ const messages: Record<GuestAccessLocale, Record<TranslationKey, string>> = {
     'securedArea.rsvpComingSoon': 'The RSVP form is coming soon.',
     'securedArea.unverifiedTitle': 'Link expired or invalid',
     'securedArea.unverified': 'Your access link has expired or is no longer valid. Request a new one from your invitation.',
+    'securedArea.errorTitle': 'Something went wrong',
     'securedArea.error': 'We could not verify your session right now.',
     'securedArea.restart': 'Start over',
   },

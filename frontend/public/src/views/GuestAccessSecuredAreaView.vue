@@ -21,7 +21,9 @@
       </section>
 
       <section v-else class="mt-4">
-        <h2 class="text-base font-semibold">{{ t('securedArea.unverifiedTitle') }}</h2>
+        <h2 class="text-base font-semibold">
+          {{ state === 'error' ? t('securedArea.errorTitle') : t('securedArea.unverifiedTitle') }}
+        </h2>
         <p class="mt-2 text-sm leading-6 text-[#093D57]/80">
           {{ state === 'error' ? t('securedArea.error') : t('securedArea.unverified') }}
         </p>
