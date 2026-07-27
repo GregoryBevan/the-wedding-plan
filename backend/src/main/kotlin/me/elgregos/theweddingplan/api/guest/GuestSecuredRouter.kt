@@ -7,10 +7,12 @@ import org.springframework.web.servlet.function.router
 @Configuration
 class GuestSecuredRouter(
     private val guestRsvpEndpoint: GuestRsvpEndpoint,
+    private val guestSessionEndpoint: GuestSessionEndpoint,
 ) {
 
     @Bean
     fun guestSecuredRoute() = router {
+        GET("/api/guest-access/secured/me", guestSessionEndpoint::me)
         POST("/api/guest-access/secured/rsvp", guestRsvpEndpoint::submit)
     }
 }

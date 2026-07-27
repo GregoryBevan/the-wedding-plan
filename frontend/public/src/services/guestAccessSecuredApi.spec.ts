@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { GuestAccessSecuredApiError, securedGuestFetch, submitRsvp } from './guestAccessSecuredApi';
+import { GuestAccessSecuredApiError, fetchGuestSession, securedGuestFetch, submitRsvp } from './guestAccessSecuredApi';
 import {
   clearCsrfCookie,
   expectCsrfHeader,
@@ -66,6 +66,37 @@ describe('guestAccessSecuredApi', () => {
 
     await expect(submitRsvp()).rejects.toBeInstanceOf(GuestAccessSecuredApiError);
     await expect(submitRsvp()).rejects.toThrow('Unable to submit RSVP at the moment.');
+  });
+
+  it('resolves the guest session from the /me endpoint', async () => {
+    const session = { guestId: 'guest-1', invitationId: 'invitation-1', firstName: 'Jane', lastName: 'Doe' };
+    const fetchMock = mockFetchResponse({ ok: true, body: session });
+
+    const result = await fetchGuestSession();
+
+    const [url, options] = getFirstRequest(fetchMock);
+    expect(url).toBe(`${securedBaseUrl}/me`);
+    expect(options).toMatchObject({ method: 'GET', credentials: 'include' });
+    expect(result).toEqual(session);
+  });
+
+  it('returns null when no valid guest session is present', async () => {
+    mockFetchResponse({ ok: false, status: 401 });
+
+    await expect(fetchGuestSession()).resolves.toBeNull();
+  });
+
+  it('returns null when the session guest no longer belongs to the invitation', async () => {
+    mockFetchResponse({ ok: false, status: 403 });
+
+    await expect(fetchGuestSession()).resolves.toBeNull();
+  });
+
+  it('throws a typed error when the guest session lookup fails unexpectedly', async () => {
+    mockFetchResponse({ ok: false, status: 500 });
+
+    await expect(fetchGuestSession()).rejects.toBeInstanceOf(GuestAccessSecuredApiError);
+    await expect(fetchGuestSession()).rejects.toThrow('Unable to load the guest session.');
   });
 });
 

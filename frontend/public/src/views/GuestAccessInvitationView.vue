@@ -45,6 +45,7 @@
                 :style="{ transitionDelay: showGuestList ? `${index * 90}ms` : '0ms' }"
               >
                 <span class="text-sm font-medium">{{ guest.firstName }} {{ guest.lastName }}</span>
+                <GuestMagicLinkRequest :token="normalizedToken" :guest-id="guest.id" />
               </li>
             </ul>
           </div>
@@ -61,6 +62,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import LanguageSwitcher from '../components/LanguageSwitcher.vue';
+import GuestMagicLinkRequest from '../components/GuestMagicLinkRequest.vue';
 import {
   GuestAccessInvitationApiError,
   type GuestInvitationResponse,

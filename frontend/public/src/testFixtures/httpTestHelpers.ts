@@ -6,6 +6,7 @@ type MockFetchResponseArgs = {
   ok: boolean;
   status?: number;
   body?: unknown;
+  headers?: Record<string, string>;
 };
 
 export const setCsrfCookie = (token = defaultCsrfToken) => {
@@ -16,10 +17,11 @@ export const clearCsrfCookie = () => {
   document.cookie = 'XSRF-TOKEN=; Max-Age=0; path=/';
 };
 
-export const mockFetchResponse = ({ ok, status = 200, body = {} }: MockFetchResponseArgs) => {
+export const mockFetchResponse = ({ ok, status = 200, body = {}, headers = {} }: MockFetchResponseArgs) => {
   return vi.spyOn(globalThis, 'fetch').mockResolvedValue({
     ok,
     status,
+    headers: new Headers(headers),
     json: async () => body,
   } as Response);
 };
