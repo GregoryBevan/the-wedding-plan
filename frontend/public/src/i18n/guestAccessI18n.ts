@@ -8,14 +8,17 @@ type TranslationKey =
   | 'landing.title'
   | 'landing.description'
   | 'invitation.title'
+  | 'invitation.chooseName'
+  | 'invitation.instructions'
   | 'invitation.errors.notFound'
   | 'invitation.errors.invalidLink'
   | 'invitation.errors.unavailable'
-  | 'invitation.magicLink.request'
-  | 'invitation.magicLink.sending'
+  | 'invitation.magicLink.requestFor'
+  | 'invitation.magicLink.sentTitle'
   | 'invitation.magicLink.sent'
   | 'invitation.magicLink.rateLimited'
   | 'invitation.magicLink.error'
+  | 'invitation.magicLink.back'
   | 'securedArea.title'
   | 'securedArea.loading'
   | 'securedArea.greeting'
@@ -36,14 +39,17 @@ const messages: Record<GuestAccessLocale, Record<TranslationKey, string>> = {
     'landing.title': 'Invitation privée',
     'landing.description': 'Scannez le QR code présent sur votre invitation pour ouvrir votre page d\'accès.',
     'invitation.title': 'Votre invitation',
+    'invitation.chooseName': 'Dites-nous qui vous êtes ❤️',
+    'invitation.instructions': 'Touchez votre prénom et nous vous enverrons un lien personnel par email pour confirmer votre présence à nos côtés.',
     'invitation.errors.notFound': 'Cette invitation est introuvable. Vérifiez le lien de votre QR code.',
     'invitation.errors.invalidLink': 'Le lien de l\'invitation est invalide.',
     'invitation.errors.unavailable': 'Impossible de charger cette invitation pour le moment.',
-    'invitation.magicLink.request': 'Recevoir mon lien d\'accès',
-    'invitation.magicLink.sending': 'Envoi en cours…',
+    'invitation.magicLink.requestFor': 'Recevoir le lien pour',
+    'invitation.magicLink.sentTitle': 'Email envoyé ❤️',
     'invitation.magicLink.sent': 'Si tout est correct, vous recevrez un email avec votre lien d\'accès.',
     'invitation.magicLink.rateLimited': 'Trop de demandes. Merci de réessayer dans quelques instants.',
     'invitation.magicLink.error': 'Impossible d\'envoyer le lien pour le moment. Réessayez.',
+    'invitation.magicLink.back': 'Revenir à l\'invitation',
     'securedArea.title': 'Espace invité sécurisé',
     'securedArea.loading': 'Vérification de votre lien…',
     'securedArea.greeting': 'Bonjour',
@@ -61,14 +67,17 @@ const messages: Record<GuestAccessLocale, Record<TranslationKey, string>> = {
     'landing.title': 'Private invitation',
     'landing.description': 'Scan the QR code on your invitation to open your access page.',
     'invitation.title': 'Your invitation',
+    'invitation.chooseName': 'Let us know who you are ❤️',
+    'invitation.instructions': 'Tap your first name and we will email you a personal link to confirm you will be joining us.',
     'invitation.errors.notFound': 'This invitation could not be found. Please check your QR code link.',
     'invitation.errors.invalidLink': 'The invitation link is invalid.',
     'invitation.errors.unavailable': 'Unable to load this invitation right now.',
-    'invitation.magicLink.request': 'Get my access link',
-    'invitation.magicLink.sending': 'Sending…',
+    'invitation.magicLink.requestFor': 'Get the access link for',
+    'invitation.magicLink.sentTitle': 'Email sent ❤️',
     'invitation.magicLink.sent': 'If everything checks out, you will receive an email with your access link.',
     'invitation.magicLink.rateLimited': 'Too many requests. Please try again in a few moments.',
     'invitation.magicLink.error': 'We could not send the link right now. Please try again.',
+    'invitation.magicLink.back': 'Back to the invitation',
     'securedArea.title': 'Secure guest area',
     'securedArea.loading': 'Verifying your link…',
     'securedArea.greeting': 'Hello',

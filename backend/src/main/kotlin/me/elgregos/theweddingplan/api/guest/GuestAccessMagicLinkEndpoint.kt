@@ -68,9 +68,17 @@ class GuestAccessMagicLinkEndpoint(
             GuestMagicLinkVerificationResult.InvalidOrExpiredOrUsedToken,
             GuestMagicLinkVerificationResult.InvitationNotFound,
             GuestMagicLinkVerificationResult.GuestNotInInvitation,
-            -> ServerResponse.notFound().build()
+                // Redirect to the guest area with an error flag, letting the SPA show a friendly,
+                // recoverable "link expired or invalid" message. No session is issued.
+            -> ServerResponse.status(HttpStatus.SEE_OTHER)
+                .location(invalidLinkRedirectUri())
+                .build()
         }
     }
+
+    private fun invalidLinkRedirectUri(): URI =
+        URI.create("${guestAccessProperties.guestAreaUrl}?linkStatus=invalid")
+
 
     private fun guestSessionCookie(token: String): ResponseCookie =
         ResponseCookie.from(GUEST_SESSION_COOKIE, token)

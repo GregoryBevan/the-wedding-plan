@@ -1,23 +1,13 @@
 <template>
-  <div class="mt-2">
-    <button
-      class="w-full rounded-xl bg-[#093D57] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-      type="button"
-      :disabled="isSending || status === 'sent'"
-      @click="request"
-    >
-      {{ isSending ? t('invitation.magicLink.sending') : t('invitation.magicLink.request') }}
-    </button>
-
-    <p
-      v-if="feedback"
-      class="mt-2 text-xs leading-5"
-      :class="status === 'error' || status === 'rateLimited' ? 'text-[#8a2b2b]' : 'text-[#093D57]/80'"
-      role="status"
-    >
-      {{ feedback }}
-    </p>
-  </div>
+  <button
+    class="guest-button rounded-xl bg-[#093D57] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+    type="button"
+    :disabled="isSending"
+    :aria-label="`${t('invitation.magicLink.requestFor')} ${fullName}`"
+    @click="request"
+  >
+    {{ firstName }}
+  </button>
 </template>
 
 <script setup lang="ts">
@@ -25,44 +15,56 @@ import { computed, ref } from 'vue';
 import { requestMagicLink } from '../services/guestAccessMagicLinkApi';
 import { useGuestAccessI18n } from '../i18n/guestAccessI18n';
 
-const props = defineProps<{ token: string; guestId: string }>();
+const props = defineProps<{ token: string; guestId: string; firstName: string; lastName: string }>();
 
-type RequestStatus = 'idle' | 'sending' | 'sent' | 'rateLimited' | 'error';
+export type MagicLinkRequestStatus = 'sent' | 'rateLimited' | 'error';
 
-const status = ref<RequestStatus>('idle');
+const emit = defineEmits<{
+  requested: [{ status: MagicLinkRequestStatus; firstName: string }];
+}>();
+
+const isSending = ref(false);
 const { t } = useGuestAccessI18n();
 
-const isSending = computed(() => status.value === 'sending');
-
-const feedback = computed(() => {
-  if (status.value === 'sent') {
-    return t('invitation.magicLink.sent');
-  }
-
-  if (status.value === 'rateLimited') {
-    return t('invitation.magicLink.rateLimited');
-  }
-
-  if (status.value === 'error') {
-    return t('invitation.magicLink.error');
-  }
-
-  return '';
-});
+const fullName = computed(() => `${props.firstName} ${props.lastName}`);
 
 const request = async (): Promise<void> => {
   if (isSending.value) {
     return;
   }
 
-  status.value = 'sending';
+  isSending.value = true;
 
   try {
     const result = await requestMagicLink(props.token, props.guestId);
-    status.value = result.status === 'rateLimited' ? 'rateLimited' : 'sent';
+    emit('requested', {
+      status: result.status === 'rateLimited' ? 'rateLimited' : 'sent',
+      firstName: props.firstName,
+    });
   } catch {
-    status.value = 'error';
+    emit('requested', { status: 'error', firstName: props.firstName });
+  } finally {
+    isSending.value = false;
   }
 };
 </script>
+
+<style scoped>
+/* Fluid button so guest names scale smoothly with the viewport. */
+.guest-button {
+  display: block;
+  width: 88%;
+  margin-inline: auto;
+  font-size: clamp(0.82rem, 3.2vw, 0.95rem);
+  padding: clamp(0.4rem, 1.5vw, 0.6rem) 0.9rem;
+}
+
+/* Keep the name buttons in scale with the smaller card text on small phones. */
+@media (max-width: 420px) {
+  .guest-button {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.75rem;
+  }
+}
+</style>
 

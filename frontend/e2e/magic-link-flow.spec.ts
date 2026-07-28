@@ -45,9 +45,9 @@ test.describe('Magic-link UX flow', () => {
     });
 
     await page.goto(`${PUBLIC_BASE_URL}/guest-access/${VALID_TOKEN}`);
-    await expect(page.getByText('Alice Martin')).toBeVisible({ timeout: UI_TIMEOUT_MS });
+    await expect(page.getByRole('button', { name: /Alice Martin/ })).toBeVisible({ timeout: UI_TIMEOUT_MS });
 
-    await page.getByRole('button', { name: /Recevoir mon lien|Get my access link/i }).first().click();
+    await page.getByRole('button', { name: /Alice Martin/ }).click();
 
     await expect(page.getByText(/vous recevrez un email|you will receive an email/i)).toBeVisible();
 
@@ -78,9 +78,9 @@ test.describe('Magic-link UX flow', () => {
     });
 
     await page.goto(`${PUBLIC_BASE_URL}/guest-access/${VALID_TOKEN}`);
-    await expect(page.getByText('Alice Martin')).toBeVisible({ timeout: UI_TIMEOUT_MS });
+    await expect(page.getByRole('button', { name: /Alice Martin/ })).toBeVisible({ timeout: UI_TIMEOUT_MS });
 
-    await page.getByRole('button', { name: /Recevoir mon lien|Get my access link/i }).first().click();
+    await page.getByRole('button', { name: /Alice Martin/ }).click();
 
     await expect(page.getByText(/Trop de demandes|Too many requests/i)).toBeVisible();
   });

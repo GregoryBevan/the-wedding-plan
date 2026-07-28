@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRoute } from 'vue-router';
 import LanguageSwitcher from '../components/LanguageSwitcher.vue';
 import { fetchGuestSession, type GuestSessionResponse } from '../services/guestAccessSecuredApi';
 import { useGuestAccessI18n } from '../i18n/guestAccessI18n';
@@ -58,6 +58,7 @@ type SessionState = 'loading' | 'verified' | 'unverified' | 'error';
 
 const state = ref<SessionState>('loading');
 const session = ref<GuestSessionResponse | null>(null);
+const route = useRoute();
 const { t } = useGuestAccessI18n();
 
 const loadSession = async (): Promise<void> => {
@@ -72,6 +73,16 @@ const loadSession = async (): Promise<void> => {
   }
 };
 
-onMounted(loadSession);
+onMounted(() => {
+  // The backend redirects a failed magic-link verification (expired, already
+  // used, invalid) here with `?linkStatus=invalid`. In that case there is no
+  // session to fetch: show the recoverable "expired or invalid" state directly.
+  if (route.query.linkStatus === 'invalid') {
+    state.value = 'unverified';
+    return;
+  }
+
+  void loadSession();
+});
 </script>
 

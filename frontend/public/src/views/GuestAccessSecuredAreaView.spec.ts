@@ -7,6 +7,13 @@ vi.mock('../services/guestAccessSecuredApi', () => ({
   fetchGuestSession: vi.fn(),
 }));
 
+const { routeMock } = vi.hoisted(() => ({ routeMock: { query: {} as Record<string, string> } }));
+
+vi.mock('vue-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('vue-router')>();
+  return { ...actual, useRoute: () => routeMock };
+});
+
 import { fetchGuestSession } from '../services/guestAccessSecuredApi';
 
 const fetchGuestSessionMock = vi.mocked(fetchGuestSession);
@@ -25,6 +32,7 @@ const mountView = () =>
 describe('GuestAccessSecuredAreaView', () => {
   afterEach(() => {
     vi.clearAllMocks();
+    routeMock.query = {};
   });
 
   it('unlocks the RSVP area when the guest session is verified', async () => {
@@ -65,6 +73,17 @@ describe('GuestAccessSecuredAreaView', () => {
     expect(wrapper.text()).toContain(t('securedArea.unverifiedTitle'));
     expect(wrapper.text()).toContain(t('securedArea.unverified'));
     expect(wrapper.text()).not.toContain(t('securedArea.rsvpComingSoon'));
+  });
+
+  it('shows the recoverable expired-link state without a session lookup when redirected with linkStatus=invalid', async () => {
+    routeMock.query = { linkStatus: 'invalid' };
+    const wrapper = mountView();
+
+    await flushPromises();
+
+    expect(fetchGuestSessionMock).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain(t('securedArea.unverifiedTitle'));
+    expect(wrapper.text()).toContain(t('securedArea.unverified'));
   });
 
   it('shows a retriable error with the error title when the session lookup fails', async () => {
