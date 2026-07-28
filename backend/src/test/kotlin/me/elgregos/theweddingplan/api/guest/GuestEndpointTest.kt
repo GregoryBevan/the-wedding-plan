@@ -335,7 +335,7 @@ class GuestEndpointTest {
         every { request.pathVariable("id") } returns guest.id.toString()
         every { request.body(UpdateGuestRequest::class.java) } returns johnDoeUpdatedRequest
         every {
-            guestUpdater.update(johnDoeUpdatedRequest.toCommand(guest.id, Language.FR))
+            guestUpdater.update(johnDoeUpdatedRequest.toCommand(guest.id))
         } returns UpdateGuestResult.Updated(johnDoeUpdated)
 
         val response = guestEndpoint.updateGuest(request)
@@ -412,7 +412,7 @@ class GuestEndpointTest {
         every { request.pathVariable("id") } returns guestId.toString()
         every { request.body(UpdateGuestRequest::class.java) } returns johnDoeUpdatedRequest
         every {
-            guestUpdater.update(johnDoeUpdatedRequest.toCommand(guestId, Language.FR))
+            guestUpdater.update(johnDoeUpdatedRequest.toCommand(guestId))
         } returns UpdateGuestResult.NotFound
 
         val response = guestEndpoint.updateGuest(request)
@@ -429,7 +429,7 @@ class GuestEndpointTest {
         every { request.pathVariable("id") } returns guestId.toString()
         every { request.body(UpdateGuestRequest::class.java) } returns updateRequest
         every {
-            guestUpdater.update(updateRequest.toCommand(guestId, Language.FR))
+            guestUpdater.update(updateRequest.toCommand(guestId))
         } returns UpdateGuestResult.VersionConflict
 
         val response = guestEndpoint.updateGuest(request)

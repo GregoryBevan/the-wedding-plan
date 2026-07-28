@@ -11,13 +11,13 @@ data class UpdateGuestRequest(
     val email: String,
     val language: String? = null,
 ) {
-    internal fun toCommand(id: GuestId, defaultLanguage: Language) =
+    internal fun toCommand(id: GuestId) =
         UpdateGuestCommand(
             id = id,
             version = version,
             firstName = firstName,
             lastName = lastName,
             email = email,
-            language = Language.fromNullable(language, defaultLanguage)
+            language = Language.parseOrNull(language)
         )
 }

@@ -11,6 +11,8 @@ import me.elgregos.theweddingplan.application.guest.command.UpdateGuestCommandFi
 import me.elgregos.theweddingplan.domain.guest.entity.Guest
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoeArchived
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.oliverBennett
+import me.elgregos.theweddingplan.domain.guest.entity.Language
 import me.elgregos.theweddingplan.domain.guest.repository.Guests
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -43,6 +45,30 @@ class GuestUpdaterTest {
             prop(Guest::lastName).isEqualTo(command.lastName)
             prop(Guest::email).isEqualTo(command.email)
         }
+    }
+
+    @Test
+    fun `should preserve the existing guest language when the command language is null`() {
+        val guest = oliverBennett
+        val command = johnDoeUpdatedCommand.copy(id = guest.id, version = guest.version, language = null)
+        every { guests.findById(guest.id) } returns guest
+        every { guests.update(any(), guest.version) } answers { firstArg() }
+
+        val updatedGuest = (guestUpdater.update(command) as UpdateGuestResult.Updated).guest
+
+        assertThat(updatedGuest.language).isEqualTo(Language.EN)
+    }
+
+    @Test
+    fun `should apply the command language when provided`() {
+        val guest = johnDoe
+        val command = johnDoeUpdatedCommand.copy(version = guest.version, language = Language.EN)
+        every { guests.findById(guest.id) } returns guest
+        every { guests.update(any(), guest.version) } answers { firstArg() }
+
+        val updatedGuest = (guestUpdater.update(command) as UpdateGuestResult.Updated).guest
+
+        assertThat(updatedGuest.language).isEqualTo(Language.EN)
     }
 
     @Test

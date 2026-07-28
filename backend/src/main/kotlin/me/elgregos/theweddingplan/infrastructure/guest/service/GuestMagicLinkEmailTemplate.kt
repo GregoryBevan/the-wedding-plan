@@ -43,8 +43,8 @@ class GuestMagicLinkEmailTemplate(
         )
     }
 
-    private fun message(code: String, locale: Locale, vararg args: Any) =
-        messages.getMessage(code, args.takeIf { it.isNotEmpty() }, locale)!!
+    private fun message(code: String, locale: Locale, vararg args: Any): String =
+        messages.getMessage(code, args.takeIf { it.isNotEmpty() }, locale)
 
     private fun htmlTemplate(
         lang: String,

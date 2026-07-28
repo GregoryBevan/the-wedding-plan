@@ -9,6 +9,6 @@ data class UpdateGuestCommand(
     val firstName: String,
     val lastName: String,
     val email: String,
-    val language: Language = Language.FR,
+    val language: Language? = null,
 )
 

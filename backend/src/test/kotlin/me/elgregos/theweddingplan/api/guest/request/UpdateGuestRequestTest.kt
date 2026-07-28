@@ -11,10 +11,16 @@ import kotlin.test.Test
 class UpdateGuestRequestTest {
 
     @Test
-    fun `should map request to command`() {
-        val command = johnDoeUpdated.toCommand(johnDoe.id, Language.FR)
+    fun `should preserve language when omitted by mapping it to null`() {
+        val command = johnDoeUpdated.toCommand(johnDoe.id)
 
         assertThat(command).isEqualTo(johnDoeUpdatedCommand)
     }
-}
 
+    @Test
+    fun `should map a provided language to the command`() {
+        val command = johnDoeUpdated.copy(language = "EN").toCommand(johnDoe.id)
+
+        assertThat(command.language).isEqualTo(Language.EN)
+    }
+}

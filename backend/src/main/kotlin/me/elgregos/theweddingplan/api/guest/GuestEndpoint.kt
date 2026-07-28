@@ -68,7 +68,7 @@ class GuestEndpoint(
         val id = request.guestIdPathParam() ?: return ServerResponse.badRequest().build()
         val payload = request.body(UpdateGuestRequest::class.java)
 
-        return with(guestUpdater.update(payload.toCommand(id, guestProperties.defaultLanguage))) {
+        return with(guestUpdater.update(payload.toCommand(id))) {
             when (this) {
                 is UpdateGuestResult.Updated -> ServerResponse.ok().body(guest.toResponse())
                 is UpdateGuestResult.NotFound -> ServerResponse.notFound().build()

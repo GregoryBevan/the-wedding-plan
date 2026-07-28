@@ -12,7 +12,10 @@ enum class Language {
     }
 
     companion object {
+        fun parseOrNull(value: String?): Language? =
+            value?.trim()?.uppercase()?.let { candidate -> entries.firstOrNull { it.name == candidate } }
+
         fun fromNullable(value: String?, default: Language): Language =
-            value?.trim()?.uppercase()?.let { candidate -> entries.firstOrNull { it.name == candidate } } ?: default
+            parseOrNull(value) ?: default
     }
 }

@@ -15,7 +15,7 @@ class GuestUpdater(private val guests: Guests) {
                     when {
                         existingGuest.version != version -> UpdateGuestResult.VersionConflict
                         else -> existingGuest
-                            .updateDetails(firstName, lastName, email, language)
+                            .updateDetails(firstName, lastName, email, language ?: existingGuest.language)
                             .let { guests.update(it, expectedVersion = version) }
                             ?.let(UpdateGuestResult::Updated)
                             ?: UpdateGuestResult.VersionConflict
