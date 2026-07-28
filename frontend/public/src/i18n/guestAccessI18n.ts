@@ -155,6 +155,20 @@ export const useGuestAccessI18n = () => {
     }
   };
 
+  /**
+   * Applies the locale advertised by the resolved guest session, unless the guest
+   * has already made an explicit manual choice (persisted in local storage), which
+   * always takes precedence. The applied value is intentionally not persisted so a
+   * later manual switch stays authoritative.
+   */
+  const applyGuestLocale = (nextLocale: GuestAccessLocale) => {
+    if (getStoredLocale()) {
+      return;
+    }
+
+    locale.value = nextLocale;
+  };
+
   const t = (key: TranslationKey) => messages[locale.value][key] ?? messages.en[key];
 
   const guestCountLabel = (guestCount: number): string => {
@@ -168,6 +182,7 @@ export const useGuestAccessI18n = () => {
   return {
     locale,
     setLocale,
+    applyGuestLocale,
     t,
     guestCountLabel,
   };

@@ -5,11 +5,11 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.prop
 import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
-import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.activeGuest
-import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.aliceSmith
-import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.archivedGuest
-import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.beforeUpdate
-import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.bobJohnson
+import me.elgregos.theweddingplan.api.guest.request.AddGuestRequestFixtures.activeGuest
+import me.elgregos.theweddingplan.api.guest.request.AddGuestRequestFixtures.aliceSmith
+import me.elgregos.theweddingplan.api.guest.request.AddGuestRequestFixtures.archivedGuest
+import me.elgregos.theweddingplan.api.guest.request.AddGuestRequestFixtures.beforeUpdate
+import me.elgregos.theweddingplan.api.guest.request.AddGuestRequestFixtures.bobJohnson
 import me.elgregos.theweddingplan.api.guest.GuestApiTestHelper.createGuest
 import me.elgregos.theweddingplan.api.invitation.InvitationApiTestHelper.createInvitation
 import me.elgregos.theweddingplan.api.invitation.request.AddInvitationRequest

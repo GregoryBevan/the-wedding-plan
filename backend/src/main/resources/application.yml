@@ -16,6 +16,10 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: true
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
   security:
     oauth2:
       client:
@@ -49,6 +53,8 @@ app:
   mail:
     from: ${APP_MAIL_FROM:no-reply@localhost}
     enabled: ${APP_MAIL_ENABLED:true}
+  guest:
+    default-language: ${APP_GUEST_DEFAULT_LANGUAGE:FR}
   guest-access:
     base-url: ${APP_GUEST_ACCESS_BASE_URL}
     guest-area-url: ${APP_GUEST_AREA_URL}

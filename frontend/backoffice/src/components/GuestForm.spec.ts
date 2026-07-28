@@ -98,4 +98,32 @@ describe('GuestForm', () => {
 
     expect(wrapper.emitted('cancel')).toHaveLength(1);
   });
+
+  it('defaults the language selector to FR and emits the selected language', async () => {
+    const wrapper = mount(GuestForm);
+    const payload = createGuestPayload({ language: 'EN' });
+
+    const inputs = wrapper.findAll('input');
+    await inputs[0].setValue(payload.firstName);
+    await inputs[1].setValue(payload.lastName);
+    await inputs[2].setValue(payload.email);
+
+    const languageSelect = wrapper.find('select');
+    expect((languageSelect.element as HTMLSelectElement).value).toBe('FR');
+
+    await languageSelect.setValue('EN');
+    await wrapper.find('form').trigger('submit.prevent');
+
+    expect(wrapper.emitted('submit')?.[0]).toEqual([payload]);
+  });
+
+  it('hydrates the language selector from initial values', () => {
+    const wrapper = mount(GuestForm, {
+      props: {
+        initialValues: createGuestPayload({ language: 'EN' })
+      }
+    });
+
+    expect((wrapper.find('select').element as HTMLSelectElement).value).toBe('EN');
+  });
 });

@@ -51,15 +51,18 @@
 import { onMounted, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import LanguageSwitcher from '../components/LanguageSwitcher.vue';
-import { fetchGuestSession, type GuestSessionResponse } from '../services/guestAccessSecuredApi';
-import { useGuestAccessI18n } from '../i18n/guestAccessI18n';
+import { fetchGuestSession, type GuestLanguage, type GuestSessionResponse } from '../services/guestAccessSecuredApi';
+import { useGuestAccessI18n, type GuestAccessLocale } from '../i18n/guestAccessI18n';
 
 type SessionState = 'loading' | 'verified' | 'unverified' | 'error';
 
 const state = ref<SessionState>('loading');
 const session = ref<GuestSessionResponse | null>(null);
 const route = useRoute();
-const { t } = useGuestAccessI18n();
+const { t, applyGuestLocale } = useGuestAccessI18n();
+
+const guestLanguageToLocale = (language: GuestLanguage): GuestAccessLocale =>
+  language === 'EN' ? 'en' : 'fr';
 
 const loadSession = async (): Promise<void> => {
   state.value = 'loading';
@@ -67,6 +70,11 @@ const loadSession = async (): Promise<void> => {
   try {
     const resolvedSession = await fetchGuestSession();
     session.value = resolvedSession;
+
+    if (resolvedSession) {
+      applyGuestLocale(guestLanguageToLocale(resolvedSession.language));
+    }
+
     state.value = resolvedSession ? 'verified' : 'unverified';
   } catch {
     state.value = 'error';

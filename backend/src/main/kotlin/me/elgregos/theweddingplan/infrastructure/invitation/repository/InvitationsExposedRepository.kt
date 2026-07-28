@@ -2,12 +2,14 @@ package me.elgregos.theweddingplan.infrastructure.invitation.repository
 
 import me.elgregos.theweddingplan.domain.guest.entity.Guest
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
+import me.elgregos.theweddingplan.domain.guest.entity.Language
 import me.elgregos.theweddingplan.domain.invitation.entity.Invitation
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationAccessToken
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationId
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationListCriteria
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationPage
 import me.elgregos.theweddingplan.domain.invitation.repository.Invitations
+import me.elgregos.theweddingplan.infrastructure.config.GuestProperties
 import me.elgregos.theweddingplan.infrastructure.guest.repository.GuestTable
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.batchInsert
@@ -20,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional
 import kotlin.uuid.Uuid
 
 @Repository
-class InvitationsExposedRepository : Invitations {
+class InvitationsExposedRepository(
+    private val guestProperties: GuestProperties,
+) : Invitations {
 
     private val listOrder =
         arrayOf(InvitationTable.id to SortOrder.ASC)
@@ -137,6 +141,7 @@ class InvitationsExposedRepository : Invitations {
                         firstName = row[GuestTable.firstName],
                         lastName = row[GuestTable.lastName],
                         email = row[GuestTable.email],
+                        language = Language.fromNullable(row[GuestTable.language], guestProperties.defaultLanguage),
                     )
                 }
                 .mapValues { (_, guests) -> guests.toSet() }

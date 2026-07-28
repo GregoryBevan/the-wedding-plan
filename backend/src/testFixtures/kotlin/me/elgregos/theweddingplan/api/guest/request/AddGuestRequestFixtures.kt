@@ -1,4 +1,4 @@
-package me.elgregos.theweddingplan.api.guest
+package me.elgregos.theweddingplan.api.guest.request
 
 import java.util.UUID
 

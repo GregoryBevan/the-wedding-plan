@@ -6,7 +6,9 @@ import me.elgregos.theweddingplan.domain.guest.entity.GuestStatus
 import me.elgregos.theweddingplan.domain.guest.entity.GuestListCriteria
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
 import me.elgregos.theweddingplan.domain.guest.entity.GuestPage
+import me.elgregos.theweddingplan.domain.guest.entity.Language
 import me.elgregos.theweddingplan.domain.guest.repository.Guests
+import me.elgregos.theweddingplan.infrastructure.config.GuestProperties
 import me.elgregos.theweddingplan.infrastructure.invitation.repository.InvitationGuestTable
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -27,7 +29,9 @@ import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 
 @Repository
-class GuestExposedRepository : Guests {
+class GuestExposedRepository(
+    private val guestProperties: GuestProperties,
+) : Guests {
 
     private val listOrder = arrayOf(GuestTable.id to SortOrder.ASC)
 
@@ -42,6 +46,7 @@ class GuestExposedRepository : Guests {
             it[firstName] = guest.firstName
             it[lastName] = guest.lastName
             it[email] = guest.email
+            it[language] = guest.language.name
         }.let { guest }
 
     @Transactional
@@ -53,6 +58,7 @@ class GuestExposedRepository : Guests {
             it[firstName] = guest.firstName
             it[lastName] = guest.lastName
             it[email] = guest.email
+            it[language] = guest.language.name
         }.let { if (it == 1) guest else null }
 
 
@@ -90,6 +96,7 @@ class GuestExposedRepository : Guests {
             it[firstName] = guest.firstName
             it[lastName] = guest.lastName
             it[email] = guest.email
+            it[language] = guest.language.name
         }.let { if (it == 1) guest else null }
 
     @Transactional(readOnly = true)
@@ -116,6 +123,7 @@ class GuestExposedRepository : Guests {
         firstName = this[GuestTable.firstName],
         lastName = this[GuestTable.lastName],
         email = this[GuestTable.email],
+        language = Language.fromNullable(this[GuestTable.language], guestProperties.defaultLanguage),
     )
 
     private fun selectGuests(

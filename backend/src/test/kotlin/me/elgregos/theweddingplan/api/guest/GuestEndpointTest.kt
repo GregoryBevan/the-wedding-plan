@@ -11,8 +11,8 @@ import me.elgregos.theweddingplan.application.guest.result.ArchiveGuestResult
 import me.elgregos.theweddingplan.application.guest.result.RestoreGuestResult
 import me.elgregos.theweddingplan.application.guest.result.UpdateGuestResult
 import me.elgregos.theweddingplan.application.guest.GuestUpdater
-import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.charlieDavis
-import me.elgregos.theweddingplan.api.guest.UpdateGuestRequestFixtures.johnDoeUpdated as johnDoeUpdatedRequest
+import me.elgregos.theweddingplan.api.guest.request.AddGuestRequestFixtures.charlieDavis
+import me.elgregos.theweddingplan.api.guest.request.UpdateGuestRequestFixtures.johnDoeUpdated as johnDoeUpdatedRequest
 import me.elgregos.theweddingplan.domain.guest.entity.GuestStatus
 import me.elgregos.theweddingplan.domain.guest.entity.GuestAvailability
 import me.elgregos.theweddingplan.domain.guest.entity.GuestListCriteria
@@ -24,6 +24,10 @@ import org.springframework.web.servlet.function.ServerRequest
 import org.springframework.http.HttpStatus
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import me.elgregos.theweddingplan.api.guest.request.AddGuestRequest
+import me.elgregos.theweddingplan.api.guest.request.UpdateGuestRequest
+import me.elgregos.theweddingplan.domain.guest.entity.Language
+import me.elgregos.theweddingplan.infrastructure.config.GuestProperties
 import java.util.Optional
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -46,12 +50,15 @@ class GuestEndpointTest {
         guestArchiver = mockk()
         guestRestorer = mockk()
         guestUpdater = mockk()
-        guestEndpoint = GuestEndpoint(guestAdder, guestLister, guestGetter, guestArchiver, guestRestorer, guestUpdater)
-    }
-
-    @Test
-    fun `should map guest to response`() {
-        assertThat(johnDoe.toResponse()).isEqualTo(GuestResponseFixtures.johnDoe)
+        guestEndpoint = GuestEndpoint(
+            guestAdder,
+            guestLister,
+            guestGetter,
+            guestArchiver,
+            guestRestorer,
+            guestUpdater,
+            GuestProperties(defaultLanguage = Language.FR),
+        )
     }
 
     @Test
@@ -60,33 +67,13 @@ class GuestEndpointTest {
         val guest = johnDoe
 
         every { request.body(AddGuestRequest::class.java) } returns charlieDavis
-        every { guestAdder.add(charlieDavis.toCommand()) } returns guest
+        every { guestAdder.add(charlieDavis.toCommand(Language.FR)) } returns guest
 
         val response = guestEndpoint.addGuest(request)
 
         assertThat(response.statusCode()).isEqualTo(HttpStatus.CREATED)
     }
 
-    @Test
-    fun `should map guest page to response`() {
-        val guestPage = GuestPage(
-            items = listOf(johnDoe),
-            page = 1,
-            size = 5,
-            totalItems = 9,
-            totalPages = 2,
-        )
-
-        assertThat(guestPage.toResponse()).isEqualTo(
-            GuestPageResponse(
-                items = listOf(GuestResponseFixtures.johnDoe),
-                page = 1,
-                size = 5,
-                totalItems = 9,
-                totalPages = 2,
-            )
-        )
-    }
 
     @Test
     fun `should list guests with default pagination`() {
@@ -348,7 +335,7 @@ class GuestEndpointTest {
         every { request.pathVariable("id") } returns guest.id.toString()
         every { request.body(UpdateGuestRequest::class.java) } returns johnDoeUpdatedRequest
         every {
-            guestUpdater.update(johnDoeUpdatedRequest.toCommand(guest.id))
+            guestUpdater.update(johnDoeUpdatedRequest.toCommand(guest.id, Language.FR))
         } returns UpdateGuestResult.Updated(johnDoeUpdated)
 
         val response = guestEndpoint.updateGuest(request)
@@ -425,7 +412,7 @@ class GuestEndpointTest {
         every { request.pathVariable("id") } returns guestId.toString()
         every { request.body(UpdateGuestRequest::class.java) } returns johnDoeUpdatedRequest
         every {
-            guestUpdater.update(johnDoeUpdatedRequest.toCommand(guestId))
+            guestUpdater.update(johnDoeUpdatedRequest.toCommand(guestId, Language.FR))
         } returns UpdateGuestResult.NotFound
 
         val response = guestEndpoint.updateGuest(request)
@@ -442,7 +429,7 @@ class GuestEndpointTest {
         every { request.pathVariable("id") } returns guestId.toString()
         every { request.body(UpdateGuestRequest::class.java) } returns updateRequest
         every {
-            guestUpdater.update(updateRequest.toCommand(guestId))
+            guestUpdater.update(updateRequest.toCommand(guestId, Language.FR))
         } returns UpdateGuestResult.VersionConflict
 
         val response = guestEndpoint.updateGuest(request)

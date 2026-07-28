@@ -1,9 +1,12 @@
 import { getApiBaseUrl, readCookie } from './http';
 
+export type GuestLanguage = 'FR' | 'EN';
+
 export interface AddGuestPayload {
   firstName: string;
   lastName: string;
   email: string;
+  language: GuestLanguage;
 }
 
 export interface EditGuestPayload extends AddGuestPayload {
@@ -18,6 +21,7 @@ export interface GuestResponse {
   firstName: string;
   lastName: string;
   email: string;
+  language: GuestLanguage;
 }
 
 export interface GuestPageResponse {

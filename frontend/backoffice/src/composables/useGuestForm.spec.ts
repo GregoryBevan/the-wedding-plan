@@ -7,7 +7,8 @@ describe('useGuestForm', () => {
     const initialValues = ref({
       firstName: 'Jane',
       lastName: 'Doe',
-      email: 'jane.doe@email.com'
+      email: 'jane.doe@email.com',
+      language: 'FR' as const
     });
 
     const { form, isDirty, reset } = useGuestForm(initialValues);
@@ -28,7 +29,8 @@ describe('useGuestForm', () => {
     const initialValues = ref({
       firstName: 'John',
       lastName: 'Doe',
-      email: 'john.doe@email.com'
+      email: 'john.doe@email.com',
+      language: 'FR' as const
     });
 
     const { form, isDirty } = useGuestForm(initialValues);
@@ -36,7 +38,8 @@ describe('useGuestForm', () => {
     initialValues.value = {
       firstName: 'Alice',
       lastName: 'Smith',
-      email: 'alice.smith@email.com'
+      email: 'alice.smith@email.com',
+      language: 'FR' as const
     };
 
     await Promise.resolve();
@@ -51,13 +54,15 @@ describe('useGuestForm', () => {
     setValues({
       firstName: 'Bob',
       lastName: 'Martin',
-      email: 'bob.martin@email.com'
+      email: 'bob.martin@email.com',
+      language: 'EN'
     });
 
     expect(form.value).toEqual({
       firstName: 'Bob',
       lastName: 'Martin',
-      email: 'bob.martin@email.com'
+      email: 'bob.martin@email.com',
+      language: 'EN'
     });
     expect(isDirty.value).toBe(false);
   });
@@ -68,12 +73,23 @@ describe('useGuestForm', () => {
     setValues({
       firstName: 'Bob',
       lastName: 'Martin',
-      email: 'bob.martin@email.com'
+      email: 'bob.martin@email.com',
+      language: 'FR'
     });
 
     expect(isDirty.value).toBe(false);
 
     form.value.firstName = 'Robert';
+    expect(isDirty.value).toBe(true);
+  });
+
+  it('defaults language to FR and tracks dirty state when it changes', () => {
+    const { form, isDirty } = useGuestForm();
+
+    expect(form.value.language).toBe('FR');
+    expect(isDirty.value).toBe(false);
+
+    form.value.language = 'EN';
     expect(isDirty.value).toBe(true);
   });
 });

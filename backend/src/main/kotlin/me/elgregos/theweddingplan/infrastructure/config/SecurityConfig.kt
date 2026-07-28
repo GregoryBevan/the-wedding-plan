@@ -33,6 +33,7 @@ import java.net.URI
     AuthRateLimitProperties::class,
     MailProperties::class,
     GuestAccessProperties::class,
+    GuestProperties::class,
 )
 class SecurityConfig(
     private val corsProperties: CorsProperties,

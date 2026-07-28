@@ -16,6 +16,8 @@ export class GuestAccessSecuredApiError extends Error {
   }
 }
 
+export type GuestLanguage = 'FR' | 'EN';
+
 /**
  * Identity of the currently verified guest, resolved from the `guest_session` cookie.
  */
@@ -24,6 +26,7 @@ export interface GuestSessionResponse {
   invitationId: string;
   firstName: string;
   lastName: string;
+  language: GuestLanguage;
 }
 
 /**
