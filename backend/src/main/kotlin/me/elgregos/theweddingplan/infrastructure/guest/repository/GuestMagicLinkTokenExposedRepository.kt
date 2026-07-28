@@ -33,7 +33,7 @@ class GuestMagicLinkTokenExposedRepository : GuestMagicLinkTokens {
     override fun consumeIfValid(token: GuestMagicLinkAccessToken, usedAt: LocalDateTime): ConsumedGuestMagicLinkToken? {
         val existing = GuestMagicLinkTokenTable.selectAll()
             .where {
-                (GuestMagicLinkTokenTable.token eq token.value) and
+                (GuestMagicLinkTokenTable.tokenHash eq token.hashed()) and
                     GuestMagicLinkTokenTable.usedAt.isNull() and
                     GuestMagicLinkTokenTable.expiresAt.greater(usedAt)
             }
@@ -67,7 +67,7 @@ class GuestMagicLinkTokenExposedRepository : GuestMagicLinkTokens {
     private fun insertActiveToken(guestMagicLink: GuestMagicLink, now: LocalDateTime) {
         GuestMagicLinkTokenTable.insert {
             it[id] = Uuid.generateV7()
-            it[GuestMagicLinkTokenTable.token] = guestMagicLink.token.value
+            it[GuestMagicLinkTokenTable.tokenHash] = guestMagicLink.token.hashed()
             it[GuestMagicLinkTokenTable.invitationId] = guestMagicLink.invitationId.value
             it[GuestMagicLinkTokenTable.guestId] = guestMagicLink.guestId.value
             it[creationDate] = now

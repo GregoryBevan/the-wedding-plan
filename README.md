@@ -3,6 +3,10 @@
 
 # The Wedding Plan
 
+## Documentation
+
+- [Guest magic-link authentication — operational & security constraints](docs/guest-magic-link-security.md)
+
 ## Deployment (Render + Aiven)
 
 This repository now includes:

@@ -9,6 +9,7 @@ import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
 import me.elgregos.theweddingplan.domain.guest.entity.GuestMagicLink
+import me.elgregos.theweddingplan.domain.guest.entity.GuestMagicLinkAccessToken
 import me.elgregos.theweddingplan.domain.guest.repository.GuestMagicLinkTokens
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.bridesMaidInvitation
 import me.elgregos.theweddingplan.domain.shared.Dates.nowUtcMillis
@@ -37,6 +38,16 @@ class GuestMagicLinkTokenExposedRepositoryIT : AbstractIntegrationTest() {
         guestMagicLinkTokens.create(token)
 
         assertThat(tokenCount(token.token.value)).isEqualTo(1)
+    }
+
+    @Test
+    fun `should store the token hashed at rest`() {
+        val token = newMagicLinkToken(expiresAt = nowUtcMillis().plusMinutes(15))
+
+        guestMagicLinkTokens.create(token)
+
+        assertThat(tokenHashCount(token.token.hashed())).isEqualTo(1)
+        assertThat(tokenHashCount(token.token.value)).isEqualTo(0)
     }
 
     @Test
@@ -166,16 +177,23 @@ class GuestMagicLinkTokenExposedRepositoryIT : AbstractIntegrationTest() {
 
     private fun tokenCount(token: String) =
         jdbcTemplate.queryForObject(
-            "select count(*) from guest_magic_link_token where token = ?",
+            "select count(*) from guest_magic_link_token where token_hash = ?",
             Int::class.java,
-            token,
+            GuestMagicLinkAccessToken(token).hashed(),
+        ) ?: 0
+
+    private fun tokenHashCount(tokenHash: String) =
+        jdbcTemplate.queryForObject(
+            "select count(*) from guest_magic_link_token where token_hash = ?",
+            Int::class.java,
+            tokenHash,
         ) ?: 0
 
     private fun usedTokenCount(token: String) =
         jdbcTemplate.queryForObject(
-            "select count(*) from guest_magic_link_token where token = ? and used_at is not null",
+            "select count(*) from guest_magic_link_token where token_hash = ? and used_at is not null",
             Int::class.java,
-            token,
+            GuestMagicLinkAccessToken(token).hashed(),
         ) ?: 0
 
     private fun activeTokenCountForGuest(guestId: GuestId) =

@@ -23,10 +23,16 @@ class GuestMagicLinkRequester(
 
     fun request(command: RequestGuestMagicLinkCommand): RequestGuestMagicLinkResult {
         val invitation = invitationTokenResolver.resolve(command.invitationAccessToken)
-            ?: return RequestGuestMagicLinkResult.InvitationNotFound
+            ?: run {
+                logger.warn { "Magic-link request rejected: invitation not found (guestId=${command.guestId})" }
+                return RequestGuestMagicLinkResult.InvitationNotFound
+            }
 
         val guest = invitation.guests.firstOrNull { it.id == command.guestId }
-            ?: return RequestGuestMagicLinkResult.GuestNotFound
+            ?: run {
+                logger.warn { "Magic-link request rejected: guest not in invitation (invitationId=${invitation.id}, guestId=${command.guestId})" }
+                return RequestGuestMagicLinkResult.GuestNotFound
+            }
 
         return runCatching {
             val guestMagicLink = GuestMagicLink(
@@ -36,6 +42,7 @@ class GuestMagicLinkRequester(
             ).also(guestMagicLinkTokens::create)
 
             guestMagicLinkSender.send(guestMagicLink, guest)
+            logger.warn { "Magic-link request accepted (invitationId=${invitation.id}, guestId=${guest.id})" }
             RequestGuestMagicLinkResult.Sent
         }.getOrElse {
             logger.warn(it) { "Magic-link delivery failed (invitationId=${invitation.id}, guestId=${guest.id})" }

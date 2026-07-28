@@ -17,4 +17,6 @@ databaseChangeLog:
       file: classpath:db/changelog/008-create-guest-magic-link-token-table.sql
   - include:
       file: classpath:db/changelog/009-add-guest-language.sql
+  - include:
+      file: classpath:db/changelog/010-hash-guest-magic-link-token.sql
 
