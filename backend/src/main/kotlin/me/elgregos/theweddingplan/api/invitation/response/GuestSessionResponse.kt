@@ -5,6 +5,5 @@ data class GuestSessionResponse(
     val invitationId: String,
     val firstName: String,
     val lastName: String,
+    val language: String,
 )
-
-

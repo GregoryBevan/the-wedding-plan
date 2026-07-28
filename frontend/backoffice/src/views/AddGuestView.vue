@@ -23,7 +23,7 @@ import GuestForm from '../components/GuestForm.vue';
 import { useAddRequest } from '../composables/useAddRequest';
 import { useConfirmDialog } from '../composables/useConfirmDialog';
 import { useToast } from '../composables/useToast';
-import { addGuest, type CreateGuestPayload } from '../services/guestApi';
+import { addGuest, type AddGuestPayload } from '../services/guestApi';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 
 const hasUnsavedChanges = ref(false);
@@ -46,7 +46,7 @@ const guestListTarget = computed(() => ({
   }
 }));
 
-const handleAddGuest = async (guestData: CreateGuestPayload) => {
+const handleAddGuest = async (guestData: AddGuestPayload) => {
   const createdGuest = await submit(guestData);
 
   if (!createdGuest) {

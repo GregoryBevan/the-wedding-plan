@@ -12,8 +12,10 @@ import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.emmaWilson
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.liamMiller
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.marieCurie
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.oliverBennett
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.pierreCurie
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
+import me.elgregos.theweddingplan.domain.guest.entity.Language
 import me.elgregos.theweddingplan.domain.guest.repository.Guests
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.bestManInvitation
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.bridesMaidInvitation
@@ -57,6 +59,23 @@ class InvitationsExposedRepositoryIT : AbstractIntegrationTest() {
 
         assertThat(invitationCount()).isEqualTo(initialCount + 1)
         assertThat(invitationById(friendsInvitation.id)).isEqualTo(createdInvitation)
+    }
+
+    @Test
+    fun `should load guest language when fetching invitation guests`() {
+        guestRepository.add(oliverBennett)
+        val invitation = Invitation(
+            label = "Language check",
+            description = "",
+            guests = setOf(oliverBennett),
+        )
+        invitationsRepository.add(invitation)
+
+        val loadedGuest = invitationsRepository.findById(invitation.id)
+            ?.guests
+            ?.first { it.id == oliverBennett.id }
+
+        assertThat(loadedGuest?.language).isEqualTo(Language.EN)
     }
 
     @Test

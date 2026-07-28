@@ -1,4 +1,4 @@
-package me.elgregos.theweddingplan.api.guest
+package me.elgregos.theweddingplan.api.guest.request
 
 object UpdateGuestRequestFixtures {
     val johnDoeUpdated = UpdateGuestRequest(
@@ -8,4 +8,3 @@ object UpdateGuestRequestFixtures {
         email = "john.updated@example.com",
     )
 }
-

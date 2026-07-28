@@ -2,9 +2,7 @@ package me.elgregos.theweddingplan.domain.guest.entity
 
 import me.elgregos.theweddingplan.domain.shared.Dates
 import java.time.LocalDateTime
-import kotlin.uuid.ExperimentalUuidApi
 
-@OptIn(ExperimentalUuidApi::class)
 data class Guest(
     val id: GuestId = GuestId.generate(),
     val version: Long = 1L,
@@ -14,11 +12,13 @@ data class Guest(
     val firstName: String,
     val lastName: String,
     val email: String,
+    val language: Language = Language.FR,
 ) {
     fun updateDetails(
         firstName: String,
         lastName: String,
         email: String,
+        language: Language,
         now: LocalDateTime = Dates.nowUtcMillis(),
     ) = copy(
         version = version + 1,
@@ -26,6 +26,7 @@ data class Guest(
         firstName = firstName,
         lastName = lastName,
         email = email,
+        language = language,
     )
 
     fun markAsArchived(now: LocalDateTime = Dates.nowUtcMillis()) =

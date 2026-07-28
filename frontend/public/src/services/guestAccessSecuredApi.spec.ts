@@ -69,7 +69,7 @@ describe('guestAccessSecuredApi', () => {
   });
 
   it('resolves the guest session from the /me endpoint', async () => {
-    const session = { guestId: 'guest-1', invitationId: 'invitation-1', firstName: 'Jane', lastName: 'Doe' };
+    const session = { guestId: 'guest-1', invitationId: 'invitation-1', firstName: 'Jane', lastName: 'Doe', language: 'FR' };
     const fetchMock = mockFetchResponse({ ok: true, body: session });
 
     const result = await fetchGuestSession();

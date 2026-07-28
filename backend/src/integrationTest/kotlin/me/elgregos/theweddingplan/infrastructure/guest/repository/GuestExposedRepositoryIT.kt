@@ -19,6 +19,7 @@ import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.liamMiller
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.liamMillerUpdated
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.noahAnderson
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.noahAndersonUpdated
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.oliverBennett
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.ryanEvans
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.joyceClement
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.julianneWhitaker
@@ -28,6 +29,7 @@ import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.restoreCandi
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.sarahMills
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
 import me.elgregos.theweddingplan.domain.guest.entity.GuestPage
+import me.elgregos.theweddingplan.domain.guest.entity.Language
 import me.elgregos.theweddingplan.domain.shared.Dates
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
@@ -55,6 +57,13 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
 
         assertThat(count).isEqualTo(initialCount + 1)
         assertThat(persistedGuest).isEqualTo(guest)
+    }
+
+    @Test
+    fun `should persist the guest language`() {
+        guestsRepository.add(oliverBennett)
+
+        assertThat(guestById(oliverBennett.id).language).isEqualTo(Language.EN)
     }
 
     @Test
@@ -226,7 +235,7 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
     private fun guestById(guestId: GuestId): Guest =
         jdbcTemplate.queryForObject(
             """
-            select id, version, creation_date, update_date, deletion_date, first_name, last_name, email
+            select id, version, creation_date, update_date, deletion_date, first_name, last_name, email, language
             from guest
             where id = ?
             """.trimIndent(),
@@ -239,7 +248,8 @@ class GuestExposedRepositoryIT : AbstractIntegrationTest() {
                     deletionDate = rs.getTimestamp("deletion_date")?.toLocalDateTime(),
                     firstName = rs.getString("first_name"),
                     lastName = rs.getString("last_name"),
-                    email = rs.getString("email")
+                    email = rs.getString("email"),
+                    language = Language.fromNullable(rs.getString("language"), Language.FR)
                 )
             },
             guestId.value.toJavaUuid()

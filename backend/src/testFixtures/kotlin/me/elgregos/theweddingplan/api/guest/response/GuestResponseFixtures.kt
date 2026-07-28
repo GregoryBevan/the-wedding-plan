@@ -1,4 +1,4 @@
-package me.elgregos.theweddingplan.api.guest
+package me.elgregos.theweddingplan.api.guest.response
 
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures
 
@@ -10,6 +10,7 @@ object GuestResponseFixtures {
         updateDate = "${GuestFixtures.creationDate}",
         firstName = GuestFixtures.johnDoe.firstName,
         lastName = GuestFixtures.johnDoe.lastName,
-        email = GuestFixtures.johnDoe.email
+        email = GuestFixtures.johnDoe.email,
+        language = GuestFixtures.johnDoe.language.name
     )
 }

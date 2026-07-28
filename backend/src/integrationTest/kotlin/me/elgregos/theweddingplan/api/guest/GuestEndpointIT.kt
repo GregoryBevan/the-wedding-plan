@@ -4,9 +4,12 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
-import me.elgregos.theweddingplan.api.guest.AddGuestRequestFixtures.charlieDavis
+import me.elgregos.theweddingplan.api.guest.request.AddGuestRequestFixtures.charlieDavis
 import me.elgregos.theweddingplan.api.guest.GuestApiTestHelper.createGuest
-import me.elgregos.theweddingplan.api.guest.UpdateGuestRequestFixtures.johnDoeUpdated
+import me.elgregos.theweddingplan.api.guest.request.UpdateGuestRequestFixtures.johnDoeUpdated
+import me.elgregos.theweddingplan.api.guest.request.AddGuestRequest
+import me.elgregos.theweddingplan.api.guest.response.GuestPageResponse
+import me.elgregos.theweddingplan.api.guest.response.GuestResponse
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
 import org.springframework.http.HttpHeaders

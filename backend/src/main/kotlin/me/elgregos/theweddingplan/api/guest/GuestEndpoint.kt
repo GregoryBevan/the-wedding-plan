@@ -4,16 +4,16 @@ import me.elgregos.theweddingplan.api.common.statusQueryParam
 import me.elgregos.theweddingplan.api.common.availabilityQueryParam
 import me.elgregos.theweddingplan.api.common.guestIdPathParam
 import me.elgregos.theweddingplan.api.common.intQueryParam
+import me.elgregos.theweddingplan.api.guest.request.AddGuestRequest
+import me.elgregos.theweddingplan.api.guest.request.UpdateGuestRequest
+import me.elgregos.theweddingplan.api.guest.response.toResponse
 import me.elgregos.theweddingplan.application.guest.*
-import me.elgregos.theweddingplan.application.guest.command.AddGuestCommand
-import me.elgregos.theweddingplan.application.guest.command.UpdateGuestCommand
 import me.elgregos.theweddingplan.application.guest.result.ArchiveGuestResult
 import me.elgregos.theweddingplan.application.guest.result.RestoreGuestResult
 import me.elgregos.theweddingplan.application.guest.result.UpdateGuestResult
 import me.elgregos.theweddingplan.domain.guest.entity.Guest
-import me.elgregos.theweddingplan.domain.guest.entity.GuestId
 import me.elgregos.theweddingplan.domain.guest.entity.GuestListCriteria
-import me.elgregos.theweddingplan.domain.guest.entity.GuestPage
+import me.elgregos.theweddingplan.infrastructure.config.GuestProperties
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.function.ServerRequest
@@ -27,6 +27,7 @@ class GuestEndpoint(
     private val guestArchiver: GuestArchiver,
     private val guestRestorer: GuestRestorer,
     private val guestUpdater: GuestUpdater,
+    private val guestProperties: GuestProperties,
 ) {
 
     fun listGuests(request: ServerRequest): ServerResponse {
@@ -40,25 +41,25 @@ class GuestEndpoint(
             ServerResponse.badRequest().build()
         } else {
             ServerResponse.ok().body(
-                guestLister.list(
-                    GuestListCriteria(page = page, size = size, status = status, availability = availability, search = search)
-                ).toResponse()
+                    guestLister.list(
+                        GuestListCriteria(page = page, size = size, status = status, availability = availability, search = search)
+                    ).toResponse()
             )
         }
     }
 
     fun addGuest(request: ServerRequest): ServerResponse =
         request.body(AddGuestRequest::class.java)
-            .toCommand()
+            .toCommand(guestProperties.defaultLanguage)
             .let(guestAdder::add)
-            .toResponse()
+            .let(Guest::toResponse)
             .let { ServerResponse.status(HttpStatus.CREATED).body(it) }
 
     fun getGuest(request: ServerRequest): ServerResponse {
         val id = request.guestIdPathParam() ?: return ServerResponse.badRequest().build()
 
         return guestGetter.get(id)
-            ?.toResponse()
+            ?.let(Guest::toResponse)
             ?.let(ServerResponse.ok()::body)
             ?: ServerResponse.notFound().build()
     }
@@ -96,54 +97,3 @@ class GuestEndpoint(
         }
     }
 }
-
-
-data class GuestResponse(
-    val id: String,
-    val version: Long,
-    val creationDate: String,
-    val updateDate: String,
-    val firstName: String,
-    val lastName: String,
-    val email: String
-)
-
-data class GuestPageResponse(
-    val items: List<GuestResponse>,
-    val page: Int,
-    val size: Int,
-    val totalItems: Long,
-    val totalPages: Int,
-)
-
-data class AddGuestRequest(
-    val firstName: String,
-    val lastName: String,
-    val email: String,
-)
-
-data class UpdateGuestRequest(
-    val version: Long,
-    val firstName: String,
-    val lastName: String,
-    val email: String,
-)
-
-internal fun Guest.toResponse() =
-    GuestResponse(id.toString(), version, creationDate.toString(), updateDate.toString(), firstName, lastName, email)
-
-internal fun AddGuestRequest.toCommand() =
-    AddGuestCommand(firstName = firstName, lastName = lastName, email = email)
-
-internal fun UpdateGuestRequest.toCommand(id: GuestId) =
-    UpdateGuestCommand(id = id, version = version, firstName = firstName, lastName = lastName, email = email)
-
-internal fun GuestPage.toResponse() =
-    GuestPageResponse(
-        items = items.map(Guest::toResponse),
-        page = page,
-        size = size,
-        totalItems = totalItems,
-        totalPages = totalPages,
-    )
-

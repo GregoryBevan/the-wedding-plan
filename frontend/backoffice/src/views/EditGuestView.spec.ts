@@ -110,7 +110,8 @@ describe('EditGuestView', () => {
       version: 2,
       firstName: 'Updated',
       lastName: 'Doe',
-      email: 'john.doe@email.com'
+      email: 'john.doe@email.com',
+      language: 'FR'
     });
     expect(showToastMock).toHaveBeenCalledWith('Guest updated successfully.', 'success');
     expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.guestList);

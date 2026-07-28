@@ -12,5 +12,6 @@ object GuestTable : Table("guest") {
     val firstName = text("first_name")
     val lastName = text("last_name")
     val email = text("email")
+    val language = text("language")
     override val primaryKey = PrimaryKey(id)
 }

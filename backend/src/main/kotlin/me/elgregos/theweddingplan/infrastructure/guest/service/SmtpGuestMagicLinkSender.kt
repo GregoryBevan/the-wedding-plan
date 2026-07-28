@@ -33,10 +33,10 @@ class SmtpGuestMagicLinkSender(
         MimeMessageHelper(message, true, Charsets.UTF_8.name()).apply {
             setFrom(mailProperties.from)
             setTo(guest.email)
-            setSubject(guestMagicLinkEmailTemplate.subject())
+            setSubject(guestMagicLinkEmailTemplate.subject(guest.language))
             setText(
-                guestMagicLinkEmailTemplate.textBody(guestFirstName = guest.firstName, magicLinkUrl = magicLinkUrl),
-                guestMagicLinkEmailTemplate.htmlBody(guestFirstName = guest.firstName, magicLinkUrl = magicLinkUrl),
+                guestMagicLinkEmailTemplate.textBody(guestFirstName = guest.firstName, magicLinkUrl = magicLinkUrl, language = guest.language),
+                guestMagicLinkEmailTemplate.htmlBody(guestFirstName = guest.firstName, magicLinkUrl = magicLinkUrl, language = guest.language),
             )
         }
 

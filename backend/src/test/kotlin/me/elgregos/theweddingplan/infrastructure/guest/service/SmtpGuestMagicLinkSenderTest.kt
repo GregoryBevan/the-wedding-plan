@@ -17,6 +17,7 @@ import me.elgregos.theweddingplan.infrastructure.config.GuestAccessPropertiesFix
 import me.elgregos.theweddingplan.infrastructure.config.MailProperties
 import org.springframework.mail.MailSendException
 import org.springframework.mail.javamail.JavaMailSender
+import org.springframework.context.support.ResourceBundleMessageSource
 import java.util.*
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -29,11 +30,16 @@ class SmtpGuestMagicLinkSenderTest {
     @BeforeTest
     fun setUp() {
         javaMailSender = mockk(relaxed = true)
+        val messageSource = ResourceBundleMessageSource().apply {
+            setBasename("messages")
+            setDefaultEncoding("UTF-8")
+            setFallbackToSystemLocale(false)
+        }
         smtpGuestMagicLinkSender = SmtpGuestMagicLinkSender(
             javaMailSender = javaMailSender,
             guestAccessProperties = testGuestAccessProperties.copy(baseUrl = "https://public.theweddingplan.app"),
             mailProperties = MailProperties(from = "no-reply@theweddingplan.app"),
-            guestMagicLinkEmailTemplate = GuestMagicLinkEmailTemplate(),
+            guestMagicLinkEmailTemplate = GuestMagicLinkEmailTemplate(messageSource),
         )
     }
 

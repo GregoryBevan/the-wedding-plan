@@ -47,7 +47,8 @@ const guestVersion = ref<number>(0);
 const initialValues = ref<GuestFormData>({
   firstName: '',
   lastName: '',
-  email: ''
+  email: '',
+  language: 'FR'
 });
 
 const {
@@ -73,7 +74,8 @@ const syncGuestState = (guest: GuestResponse) => {
   initialValues.value = {
     firstName: guest.firstName,
     lastName: guest.lastName,
-    email: guest.email
+    email: guest.email,
+    language: guest.language
   };
 };
 

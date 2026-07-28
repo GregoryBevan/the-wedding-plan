@@ -57,6 +57,7 @@ class GuestSessionEndpointIT : AbstractEndpointIntegrationTest() {
             prop(GuestSessionResponse::invitationId).isEqualTo("${bridesMaidInvitation.id}")
             prop(GuestSessionResponse::firstName).isEqualTo(janeDoe.firstName)
             prop(GuestSessionResponse::lastName).isEqualTo(janeDoe.lastName)
+            prop(GuestSessionResponse::language).isEqualTo(janeDoe.language.name)
         }
     }
 

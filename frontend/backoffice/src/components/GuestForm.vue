@@ -28,6 +28,18 @@
       placeholder="e.g. john.doe@email.com"
       required
     />
+    <div>
+      <label for="language" class="block text-sm font-medium uppercase tracking-wider">Language</label>
+      <select
+        id="language"
+        v-model="form.language"
+        name="language"
+        class="mt-2 block w-full rounded border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
+      >
+        <option value="FR">Français</option>
+        <option value="EN">English</option>
+      </select>
+    </div>
     <div v-if="props.showCancelButton" class="flex gap-3 pt-2">
       <button
         type="button"
@@ -68,7 +80,8 @@ const props = withDefaults(defineProps<{
   initialValues: () => ({
     firstName: '',
     lastName: '',
-    email: ''
+    email: '',
+    language: 'FR'
   }),
   submitLabel: 'Add Guest',
   submittingLabel: 'Adding guest...',

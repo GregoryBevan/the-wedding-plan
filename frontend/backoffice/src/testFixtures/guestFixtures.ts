@@ -4,6 +4,7 @@ export const createGuestPayload = (overrides: Partial<AddGuestPayload> = {}): Ad
   firstName: 'John',
   lastName: 'Doe',
   email: 'john.doe@email.com',
+  language: 'FR',
   ...overrides
 });
 
@@ -15,6 +16,7 @@ export const createGuestResponse = (overrides: Partial<GuestResponse> = {}): Gue
   firstName: 'John',
   lastName: 'Doe',
   email: 'john.doe@email.com',
+  language: 'FR',
   ...overrides
 });
 

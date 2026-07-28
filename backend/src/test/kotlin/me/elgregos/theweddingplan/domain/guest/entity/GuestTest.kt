@@ -16,6 +16,7 @@ class GuestTest {
             firstName = "Johnny",
             lastName = "Doe",
             email = "johnny.doe@example.com",
+            language = johnDoe.language,
             now = johnDoe.creationDate.plusDays(1),
         )
 

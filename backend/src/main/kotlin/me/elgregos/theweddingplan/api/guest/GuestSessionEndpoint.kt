@@ -26,6 +26,7 @@ class GuestSessionEndpoint(
                     invitationId = "${guestSession.invitationId}",
                     firstName = result.guest.firstName,
                     lastName = result.guest.lastName,
+                    language = result.guest.language.name,
                 )
             )
 

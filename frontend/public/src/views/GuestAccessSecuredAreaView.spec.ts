@@ -41,6 +41,7 @@ describe('GuestAccessSecuredAreaView', () => {
       invitationId: 'invitation-1',
       firstName: 'Alice',
       lastName: 'Martin',
+      language: 'FR',
     });
     const wrapper = mountView();
 
@@ -56,12 +57,39 @@ describe('GuestAccessSecuredAreaView', () => {
       invitationId: 'invitation-1',
       firstName: 'Alice',
       lastName: 'Martin',
+      language: 'FR',
     });
     const wrapper = mountView();
 
     await flushPromises();
 
     expect(wrapper.text()).toContain(`${t('securedArea.greeting')} Alice Martin`);
+  });
+
+  it('applies the guest language to the active locale', async () => {
+    const { locale } = useGuestAccessI18n();
+
+    fetchGuestSessionMock.mockResolvedValue({
+      guestId: 'guest-1',
+      invitationId: 'invitation-1',
+      firstName: 'Alice',
+      lastName: 'Martin',
+      language: 'EN',
+    });
+    mountView();
+    await flushPromises();
+    expect(locale.value).toBe('en');
+
+    fetchGuestSessionMock.mockResolvedValue({
+      guestId: 'guest-1',
+      invitationId: 'invitation-1',
+      firstName: 'Alice',
+      lastName: 'Martin',
+      language: 'FR',
+    });
+    mountView();
+    await flushPromises();
+    expect(locale.value).toBe('fr');
   });
 
   it('shows a recoverable expired-link message when no session is present', async () => {
@@ -105,6 +133,7 @@ describe('GuestAccessSecuredAreaView', () => {
       invitationId: 'invitation-1',
       firstName: 'Alice',
       lastName: 'Martin',
+      language: 'FR',
     });
     const wrapper = mountView();
     await flushPromises();

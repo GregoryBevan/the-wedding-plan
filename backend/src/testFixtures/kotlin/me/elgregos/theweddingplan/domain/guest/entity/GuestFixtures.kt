@@ -214,4 +214,15 @@ object GuestFixtures {
         creationDate = creationDate,
         updateDate = creationDate
     )
+
+    val oliverBennett = Guest(
+        id = GuestId.fromString("019f7000-0000-7000-8000-000000000006"),
+        version = 1L,
+        firstName = "Oliver",
+        lastName = "Bennett",
+        email = "oliver.bennett@example.com",
+        language = Language.EN,
+        creationDate = creationDate,
+        updateDate = creationDate
+    )
 }
