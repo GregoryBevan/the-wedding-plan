@@ -22,8 +22,8 @@ test.describe('Guest access invitation page', () => {
     await page.goto(`${PUBLIC_BASE_URL}/guest-access/${VALID_TOKEN}`);
 
     await expect(page.getByRole('heading', { name: 'Famille Martin' })).toBeVisible({ timeout: UI_TIMEOUT_MS });
-    await expect(page.getByText('Alice Martin')).toBeVisible();
-    await expect(page.getByText('Bob Martin')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Alice Martin/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Bob Martin/ })).toBeVisible();
     await expect(page.getByText(/2 (invités|guests)/i)).toBeVisible();
   });
 

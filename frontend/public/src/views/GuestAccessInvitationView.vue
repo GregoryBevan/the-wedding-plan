@@ -6,13 +6,21 @@
           <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#A88277]">{{ t('common.appName') }}</p>
           <LanguageSwitcher />
         </div>
-        <h1 class="mt-2 text-2xl font-semibold text-[#093D57]">{{ t('invitation.title') }}</h1>
+        <h1 class="mt-2 page-title font-semibold text-[#093D57]">{{ t('invitation.title') }}</h1>
+
+        <Transition name="fade">
+          <div v-if="instructionsVisible" class="mt-[3.75rem]">
+            <h2 class="intro-title font-semibold text-[#093D57]">{{ t('invitation.chooseName') }}</h2>
+            <p class="mx-auto mt-2 max-w-xs intro-text italic text-[#093D57]/75">{{ t('invitation.instructions') }}</p>
+          </div>
+        </Transition>
       </div>
 
       <div class="envelope" :class="{ 'envelope--opened': flapOpened }">
         <div class="envelope__back" aria-hidden="true"></div>
 
-        <article class="invitation-sheet" :class="{ 'invitation-sheet--visible': invitationVisible }">
+        <article class="invitation-sheet" :class="{ 'invitation-sheet--visible': invitationVisible }" @transitionend="onSheetTransitionEnd">
+        <div class="invitation-sheet__scroll">
         <p v-if="isLoading" class="text-center text-sm text-[#093D57]/80">
         <br>
         </p>
@@ -29,27 +37,49 @@
         </div>
 
         <section v-else-if="invitation">
-          <h2 class="text-xl font-semibold text-[#093D57]">{{ invitation.label }}</h2>
-          <p class="mt-2 text-sm leading-6 text-[#093D57]/85">{{ invitation.description }}</p>
-
-          <div class="guest-list-stage mt-4">
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#738F9D]">
-              {{ guestCountLabel(invitation.guestCount) }}
+          <div v-if="magicLinkResult" class="magic-link-confirmation text-center">
+            <p v-if="magicLinkResult.status === 'sent'" class="confirmation-title font-semibold text-[#093D57]">
+              {{ t('invitation.magicLink.sentTitle') }}
             </p>
-
-            <ul class="guest-list mt-3 space-y-2" :class="{ 'guest-list--revealed': showGuestList }">
-              <li
-                v-for="(guest, index) in invitation.guests"
-                :key="guest.id"
-                class="guest-list__item rounded-xl bg-[#BEC6C2]/30 px-4 py-3 text-[#093D57]"
-                :style="{ transitionDelay: showGuestList ? `${index * 90}ms` : '0ms' }"
-              >
-                <span class="text-sm font-medium">{{ guest.firstName }} {{ guest.lastName }}</span>
-                <GuestMagicLinkRequest :token="normalizedToken" :guest-id="guest.id" />
-              </li>
-            </ul>
+            <p class="confirmation-message mt-2 text-[#093D57]/85">{{ messageForStatus(magicLinkResult.status) }}</p>
+            <button
+              class="confirmation-back mt-5 rounded-xl bg-[#093D57] font-semibold text-white"
+              type="button"
+              @click="magicLinkResult = null"
+            >
+              {{ t('invitation.magicLink.back') }}
+            </button>
           </div>
+
+          <template v-else>
+            <h2 class="card-label font-semibold text-[#093D57]">{{ invitation.label }}</h2>
+            <p class="mt-2 card-text text-[#093D57]/85">{{ invitation.description }}</p>
+
+            <div class="guest-list-stage mt-4">
+              <p class="guest-count text-xs font-semibold uppercase tracking-[0.2em] text-[#738F9D]">
+                {{ guestCountLabel(invitation.guestCount) }}
+              </p>
+
+              <ul class="guest-list mt-3 space-y-2" :class="{ 'guest-list--revealed': showGuestList }">
+                <li
+                  v-for="(guest, index) in invitation.guests"
+                  :key="guest.id"
+                  class="guest-list__item"
+                  :style="{ transitionDelay: showGuestList ? `${index * 90}ms` : '0ms' }"
+                >
+                  <GuestMagicLinkRequest
+                    :token="normalizedToken"
+                    :guest-id="guest.id"
+                    :first-name="guest.firstName"
+                    :last-name="guest.lastName"
+                    @requested="onMagicLinkRequested"
+                  />
+                </li>
+              </ul>
+            </div>
+          </template>
         </section>
+        </div>
         </article>
 
         <div class="envelope__front" aria-hidden="true"></div>
@@ -62,7 +92,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import LanguageSwitcher from '../components/LanguageSwitcher.vue';
-import GuestMagicLinkRequest from '../components/GuestMagicLinkRequest.vue';
+import GuestMagicLinkRequest, { type MagicLinkRequestStatus } from '../components/GuestMagicLinkRequest.vue';
 import {
   GuestAccessInvitationApiError,
   type GuestInvitationResponse,
@@ -79,11 +109,39 @@ const isLoading = ref(false);
 const errorKey = ref<InvitationErrorKey | null>(null);
 const flapOpened = ref(false);
 const invitationVisible = ref(false);
+const cardRevealed = ref(false);
+const magicLinkResult = ref<{ status: MagicLinkRequestStatus; firstName: string } | null>(null);
 
 const { t, guestCountLabel } = useGuestAccessI18n();
 
 const normalizedToken = computed(() => props.token.trim());
 const showGuestList = computed(() => invitationVisible.value && Boolean(invitation.value) && !isLoading.value);
+// The explanatory intro is shown only once the card's slide-out transition has ended.
+const instructionsVisible = computed(() => cardRevealed.value && Boolean(invitation.value) && !isLoading.value);
+
+const messageForStatus = (status: MagicLinkRequestStatus): string => {
+  switch (status) {
+    case 'sent':
+      return t('invitation.magicLink.sent');
+    case 'rateLimited':
+      return t('invitation.magicLink.rateLimited');
+    case 'error':
+      return t('invitation.magicLink.error');
+  }
+};
+
+const onMagicLinkRequested = (result: { status: MagicLinkRequestStatus; firstName: string }): void => {
+  magicLinkResult.value = result;
+};
+
+const onSheetTransitionEnd = (event: TransitionEvent): void => {
+  // `transitionend` bubbles, so ignore events re-emitted by child elements
+  // (e.g. the guest list items also transition `transform`); only react to the
+  // sheet's own slide-out transition.
+  if (event.target === event.currentTarget && event.propertyName === 'transform') {
+    cardRevealed.value = true;
+  }
+};
 const errorMessageForKey = (key: InvitationErrorKey): string => {
   if (key === 'notFound') {
     return t('invitation.errors.notFound');
@@ -117,6 +175,8 @@ const loadInvitation = async (): Promise<void> => {
   isLoading.value = true;
   flapOpened.value = false;
   invitationVisible.value = false;
+  cardRevealed.value = false;
+  magicLinkResult.value = null;
 
   if (!normalizedToken.value) {
     errorKey.value = 'invalidLink';
@@ -164,6 +224,96 @@ watch(normalizedToken, () => {
 <style scoped>
 .guest-access-page {
   background: linear-gradient(160deg, #e7d4cd 0%, #f7f4f2 38%, #bec6c2 100%);
+}
+
+/* Fluid typography so the content scales smoothly across screen sizes
+   (mobile-first) rather than jumping at fixed breakpoints. */
+.page-title {
+  font-size: clamp(1.35rem, 5.5vw, 1.9rem);
+  line-height: 1.2;
+}
+
+.intro-title {
+  font-size: clamp(1rem, 4vw, 1.2rem);
+  line-height: 1.3;
+}
+
+.intro-text {
+  font-size: clamp(0.85rem, 3.4vw, 1rem);
+  line-height: 1.5;
+}
+
+.card-label {
+  font-size: clamp(1.05rem, 4.2vw, 1.4rem);
+  line-height: 1.25;
+}
+
+.card-text {
+  font-size: clamp(0.85rem, 3.2vw, 1rem);
+  line-height: 1.55;
+}
+
+.confirmation-title {
+  font-size: clamp(1.05rem, 4.2vw, 1.4rem);
+  line-height: 1.25;
+}
+
+.confirmation-message {
+  font-size: clamp(0.85rem, 3.2vw, 1rem);
+  line-height: 1.55;
+}
+
+.confirmation-back {
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+  font-size: clamp(0.82rem, 3.2vw, 0.95rem);
+  padding: clamp(0.4rem, 1.5vw, 0.6rem) 1.1rem;
+}
+
+/* Small phones (iPhone SE, Galaxy S8 / S9+, …) where the card content still
+   reads a touch big. */
+@media (max-width: 420px) {
+  .page-title {
+    font-size: 1.2rem;
+  }
+
+  .intro-title {
+    font-size: 0.9rem;
+  }
+
+  .intro-text {
+    font-size: 0.78rem;
+  }
+
+  .card-label {
+    font-size: 0.85rem;
+  }
+
+  .card-text {
+    font-size: 0.72rem;
+  }
+
+  .confirmation-title {
+    font-size: 0.85rem;
+  }
+
+  .confirmation-message {
+    font-size: 0.72rem;
+  }
+
+  .guest-count {
+    font-size: 0.62rem;
+  }
+}
+
+/* The explanatory intro appears (fades in) only once the card is fully revealed. */
+.fade-enter-active {
+  transition: opacity 0.6s ease;
+}
+
+.fade-enter-from {
+  opacity: 0;
 }
 
 .envelope-stage {
@@ -214,11 +364,19 @@ watch(normalizedToken, () => {
   left: 7%;
   right: 7%;
   top: 46%;
-  max-height: 52%;
-  overflow-y: auto;
+  /* Fixed height keeps the card a consistent size across loading / error /
+     loaded states (no jump), and long guest lists scroll inside it. */
+  height: 52%;
+  /* The card itself is a fixed frame: it does not scroll, so its padding
+     (incl. the bottom) is a fixed white border/line. The inner wrapper scrolls. */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.96);
-  padding: 1.1rem;
+  box-sizing: border-box;
+  /* Thinner fixed bottom line than the top/side border. */
+  padding: 0.85rem 0.85rem 0.35rem;
   box-shadow: 0 16px 32px rgba(9, 61, 87, 0.18);
   /* Anchored by its top so the card's head always sits inside the front's
      notch (independent of content height): once the flap opens you see the
@@ -230,6 +388,14 @@ watch(normalizedToken, () => {
 
 .invitation-sheet--visible {
   transform: translateY(-30dvh);
+}
+
+/* Only the inner wrapper scrolls, so the card's bottom padding stays a fixed
+   white line while the guest list scrolls underneath it. */
+.invitation-sheet__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* Front pocket: covers the lower part of the envelope with a V-notch top
@@ -263,9 +429,13 @@ watch(normalizedToken, () => {
      z-index once the 1s rotation is finished, so the card's head never
      flashes over the flap mid-animation. */
   transition: transform 1s ease, z-index 0s linear 1s;
-  /* drop-shadow follows the clipped triangle, giving a visible light rim
-     so the flap reads distinctly against the front pocket. */
-  filter: drop-shadow(0 0 1px rgba(231, 212, 205, 0.9)) drop-shadow(0 6px 10px rgba(9, 61, 87, 0.3));
+  /* Layered drop-shadows follow the clipped triangle: a tight, near-opaque rim
+     reads as a fine border, and a softer, offset one adds depth. */
+  filter:
+    drop-shadow(0 0 0.5px rgba(231, 212, 205, 1))
+    drop-shadow(0 0 1px rgba(231, 212, 205, 0.95))
+    drop-shadow(0 1px 1px rgba(9, 61, 87, 0.45))
+    drop-shadow(0 6px 10px rgba(9, 61, 87, 0.3));
   z-index: 6;
 }
 

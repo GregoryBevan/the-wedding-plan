@@ -78,7 +78,9 @@ class GuestAccessMagicLinkEndpointIT : AbstractEndpointIntegrationTest() {
 
         restTestClient.get().uri("/api/guest-access/magic-links/$token")
             .exchange()
-            .expectStatus().isNotFound
+            .expectStatus().isEqualTo(HttpStatus.SEE_OTHER)
+            .expectHeader()
+            .valueEquals(HttpHeaders.LOCATION, "http://localhost:5174/guest-access/secured-area?linkStatus=invalid")
 
         assertThat(consumedTokenCount(token)).isEqualTo(1)
         assertThat(
@@ -86,12 +88,14 @@ class GuestAccessMagicLinkEndpointIT : AbstractEndpointIntegrationTest() {
     }
 
     @Test
-    fun `should reject expired magic-link token verification`() {
+    fun `should redirect expired magic-link token to the invalid-link page without a session`() {
         val token = createMagicLink(expiresAt = nowUtcMillis().minusSeconds(1))
 
         val response = restTestClient.get().uri("/api/guest-access/magic-links/$token")
             .exchange()
-            .expectStatus().isNotFound
+            .expectStatus().isEqualTo(HttpStatus.SEE_OTHER)
+            .expectHeader()
+            .valueEquals(HttpHeaders.LOCATION, "http://localhost:5174/guest-access/secured-area?linkStatus=invalid")
             .expectBody()
             .returnResult()
 
@@ -107,7 +111,7 @@ class GuestAccessMagicLinkEndpointIT : AbstractEndpointIntegrationTest() {
     }
 
     @Test
-    fun `should reject token when guest is not part of invitation and consume it`() {
+    fun `should redirect token to the invalid-link page when guest is not part of invitation and consume it`() {
         val token = createMagicLink(
             guestId = johnDoe.id,
             expiresAt = nowUtcMillis().plusMinutes(15),
@@ -115,7 +119,9 @@ class GuestAccessMagicLinkEndpointIT : AbstractEndpointIntegrationTest() {
 
         val response = restTestClient.get().uri("/api/guest-access/magic-links/$token")
             .exchange()
-            .expectStatus().isNotFound
+            .expectStatus().isEqualTo(HttpStatus.SEE_OTHER)
+            .expectHeader()
+            .valueEquals(HttpHeaders.LOCATION, "http://localhost:5174/guest-access/secured-area?linkStatus=invalid")
             .expectBody()
             .returnResult()
 
