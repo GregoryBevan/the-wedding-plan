@@ -42,7 +42,7 @@ class GuestMagicLinkRequester(
             ).also(guestMagicLinkTokens::create)
 
             guestMagicLinkSender.send(guestMagicLink, guest)
-            logger.warn { "Magic-link request accepted (invitationId=${invitation.id}, guestId=${guest.id})" }
+            logger.info { "Magic-link request accepted (invitationId=${invitation.id}, guestId=${guest.id})" }
             RequestGuestMagicLinkResult.Sent
         }.getOrElse {
             logger.warn(it) { "Magic-link delivery failed (invitationId=${invitation.id}, guestId=${guest.id})" }
