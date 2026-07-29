@@ -12,6 +12,7 @@ import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
 import me.elgregos.theweddingplan.domain.guest.entity.GuestMagicLink
+import me.elgregos.theweddingplan.domain.guest.entity.GuestMagicLinkAccessToken
 import me.elgregos.theweddingplan.domain.guest.repository.GuestMagicLinkTokens
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.bridesMaidInvitation
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.unknownToken
@@ -241,8 +242,8 @@ class GuestAccessMagicLinkEndpointIT : AbstractEndpointIntegrationTest() {
 
     private fun consumedTokenCount(token: String): Int =
         jdbcTemplate.queryForObject(
-            "select count(*) from guest_magic_link_token where token = ? and used_at is not null",
+            "select count(*) from guest_magic_link_token where token_hash = ? and used_at is not null",
             Int::class.java,
-            token,
+            GuestMagicLinkAccessToken(token).hashed(),
         ) ?: 0
 }

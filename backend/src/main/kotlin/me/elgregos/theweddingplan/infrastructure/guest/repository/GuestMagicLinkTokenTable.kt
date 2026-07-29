@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.javatime.datetime
 
 object GuestMagicLinkTokenTable : Table("guest_magic_link_token") {
     val id = uuid("id")
-    val token = text("token")
+    val tokenHash = text("token_hash")
     val invitationId = reference("invitation_id", InvitationTable.id, onDelete = ReferenceOption.CASCADE)
     val guestId = reference("guest_id", GuestTable.id, onDelete = ReferenceOption.RESTRICT)
     val creationDate = datetime("creation_date")
