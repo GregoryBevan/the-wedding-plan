@@ -5,15 +5,37 @@ import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
 import me.elgregos.theweddingplan.domain.guest.entity.GuestStatus
+import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
+import me.elgregos.theweddingplan.domain.guest.entity.GuestSession
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.bridesMaidInvitation
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationId
+import me.elgregos.theweddingplan.infrastructure.guest.security.GuestSessionAuthenticationToken
 import org.springframework.web.servlet.function.ServerRequest
 import java.net.InetSocketAddress
 import java.util.Optional
 import jakarta.servlet.http.HttpServletRequest
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 class ServerRequestExtensionsTest {
+
+    @Test
+    fun `should return the guest session when the request is authenticated`() {
+        val session = GuestSession(guestId = janeDoe.id, invitationId = bridesMaidInvitation.id)
+        val request = mockk<ServerRequest> {
+            every { principal() } returns Optional.of(GuestSessionAuthenticationToken.authenticated(session))
+        }
+
+        assertThat(request.requireGuestSession()).isEqualTo(session)
+    }
+
+    @Test
+    fun `should fail to require a guest session when the request is not authenticated`() {
+        val request = mockk<ServerRequest> { every { principal() } returns Optional.empty() }
+
+        assertFailsWith<IllegalStateException> { request.requireGuestSession() }
+    }
 
     @Test
     fun `should return default int query param when value is missing`() {

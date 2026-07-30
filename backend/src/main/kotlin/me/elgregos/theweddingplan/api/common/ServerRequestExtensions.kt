@@ -4,12 +4,20 @@ import me.elgregos.theweddingplan.domain.guest.entity.GuestStatus
 import me.elgregos.theweddingplan.domain.guest.entity.GuestAvailability
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
 import me.elgregos.theweddingplan.domain.guest.entity.GuestMagicLinkAccessToken
+import me.elgregos.theweddingplan.domain.guest.entity.GuestSession
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationAccessToken
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationId
+import org.springframework.security.core.Authentication
 import org.springframework.web.servlet.function.ServerRequest
 
 private const val STATUS_PARAM_NAME = "status"
 private const val AVAILABILITY_PARAM_NAME = "availability"
+
+internal fun ServerRequest.requireGuestSession(): GuestSession =
+    guestSession() ?: error("A verified guest session is guaranteed by the guest-access security filter chain")
+
+private fun ServerRequest.guestSession(): GuestSession? =
+    (principal().orElse(null) as? Authentication)?.principal as? GuestSession
 
 internal fun ServerRequest.intQueryParam(name: String, default: Int): Int? =
     queryParamOrNull(name)?.toIntOrNull() ?: if (param(name).isEmpty) default else null

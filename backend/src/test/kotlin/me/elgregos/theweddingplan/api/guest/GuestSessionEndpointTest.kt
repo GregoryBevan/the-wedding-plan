@@ -29,12 +29,6 @@ class GuestSessionEndpointTest {
         guestSessionEndpoint = GuestSessionEndpoint(guestSessionResolver)
     }
 
-    @Test
-    fun `should return unauthorized when there is no authenticated guest session`() {
-        val request = mockk<ServerRequest> { every { principal() } returns Optional.empty() }
-
-        assertThat(guestSessionEndpoint.me(request).statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED)
-    }
 
     @Test
     fun `should return the guest session when it resolves`() {
