@@ -58,17 +58,23 @@ test.describe('Magic-link UX flow', () => {
     await page.route('**/api/guest-access/secured/me', async (route) => {
       await fulfillJson(
         route,
-        { guestId: 'guest-1', invitationId: 'invitation-1', firstName: 'Alice', lastName: 'Martin' },
+        { guestId: 'guest-1', invitationId: 'invitation-1', firstName: 'Alice', lastName: 'Martin', language: 'FR' },
         200,
         CREDENTIALED_CORS,
       );
+    });
+
+    // The RSVP form fetches the current answer on mount; the guest has not
+    // responded yet, so the endpoint replies `204 No Content`.
+    await page.route('**/api/guest-access/secured/rsvp', async (route) => {
+      await route.fulfill({ status: 204, headers: CREDENTIALED_CORS });
     });
 
     await page.goto(`${PUBLIC_BASE_URL}/guest-access/secured-area`);
 
     await expect(page.getByText(/lien a été vérifié|link has been verified/i)).toBeVisible({ timeout: UI_TIMEOUT_MS });
     await expect(page.getByText('Alice Martin')).toBeVisible();
-    await expect(page.getByText(/formulaire de réponse arrive|RSVP form is coming/i)).toBeVisible();
+    await expect(page.getByText(/célébrer notre amour|celebrate our love/i)).toBeVisible();
   });
 
   test('shows a recoverable message when the magic-link request is rate limited', async ({ page }) => {

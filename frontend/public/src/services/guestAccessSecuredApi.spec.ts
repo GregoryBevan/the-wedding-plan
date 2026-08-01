@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { GuestAccessSecuredApiError, fetchGuestSession, securedGuestFetch, submitRsvp } from './guestAccessSecuredApi';
+import { GuestAccessSecuredApiError, fetchGuestSession, fetchRsvp, securedGuestFetch, submitRsvp } from './guestAccessSecuredApi';
 import {
   clearCsrfCookie,
   expectCsrfHeader,
@@ -48,24 +48,64 @@ describe('guestAccessSecuredApi', () => {
     expect((options.headers as Headers).get('X-XSRF-TOKEN')).toBeNull();
   });
 
-  it('submits the RSVP with credentials and CSRF header', async () => {
+  it('submits the RSVP attendance with credentials, payload and CSRF header', async () => {
     setCsrfCookie();
-    const fetchMock = mockFetchResponse({ ok: true });
+    const saved = {
+      id: 'rsvp-1',
+      version: 1,
+      creationDate: '2026-06-13T10:00:00',
+      updateDate: '2026-06-13T10:00:00',
+      attendance: 'ATTENDING',
+    };
+    const fetchMock = mockFetchResponse({ ok: true, body: saved });
 
-    await submitRsvp();
+    const result = await submitRsvp('ATTENDING');
 
     const [url, options] = getFirstRequest(fetchMock);
     expect(url).toBe(`${securedBaseUrl}/rsvp`);
     expect(options).toMatchObject({ method: 'POST', credentials: 'include' });
     expect((options.headers as Headers).get('Content-Type')).toBe('application/json');
+    expect(options.body).toBe(JSON.stringify({ attendance: 'ATTENDING' }));
     expectCsrfHeader(options);
+    expect(result).toEqual(saved);
   });
 
   it('throws a typed error when the RSVP submission fails', async () => {
     mockFetchResponse({ ok: false, status: 403 });
 
-    await expect(submitRsvp()).rejects.toBeInstanceOf(GuestAccessSecuredApiError);
-    await expect(submitRsvp()).rejects.toThrow('Unable to submit RSVP at the moment.');
+    await expect(submitRsvp('ATTENDING')).rejects.toBeInstanceOf(GuestAccessSecuredApiError);
+    await expect(submitRsvp('ATTENDING')).rejects.toThrow('Unable to submit RSVP at the moment.');
+  });
+
+  it('loads the current guest RSVP', async () => {
+    const rsvp = {
+      id: 'rsvp-1',
+      version: 2,
+      creationDate: '2026-06-13T10:00:00',
+      updateDate: '2026-06-14T10:00:00',
+      attendance: 'DECLINED',
+    };
+    const fetchMock = mockFetchResponse({ ok: true, body: rsvp });
+
+    const result = await fetchRsvp();
+
+    const [url, options] = getFirstRequest(fetchMock);
+    expect(url).toBe(`${securedBaseUrl}/rsvp`);
+    expect(options).toMatchObject({ method: 'GET', credentials: 'include' });
+    expect(result).toEqual(rsvp);
+  });
+
+  it('returns null when the guest has not responded yet', async () => {
+    mockFetchResponse({ ok: true, status: 204 });
+
+    await expect(fetchRsvp()).resolves.toBeNull();
+  });
+
+  it('throws a typed error when the RSVP lookup fails', async () => {
+    mockFetchResponse({ ok: false, status: 500 });
+
+    await expect(fetchRsvp()).rejects.toBeInstanceOf(GuestAccessSecuredApiError);
+    await expect(fetchRsvp()).rejects.toThrow('Unable to load your RSVP at the moment.');
   });
 
   it('resolves the guest session from the /me endpoint', async () => {

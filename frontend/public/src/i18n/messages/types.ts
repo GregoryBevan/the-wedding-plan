@@ -1,0 +1,40 @@
+export type GuestAccessLocale = 'fr' | 'en';
+
+export type TranslationKey =
+  | 'common.appName'
+  | 'common.retry'
+  | 'landing.title'
+  | 'landing.description'
+  | 'invitation.title'
+  | 'invitation.chooseName'
+  | 'invitation.instructions'
+  | 'invitation.errors.notFound'
+  | 'invitation.errors.invalidLink'
+  | 'invitation.errors.unavailable'
+  | 'invitation.magicLink.requestFor'
+  | 'invitation.magicLink.sentTitle'
+  | 'invitation.magicLink.sent'
+  | 'invitation.magicLink.rateLimited'
+  | 'invitation.magicLink.error'
+  | 'invitation.magicLink.back'
+  | 'securedArea.title'
+  | 'securedArea.loading'
+  | 'securedArea.greeting'
+  | 'securedArea.verifiedIntro'
+  | 'securedArea.unverifiedTitle'
+  | 'securedArea.unverified'
+  | 'securedArea.errorTitle'
+  | 'securedArea.error'
+  | 'securedArea.restart'
+  | 'rsvp.question'
+  | 'rsvp.attending'
+  | 'rsvp.declined'
+  | 'rsvp.loading'
+  | 'rsvp.submit'
+  | 'rsvp.submitting'
+  | 'rsvp.saved'
+  | 'rsvp.loadError'
+  | 'rsvp.submitError';
+
+export type LocaleMessages = Record<TranslationKey, string>;
+

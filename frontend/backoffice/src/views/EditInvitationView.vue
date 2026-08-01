@@ -150,7 +150,7 @@ import addGuestIcon from '../assets/icons/add-guest.svg';
 import backIcon from '../assets/icons/back.svg';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 import { listGuests, type GuestResponse } from '../services/guestApi';
-import { getInvitationById, updateInvitation, type InvitationGuestResponse, type InvitationResponse } from '../services/invitationApi';
+import { getInvitationById, updateInvitation, type InvitationGuestResponse } from '../services/invitationApi';
 
 const router = useRouter();
 const route = useRoute();

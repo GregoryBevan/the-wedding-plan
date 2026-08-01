@@ -15,9 +15,7 @@
           {{ t('securedArea.greeting') }} {{ session.firstName }} {{ session.lastName }}
         </p>
         <p class="mt-2 text-sm leading-6 text-[#093D57]/80">{{ t('securedArea.verifiedIntro') }}</p>
-        <div class="mt-4 rounded-xl bg-[#BEC6C2]/25 p-4 text-sm text-[#093D57]/80">
-          {{ t('securedArea.rsvpComingSoon') }}
-        </div>
+        <GuestRsvpForm />
       </section>
 
       <section v-else class="mt-4">
@@ -50,6 +48,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
+import GuestRsvpForm from '../components/GuestRsvpForm.vue';
 import LanguageSwitcher from '../components/LanguageSwitcher.vue';
 import { fetchGuestSession, type GuestLanguage, type GuestSessionResponse } from '../services/guestAccessSecuredApi';
 import { useGuestAccessI18n, type GuestAccessLocale } from '../i18n/guestAccessI18n';
