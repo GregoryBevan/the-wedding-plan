@@ -9,6 +9,7 @@ import me.elgregos.theweddingplan.domain.guest.entity.GuestId
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvp
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvp
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvpUpdated
+import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvpWithChoices
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpId
 import me.elgregos.theweddingplan.domain.rsvp.entity.RsvpAttendance
 import org.springframework.beans.factory.annotation.Autowired
@@ -72,6 +73,13 @@ class GuestRsvpExposedRepositoryIT : AbstractIntegrationTest() {
     @Test
     fun `should return null when guest has no rsvp`() {
         assertThat(guestRsvpsRepository.findByGuestId(janeDoe.id)).isNull()
+    }
+
+    @Test
+    fun `should round-trip answers through the jsonb column`() {
+        guestRsvpsRepository.save(johnDoeRsvpWithChoices)
+
+        assertThat(guestRsvpsRepository.findByGuestId(johnDoeRsvpWithChoices.guestId)).isEqualTo(johnDoeRsvpWithChoices)
     }
 
     private fun rsvpCount() =

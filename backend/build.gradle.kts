@@ -12,7 +12,7 @@ plugins {
 
 
 group = "me.elgregoss"
-version = "0.0.34-SNAPSHOT"
+version = "0.0.35-SNAPSHOT"
 
 java {
     toolchain {
@@ -61,6 +61,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
     implementation(libs.exposed.spring.boot)
     implementation(libs.exposed.java.time)
+    implementation(libs.exposed.json)
     implementation(libs.uuid.creator)
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

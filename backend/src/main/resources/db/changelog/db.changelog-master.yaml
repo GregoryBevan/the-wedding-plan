@@ -21,4 +21,6 @@ databaseChangeLog:
       file: classpath:db/changelog/010-hash-guest-magic-link-token.sql
   - include:
       file: classpath:db/changelog/011-create-guest-rsvp-table.sql
+  - include:
+      file: classpath:db/changelog/012-add-guest-rsvp-answers.sql
 
