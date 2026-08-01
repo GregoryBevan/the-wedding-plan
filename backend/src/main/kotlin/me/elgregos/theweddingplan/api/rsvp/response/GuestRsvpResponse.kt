@@ -8,6 +8,8 @@ data class GuestRsvpResponse(
     val creationDate: String,
     val updateDate: String,
     val attendance: String,
+    val meal: String? = null,
+    val song: SongResponse? = null,
 )
 
 internal fun GuestRsvp.toResponse() = GuestRsvpResponse(
@@ -16,5 +18,7 @@ internal fun GuestRsvp.toResponse() = GuestRsvpResponse(
     creationDate = creationDate.toString(),
     updateDate = updateDate.toString(),
     attendance = attendance.name,
+    meal = answers?.meal?.name,
+    song = answers?.song?.toResponse(),
 )
 

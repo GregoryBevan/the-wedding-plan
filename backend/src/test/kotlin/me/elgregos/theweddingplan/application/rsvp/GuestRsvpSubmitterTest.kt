@@ -6,8 +6,10 @@ import assertk.assertions.isInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import me.elgregos.theweddingplan.application.rsvp.command.SubmitGuestRsvpCommand
+import me.elgregos.theweddingplan.application.rsvp.command.SubmitGuestRsvpCommandFixtures.johnDoeAttending
 import me.elgregos.theweddingplan.application.rsvp.result.SubmitGuestRsvpResult
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
+import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeAnswers
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvp
 import me.elgregos.theweddingplan.domain.rsvp.entity.RsvpAttendance
 import me.elgregos.theweddingplan.domain.rsvp.repository.GuestRsvps
@@ -63,6 +65,16 @@ class GuestRsvpSubmitterTest {
         val result = guestRsvpSubmitter.submit(SubmitGuestRsvpCommand(johnDoe.id, RsvpAttendance.DECLINED))
 
         assertThat((result as SubmitGuestRsvpResult.Updated).rsvp.version).isEqualTo(2L)
+    }
+
+    @Test
+    fun `should persist the answers when creating an attending rsvp`() {
+        every { guestRsvps.findByGuestId(johnDoe.id) } returns null
+        every { guestRsvps.save(any()) } answers { firstArg() }
+
+        val result = guestRsvpSubmitter.submit(johnDoeAttending)
+
+        assertThat((result as SubmitGuestRsvpResult.Created).rsvp.answers).isEqualTo(johnDoeAnswers)
     }
 }
 
