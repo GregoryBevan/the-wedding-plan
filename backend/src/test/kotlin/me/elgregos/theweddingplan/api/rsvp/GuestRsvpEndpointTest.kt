@@ -41,10 +41,15 @@ class GuestRsvpEndpointTest {
     }
 
     @Test
+    fun `should reject an attending submission without a meal`() {
+        assertThat(guestRsvpEndpoint.submit(submitRequest("ATTENDING")).statusCode()).isEqualTo(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
     fun `should create the rsvp on first submission`() {
         every { guestRsvpSubmitter.submit(any()) } returns SubmitGuestRsvpResult.Created(johnDoeRsvp)
 
-        assertThat(guestRsvpEndpoint.submit(submitRequest("ATTENDING")).statusCode()).isEqualTo(HttpStatus.CREATED)
+        assertThat(guestRsvpEndpoint.submit(submitRequest("ATTENDING", "MEAT")).statusCode()).isEqualTo(HttpStatus.CREATED)
     }
 
     @Test
@@ -68,9 +73,9 @@ class GuestRsvpEndpointTest {
         assertThat(guestRsvpEndpoint.fetch(authenticatedRequest()).statusCode()).isEqualTo(HttpStatus.NO_CONTENT)
     }
 
-    private fun submitRequest(attendance: String): ServerRequest = mockk {
+    private fun submitRequest(attendance: String, meal: String? = null): ServerRequest = mockk {
         every { principal() } returns Optional.of(GuestSessionAuthenticationToken.authenticated(session))
-        every { body(SubmitRsvpRequest::class.java) } returns SubmitRsvpRequest(attendance)
+        every { body(SubmitRsvpRequest::class.java) } returns SubmitRsvpRequest(attendance, meal)
     }
 
     private fun authenticatedRequest(): ServerRequest = mockk {

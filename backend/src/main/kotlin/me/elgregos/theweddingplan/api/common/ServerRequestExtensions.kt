@@ -19,6 +19,7 @@ internal fun ServerRequest.requireGuestSession(): GuestSession =
 private fun ServerRequest.guestSession(): GuestSession? =
     (principal().orElse(null) as? Authentication)?.principal as? GuestSession
 
+
 internal fun ServerRequest.intQueryParam(name: String, default: Int): Int? =
     queryParamOrNull(name)?.toIntOrNull() ?: if (param(name).isEmpty) default else null
 

@@ -7,7 +7,7 @@ import assertk.assertions.isNull
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeAnswers
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvp
-import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvpUpdated
+import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvpDeclined
 import me.elgregos.theweddingplan.domain.shared.Dates
 import kotlin.test.Test
 
@@ -27,7 +27,7 @@ class GuestRsvpTest {
             now = johnDoeRsvp.creationDate.plusDays(1),
         )
 
-        assertThat(respondedRsvp).isEqualTo(johnDoeRsvpUpdated)
+        assertThat(respondedRsvp).isEqualTo(johnDoeRsvpDeclined)
     }
 
     @Test

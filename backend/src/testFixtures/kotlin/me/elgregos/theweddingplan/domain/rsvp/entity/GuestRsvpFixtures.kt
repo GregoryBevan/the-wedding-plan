@@ -18,10 +18,10 @@ object GuestRsvpFixtures {
 
     val veggieAnswers = RsvpAnswers(meal = Meal.VEGGIE)
 
-    val johnDoeAnswersJson =
+    const val johnDoeAnswersJson =
         """{"meal":"MEAT","song":{"deezerId":3135556,"title":"La Vie en rose","artist":"Édith Piaf","link":"https://www.deezer.com/track/3135556","preview":"https://cdns-preview.deezer.com/stream/la-vie-en-rose.mp3"}}"""
 
-    val veggieAnswersJson =
+    const val veggieAnswersJson =
         """{"meal":"VEGGIE","song":null}"""
 
     val johnDoeRsvp = GuestRsvp(
@@ -33,18 +33,15 @@ object GuestRsvpFixtures {
         attendance = RsvpAttendance.ATTENDING,
     )
 
-    val johnDoeRsvpUpdated = johnDoeRsvp.copy(
+    val johnDoeRsvpDeclined = johnDoeRsvp.copy(
         version = 2L,
         updateDate = creationDate.plusDays(1),
         attendance = RsvpAttendance.DECLINED,
     )
 
-    val johnDoeRsvpWithChoices = johnDoeRsvp.copy(
-        version = 2L,
-        updateDate = creationDate.plusDays(1),
-        answers = johnDoeAnswers,
-    )
+    val johnDoeRsvpWithChoices = johnDoeRsvp.copy(answers = johnDoeAnswers)
 
+    val johnDoeRsvpMealOnly = johnDoeRsvp.copy(answers = veggieAnswers)
 }
 
 

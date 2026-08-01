@@ -8,7 +8,7 @@ import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvp
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvp
-import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvpUpdated
+import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvpDeclined
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvpWithChoices
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpId
 import me.elgregos.theweddingplan.domain.rsvp.entity.RsvpAttendance
@@ -54,13 +54,13 @@ class GuestRsvpExposedRepositoryIT : AbstractIntegrationTest() {
     fun `should return the stored row when upserting ignoring a mismatched surrogate id`() {
         guestRsvpsRepository.save(johnDoeRsvp)
 
-        val mismatched = johnDoeRsvpUpdated.copy(
+        val mismatched = johnDoeRsvpDeclined.copy(
             id = GuestRsvpId(),
             creationDate = johnDoeRsvp.creationDate.plusDays(5),
         )
         val saved = guestRsvpsRepository.save(mismatched)
 
-        assertThat(saved).isEqualTo(johnDoeRsvpUpdated)
+        assertThat(saved).isEqualTo(johnDoeRsvpDeclined)
     }
 
     @Test
