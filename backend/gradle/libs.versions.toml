@@ -15,6 +15,7 @@ assertk-jvm = { module = "com.willowtreeapps.assertk:assertk-jvm", version.ref =
 uuid-creator = { module = "com.github.f4b6a3:uuid-creator", version.ref = "uuid-creator" }
 exposed-spring-boot = { module = "org.jetbrains.exposed:exposed-spring-boot4-starter", version.ref = "exposed" }
 exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed"}
+exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed"}
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

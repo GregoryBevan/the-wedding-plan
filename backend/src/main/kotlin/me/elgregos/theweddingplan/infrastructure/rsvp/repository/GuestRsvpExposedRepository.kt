@@ -15,7 +15,7 @@ import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 
 @Repository
-class GuestRsvpExposedRepository : GuestRsvps {
+class GuestRsvpExposedRepository: GuestRsvps {
 
     @Transactional(readOnly = true)
     override fun findByGuestId(guestId: GuestId): GuestRsvp? =
@@ -30,11 +30,13 @@ class GuestRsvpExposedRepository : GuestRsvps {
                 it[version] = rsvp.version
                 it[updateDate] = rsvp.updateDate
                 it[attendance] = rsvp.attendance.name
+                it[answers] = rsvp.answers
             }
             existing.copy(
                 version = rsvp.version,
                 updateDate = rsvp.updateDate,
                 attendance = rsvp.attendance,
+                answers = rsvp.answers,
             )
         } else {
             GuestRsvpTable.insert {
@@ -44,6 +46,7 @@ class GuestRsvpExposedRepository : GuestRsvps {
                 it[creationDate] = rsvp.creationDate
                 it[updateDate] = rsvp.updateDate
                 it[attendance] = rsvp.attendance.name
+                it[answers] = rsvp.answers
             }
             rsvp
         }
@@ -68,6 +71,7 @@ class GuestRsvpExposedRepository : GuestRsvps {
         creationDate = this[GuestRsvpTable.creationDate],
         updateDate = this[GuestRsvpTable.updateDate],
         attendance = RsvpAttendance.valueOf(this[GuestRsvpTable.attendance]),
+        answers = this[GuestRsvpTable.answers]
     )
 }
 
