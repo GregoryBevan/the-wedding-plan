@@ -24,6 +24,7 @@ const mountView = () =>
     global: {
       stubs: {
         LanguageSwitcher: true,
+        GuestRsvpForm: true,
         RouterLink: { template: '<a><slot /></a>' },
       },
     },
@@ -48,7 +49,7 @@ describe('GuestAccessSecuredAreaView', () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain(t('securedArea.verifiedIntro'));
-    expect(wrapper.text()).toContain(t('securedArea.rsvpComingSoon'));
+    expect(wrapper.findComponent({ name: 'GuestRsvpForm' }).exists()).toBe(true);
   });
 
   it('greets the verified guest by name', async () => {
@@ -100,7 +101,7 @@ describe('GuestAccessSecuredAreaView', () => {
 
     expect(wrapper.text()).toContain(t('securedArea.unverifiedTitle'));
     expect(wrapper.text()).toContain(t('securedArea.unverified'));
-    expect(wrapper.text()).not.toContain(t('securedArea.rsvpComingSoon'));
+    expect(wrapper.findComponent({ name: 'GuestRsvpForm' }).exists()).toBe(false);
   });
 
   it('shows the recoverable expired-link state without a session lookup when redirected with linkStatus=invalid', async () => {

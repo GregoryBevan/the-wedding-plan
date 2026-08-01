@@ -18,6 +18,8 @@ export class GuestAccessSecuredApiError extends Error {
 
 export type GuestLanguage = 'FR' | 'EN';
 
+export type RsvpAttendance = 'ATTENDING' | 'DECLINED';
+
 /**
  * Identity of the currently verified guest, resolved from the `guest_session` cookie.
  */
@@ -27,6 +29,17 @@ export interface GuestSessionResponse {
   firstName: string;
   lastName: string;
   language: GuestLanguage;
+}
+
+/**
+ * A guest's stored RSVP, as returned by the secured RSVP endpoints.
+ */
+export interface GuestRsvpResponse {
+  id: string;
+  version: number;
+  creationDate: string;
+  updateDate: string;
+  attendance: RsvpAttendance;
 }
 
 /**
@@ -80,19 +93,42 @@ export const fetchGuestSession = async (): Promise<GuestSessionResponse | null> 
 };
 
 /**
- * Placeholder secured mutation ready for the upcoming RSVP feature.
- * The backend endpoint currently returns 204 No Content.
+ * Loads the current guest's RSVP (`GET /api/guest-access/secured/rsvp`).
+ *
+ * Returns `null` when the guest has not responded yet (`204 No Content`), so the
+ * form can render an empty state rather than treating "no answer yet" as an error.
  */
-export const submitRsvp = async (): Promise<void> => {
+export const fetchRsvp = async (): Promise<GuestRsvpResponse | null> => {
+  const response = await securedGuestFetch('/rsvp');
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new GuestAccessSecuredApiError('Unable to load your RSVP at the moment.', response.status);
+  }
+
+  return response.json() as Promise<GuestRsvpResponse>;
+};
+
+/**
+ * Submits or updates the current guest's attendance
+ * (`POST /api/guest-access/secured/rsvp`) and returns the saved RSVP.
+ */
+export const submitRsvp = async (attendance: RsvpAttendance): Promise<GuestRsvpResponse> => {
   const response = await securedGuestFetch('/rsvp', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify({ attendance }),
   });
 
   if (!response.ok) {
     throw new GuestAccessSecuredApiError('Unable to submit RSVP at the moment.', response.status);
   }
+
+  return response.json() as Promise<GuestRsvpResponse>;
 };
 
