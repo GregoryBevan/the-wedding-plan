@@ -145,6 +145,65 @@ test.describe('Guest RSVP form', () => {
 
     await expect(page.getByText(/Merci du fond du cœur|Thank you from the bottom of our hearts/i)).toBeVisible();
   });
+
+  test('persists the submitted attendance across a reload', async ({ page }) => {
+    await mockVerifiedSession(page);
+
+    // A stateful mock stands in for the backend: the answer submitted via POST is
+    // returned by the subsequent GET, so reloading the page must show it persisted.
+    let storedAttendance: Attendance | null = null;
+    await page.route('**/api/guest-access/secured/rsvp', async (route: Route) => {
+      const method = route.request().method();
+
+      if (method === 'OPTIONS') {
+        await route.fulfill({ status: 204, headers: PREFLIGHT_CORS });
+        return;
+      }
+
+      if (method === 'GET') {
+        if (storedAttendance === null) {
+          await route.fulfill({ status: 204, headers: CREDENTIALED_CORS });
+          return;
+        }
+
+        await fulfillJson(route, savedRsvp(storedAttendance), 200, CREDENTIALED_CORS);
+        return;
+      }
+
+      storedAttendance = 'DECLINED';
+      await fulfillJson(route, savedRsvp(storedAttendance), 200, CREDENTIALED_CORS);
+    });
+
+    await openSecuredArea(page);
+
+    await page.locator('input[value="DECLINED"]').check();
+    await submitButton(page).click();
+    await expect(page.getByText(/Merci du fond du cœur|Thank you from the bottom of our hearts/i)).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByText(/célébrer notre amour|celebrate our love/i)).toBeVisible({ timeout: UI_TIMEOUT_MS });
+
+    await expect(page.locator('input[value="DECLINED"]')).toBeChecked();
+    await expect(submitButton(page)).toBeDisabled();
+  });
+
+  test('blocks the RSVP form when the session is not valid', async ({ page }) => {
+    // Without a valid `guest_session` the backend rejects `/me` (401) and the
+    // guarded `/rsvp` endpoint (401/403); the UI must gate the form behind the
+    // recoverable "expired or invalid" state instead of exposing the RSVP.
+    await page.route('**/api/guest-access/secured/me', async (route) => {
+      await fulfillJson(route, {}, 401, CREDENTIALED_CORS);
+    });
+    await page.route('**/api/guest-access/secured/rsvp', async (route) => {
+      await fulfillJson(route, {}, 401, CREDENTIALED_CORS);
+    });
+
+    await page.goto(`${PUBLIC_BASE_URL}/guest-access/secured-area`);
+
+    await expect(page.getByText(/expiré ou invalide|expired or invalid/i)).toBeVisible({ timeout: UI_TIMEOUT_MS });
+    await expect(page.getByText(/célébrer notre amour|celebrate our love/i)).toHaveCount(0);
+    await expect(submitButton(page)).toHaveCount(0);
+  });
 });
 
 
