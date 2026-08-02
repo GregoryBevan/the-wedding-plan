@@ -1,0 +1,25 @@
+info:
+  name: Deezer Authentication
+  type: http
+  seq: 5
+
+http:
+  method: GET
+  url: https://connect.deezer.com/oauth/access_token.php?app_id={{deezerAppId}}&code={{deezerCode}}&secret={{deezerSecret}}
+  params:
+    - name: app_id
+      value: "{{deezerAppId}}"
+      type: query
+    - name: code
+      value: "{{deezerCode}}"
+      type: query
+    - name: secret
+      value: "{{deezerSecret}}"
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

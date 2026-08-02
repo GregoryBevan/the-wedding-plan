@@ -55,6 +55,10 @@ app:
     enabled: ${APP_MAIL_ENABLED:true}
   guest:
     default-language: ${APP_GUEST_DEFAULT_LANGUAGE:FR}
+  deezer:
+    base-url: ${APP_DEEZER_BASE_URL:https://api.deezer.com}
+    connect-timeout: ${APP_DEEZER_CONNECT_TIMEOUT:2s}
+    read-timeout: ${APP_DEEZER_READ_TIMEOUT:3s}
   guest-access:
     base-url: ${APP_GUEST_ACCESS_BASE_URL}
     guest-area-url: ${APP_GUEST_AREA_URL}

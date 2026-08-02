@@ -1,6 +1,12 @@
 package me.elgregos.theweddingplan
 
 import me.elgregos.theweddingplan.TestAuthenticationConfig.Companion.TEST_USER_EMAIL_HEADER
+import me.elgregos.theweddingplan.domain.guest.entity.GuestId
+import me.elgregos.theweddingplan.domain.guest.entity.GuestSession
+import me.elgregos.theweddingplan.domain.guest.service.GuestSessionTokens
+import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.bridesMaidInvitation
+import me.elgregos.theweddingplan.infrastructure.guest.security.GUEST_SESSION_COOKIE
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -17,6 +23,9 @@ abstract class AbstractEndpointIntegrationTest : AbstractIntegrationTest() {
 
     @LocalServerPort
     protected var port: Int = 0
+
+    @Autowired
+    protected lateinit var guestSessionTokens: GuestSessionTokens
 
     protected val restTestClient: RestTestClient
         get() = RestTestClient.bindToServer().baseUrl("http://localhost:$port").build()
@@ -65,6 +74,14 @@ abstract class AbstractEndpointIntegrationTest : AbstractIntegrationTest() {
             ?: error("Missing session id from /test/login")
 
         return csrfContext(sessionId)
+    }
+
+    protected fun guestSessionCookie(guestId: GuestId): String {
+        val token = guestSessionTokens.issue(
+            GuestSession(guestId = guestId, invitationId = bridesMaidInvitation.id)
+        )
+
+        return "$GUEST_SESSION_COOKIE=$token"
     }
 }
 

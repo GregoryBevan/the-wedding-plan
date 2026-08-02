@@ -63,6 +63,12 @@ Set these variables in Render dashboard (or through Blueprint secrets), never in
 - `SPRING_MAIL_SMTP_WRITE_TIMEOUT`
 - `SERVER_FORWARD_HEADERS_STRATEGY` (set to `framework` only when requests always come through a trusted proxy that strips/overwrites `Forwarded`/`X-Forwarded-*` headers; otherwise keep default `none`)
 
+Optional (Deezer song search — sensible defaults are provided, override only if needed):
+
+- `APP_DEEZER_BASE_URL` (default `https://api.deezer.com`)
+- `APP_DEEZER_CONNECT_TIMEOUT` (default `2s`)
+- `APP_DEEZER_READ_TIMEOUT` (default `3s`)
+
 ### 3) OAuth callback
 
 In Google OAuth app settings, configure callback URL:
@@ -73,6 +79,34 @@ In Google OAuth app settings, configure callback URL:
 
 - Backoffice: `https://<your-render-domain>/backoffice`
 - API base: same origin, under `/api`
+
+### Deezer song search (autocomplete proxy)
+
+Guests pick a song for the wedding playlist via an autocomplete backed by Deezer. Because Deezer's
+API sends no CORS headers, the browser never calls Deezer directly: the backend proxies it through
+the session-guarded endpoint `GET /api/guest-access/secured/song-search?q=...`, which queries Deezer
+`GET https://api.deezer.com/search?q=...` and returns a slim suggestion list (`deezerId`, `title`,
+`artist`, `link`, `preview`).
+
+#### Deezer developer account
+
+- Deezer's **search** endpoint is public and needs **no credentials**, so the proxy works out of the
+  box with the defaults above.
+- To register your app anyway (recommended, and required later for playlist sync via OAuth), create a
+  Deezer developer account and application at <https://developers.deezer.com/myapps>. You'll obtain an
+  **Application ID** and **Secret Key**; keep them in secret environment variables (never in git),
+  using these names:
+  - `APP_DEEZER_APP_ID` — Deezer Application ID
+  - `APP_DEEZER_SECRET_KEY` — Deezer Secret Key
+
+  These credentials are **not** used by the search proxy — they'll be wired in when the playlist-sync
+  (OAuth `manage_library`) feature lands.
+
+#### Adding other providers later
+
+The proxy is intentionally scoped to a single provider today. Support for Spotify, YouTube Music or
+Apple Music would be added as separate, similarly configured integrations when needed — no
+provider-agnostic abstraction is introduced up front (YAGNI).
 
 ### 5) Local email delivery test scenario (Mailpit + Bruno)
 
