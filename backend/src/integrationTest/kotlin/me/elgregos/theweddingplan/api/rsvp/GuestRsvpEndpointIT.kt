@@ -8,11 +8,6 @@ import me.elgregos.theweddingplan.api.rsvp.response.GuestRsvpResponse
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
-import me.elgregos.theweddingplan.domain.guest.entity.GuestSession
-import me.elgregos.theweddingplan.domain.guest.service.GuestSessionTokens
-import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.bridesMaidInvitation
-import me.elgregos.theweddingplan.infrastructure.guest.security.GUEST_SESSION_COOKIE
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.context.jdbc.Sql
@@ -21,8 +16,6 @@ import kotlin.test.Test
 @Sql(statements = ["DELETE FROM guest_rsvp"], executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class GuestRsvpEndpointIT : AbstractEndpointIntegrationTest() {
 
-    @Autowired
-    private lateinit var guestSessionTokens: GuestSessionTokens
 
     @Test
     fun `should reject rsvp submission without guest session`() {
@@ -252,14 +245,6 @@ class GuestRsvpEndpointIT : AbstractEndpointIntegrationTest() {
             .returnResult()
             .responseBody
             ?: error("Expected rsvp in response body")
-
-    private fun guestSessionCookie(guestId: GuestId): String {
-        val token = guestSessionTokens.issue(
-            GuestSession(guestId = guestId, invitationId = bridesMaidInvitation.id)
-        )
-
-        return "$GUEST_SESSION_COOKIE=$token"
-    }
 }
 
 

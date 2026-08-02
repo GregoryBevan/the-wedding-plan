@@ -12,7 +12,7 @@ plugins {
 
 
 group = "me.elgregoss"
-version = "0.0.36-SNAPSHOT"
+version = "0.0.37-SNAPSHOT"
 
 java {
     toolchain {
@@ -72,6 +72,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.mockk.agent)
     testImplementation(kotlin("test"))
+    testImplementation("org.junit.jupiter:junit-jupiter-params")
 
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 

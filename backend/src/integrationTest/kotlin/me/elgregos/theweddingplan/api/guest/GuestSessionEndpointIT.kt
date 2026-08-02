@@ -8,20 +8,13 @@ import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
 import me.elgregos.theweddingplan.api.invitation.response.GuestSessionResponse
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
-import me.elgregos.theweddingplan.domain.guest.entity.GuestId
-import me.elgregos.theweddingplan.domain.guest.entity.GuestSession
-import me.elgregos.theweddingplan.domain.guest.service.GuestSessionTokens
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.bridesMaidInvitation
-import me.elgregos.theweddingplan.infrastructure.guest.security.GUEST_SESSION_COOKIE
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import kotlin.test.Test
 
 class GuestSessionEndpointIT : AbstractEndpointIntegrationTest() {
 
-    @Autowired
-    private lateinit var guestSessionTokens: GuestSessionTokens
 
     @Test
     fun `should reject session lookup without guest session`() {
@@ -59,14 +52,6 @@ class GuestSessionEndpointIT : AbstractEndpointIntegrationTest() {
             prop(GuestSessionResponse::lastName).isEqualTo(janeDoe.lastName)
             prop(GuestSessionResponse::language).isEqualTo(janeDoe.language.name)
         }
-    }
-
-    private fun guestSessionCookie(guestId: GuestId): String {
-        val token = guestSessionTokens.issue(
-            GuestSession(guestId = guestId, invitationId = bridesMaidInvitation.id)
-        )
-
-        return "$GUEST_SESSION_COOKIE=$token"
     }
 }
 
