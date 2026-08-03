@@ -1,4 +1,6 @@
 import org.gradle.testing.jacoco.tasks.JacocoReport
+import nl.littlerobots.vcu.plugin.resolver.VersionSelectors
+
 
 plugins {
     `java-test-fixtures`
@@ -8,11 +10,12 @@ plugins {
     id("idea")
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.spring.dependency.management)
+    alias(libs.plugins.dependency.update)
 }
 
 
 group = "me.elgregoss"
-version = "0.0.37-SNAPSHOT"
+version = "0.0.38-SNAPSHOT"
 
 java {
     toolchain {
@@ -57,12 +60,13 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-mail")
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
+    implementation("org.springframework.boot:spring-boot-starter-restclient")
     implementation(libs.exposed.spring.boot)
     implementation(libs.exposed.java.time)
     implementation(libs.exposed.json)
     implementation(libs.uuid.creator)
+    implementation(libs.kotlin.logging.jvm)
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
@@ -136,4 +140,9 @@ tasks.register<JacocoReport>("jacocoAllTestReport") {
 tasks.named("check") {
     dependsOn(tasks.named("integrationTest"))
     dependsOn(tasks.named("jacocoAllTestReport"))
+}
+
+versionCatalogUpdate {
+    sortByKey = false
+    versionSelector(VersionSelectors.LATEST)
 }

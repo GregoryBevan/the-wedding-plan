@@ -48,7 +48,29 @@ describe('guestAccessSecuredApi', () => {
     expect((options.headers as Headers).get('X-XSRF-TOKEN')).toBeNull();
   });
 
-  it('submits the RSVP attendance with credentials, payload and CSRF header', async () => {
+  it('submits a declined RSVP with credentials, payload and CSRF header', async () => {
+    setCsrfCookie();
+    const saved = {
+      id: 'rsvp-1',
+      version: 1,
+      creationDate: '2026-06-13T10:00:00',
+      updateDate: '2026-06-13T10:00:00',
+      attendance: 'DECLINED',
+    };
+    const fetchMock = mockFetchResponse({ ok: true, body: saved });
+
+    const result = await submitRsvp('DECLINED');
+
+    const [url, options] = getFirstRequest(fetchMock);
+    expect(url).toBe(`${securedBaseUrl}/rsvp`);
+    expect(options).toMatchObject({ method: 'POST', credentials: 'include' });
+    expect((options.headers as Headers).get('Content-Type')).toBe('application/json');
+    expect(options.body).toBe(JSON.stringify({ attendance: 'DECLINED' }));
+    expectCsrfHeader(options);
+    expect(result).toEqual(saved);
+  });
+
+  it('submits an attending RSVP with the chosen meal in the payload', async () => {
     setCsrfCookie();
     const saved = {
       id: 'rsvp-1',
@@ -56,25 +78,22 @@ describe('guestAccessSecuredApi', () => {
       creationDate: '2026-06-13T10:00:00',
       updateDate: '2026-06-13T10:00:00',
       attendance: 'ATTENDING',
+      meal: 'FISH',
     };
     const fetchMock = mockFetchResponse({ ok: true, body: saved });
 
-    const result = await submitRsvp('ATTENDING');
+    const result = await submitRsvp('ATTENDING', 'FISH');
 
-    const [url, options] = getFirstRequest(fetchMock);
-    expect(url).toBe(`${securedBaseUrl}/rsvp`);
-    expect(options).toMatchObject({ method: 'POST', credentials: 'include' });
-    expect((options.headers as Headers).get('Content-Type')).toBe('application/json');
-    expect(options.body).toBe(JSON.stringify({ attendance: 'ATTENDING' }));
-    expectCsrfHeader(options);
+    const [, options] = getFirstRequest(fetchMock);
+    expect(options.body).toBe(JSON.stringify({ attendance: 'ATTENDING', meal: 'FISH' }));
     expect(result).toEqual(saved);
   });
 
   it('throws a typed error when the RSVP submission fails', async () => {
     mockFetchResponse({ ok: false, status: 403 });
 
-    await expect(submitRsvp('ATTENDING')).rejects.toBeInstanceOf(GuestAccessSecuredApiError);
-    await expect(submitRsvp('ATTENDING')).rejects.toThrow('Unable to submit RSVP at the moment.');
+    await expect(submitRsvp('ATTENDING', 'MEAT')).rejects.toBeInstanceOf(GuestAccessSecuredApiError);
+    await expect(submitRsvp('ATTENDING', 'MEAT')).rejects.toThrow('Unable to submit RSVP at the moment.');
   });
 
   it('loads the current guest RSVP', async () => {

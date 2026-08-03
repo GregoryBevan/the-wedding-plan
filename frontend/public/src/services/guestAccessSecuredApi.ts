@@ -20,6 +20,8 @@ export type GuestLanguage = 'FR' | 'EN';
 
 export type RsvpAttendance = 'ATTENDING' | 'DECLINED';
 
+export type Meal = 'MEAT' | 'FISH' | 'VEGGIE';
+
 /**
  * Identity of the currently verified guest, resolved from the `guest_session` cookie.
  */
@@ -33,6 +35,8 @@ export interface GuestSessionResponse {
 
 /**
  * A guest's stored RSVP, as returned by the secured RSVP endpoints.
+ *
+ * `meal` is only present for attending guests (it is reset when the guest declines).
  */
 export interface GuestRsvpResponse {
   id: string;
@@ -40,6 +44,7 @@ export interface GuestRsvpResponse {
   creationDate: string;
   updateDate: string;
   attendance: RsvpAttendance;
+  meal?: Meal | null;
 }
 
 /**
@@ -113,16 +118,24 @@ export const fetchRsvp = async (): Promise<GuestRsvpResponse | null> => {
 };
 
 /**
- * Submits or updates the current guest's attendance
+ * Submits or updates the current guest's answer
  * (`POST /api/guest-access/secured/rsvp`) and returns the saved RSVP.
+ *
+ * A meal is mandatory to attend and irrelevant otherwise, so the overloads make it
+ * required for `ATTENDING` and reject it for `DECLINED`. The payload is derived from
+ * the attendance, never from the presence of a meal.
  */
-export const submitRsvp = async (attendance: RsvpAttendance): Promise<GuestRsvpResponse> => {
+export function submitRsvp(attendance: 'ATTENDING', meal: Meal): Promise<GuestRsvpResponse>;
+export function submitRsvp(attendance: 'DECLINED'): Promise<GuestRsvpResponse>;
+export async function submitRsvp(attendance: RsvpAttendance, meal?: Meal): Promise<GuestRsvpResponse> {
+  const payload = attendance === 'ATTENDING' ? { attendance, meal } : { attendance };
+
   const response = await securedGuestFetch('/rsvp', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ attendance }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
@@ -130,5 +143,5 @@ export const submitRsvp = async (attendance: RsvpAttendance): Promise<GuestRsvpR
   }
 
   return response.json() as Promise<GuestRsvpResponse>;
-};
+}
 
