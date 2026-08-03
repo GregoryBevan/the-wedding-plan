@@ -20,13 +20,15 @@ const PREFLIGHT_CORS = {
 };
 
 type Attendance = 'ATTENDING' | 'DECLINED';
+type Meal = 'MEAT' | 'FISH' | 'VEGGIE';
 
-const savedRsvp = (attendance: Attendance) => ({
+const savedRsvp = (attendance: Attendance, meal: Meal | null = null) => ({
   id: 'rsvp-1',
   version: 1,
   creationDate: '2026-06-13T10:00:00',
   updateDate: '2026-06-13T10:00:00',
   attendance,
+  meal,
 });
 
 const mockVerifiedSession = (page: Page) =>
@@ -63,13 +65,16 @@ test.describe('Guest RSVP form', () => {
         return;
       }
 
-      await fulfillJson(route, savedRsvp('ATTENDING'), 200, CREDENTIALED_CORS);
+      await fulfillJson(route, savedRsvp('ATTENDING', 'MEAT'), 200, CREDENTIALED_CORS);
     });
 
     await openSecuredArea(page);
 
     await expect(submitButton(page)).toBeDisabled();
     await page.locator('input[value="ATTENDING"]').check();
+    // A meal is mandatory to attend, so the submit stays disabled until one is picked.
+    await expect(submitButton(page)).toBeDisabled();
+    await page.locator('input[value="MEAT"]').check();
     await expect(submitButton(page)).toBeEnabled();
 
     await submitButton(page).click();
@@ -88,7 +93,7 @@ test.describe('Guest RSVP form', () => {
       }
 
       if (method === 'GET') {
-        await fulfillJson(route, savedRsvp('ATTENDING'), 200, CREDENTIALED_CORS);
+        await fulfillJson(route, savedRsvp('ATTENDING', 'FISH'), 200, CREDENTIALED_CORS);
         return;
       }
 
@@ -131,12 +136,13 @@ test.describe('Guest RSVP form', () => {
         return;
       }
 
-      await fulfillJson(route, savedRsvp('ATTENDING'), 200, CREDENTIALED_CORS);
+      await fulfillJson(route, savedRsvp('ATTENDING', 'MEAT'), 200, CREDENTIALED_CORS);
     });
 
     await openSecuredArea(page);
 
     await page.locator('input[value="ATTENDING"]').check();
+    await page.locator('input[value="MEAT"]').check();
     await submitButton(page).click();
 
     await expect(page.getByText(/votre réponse n'a pas été enregistrée|couldn't save your answer/i)).toBeVisible();
