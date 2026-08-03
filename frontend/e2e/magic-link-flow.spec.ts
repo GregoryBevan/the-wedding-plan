@@ -49,7 +49,7 @@ test.describe('Magic-link UX flow', () => {
 
     await page.getByRole('button', { name: /Alice Martin/ }).click();
 
-    await expect(page.getByText(/vous recevrez un email|you will receive an email/i)).toBeVisible();
+    await expect(page.getByText(/tu recevras un email|you will receive an email/i)).toBeVisible();
 
     // The magic link in the email points to the backend, which verifies the token,
     // sets the `guest_session` cookie and redirects to the secured area. That
@@ -72,8 +72,7 @@ test.describe('Magic-link UX flow', () => {
 
     await page.goto(`${PUBLIC_BASE_URL}/guest-access/secured-area`);
 
-    await expect(page.getByText(/lien a été vérifié|link has been verified/i)).toBeVisible({ timeout: UI_TIMEOUT_MS });
-    await expect(page.getByText('Alice Martin')).toBeVisible();
+    await expect(page.getByText(/Bonjour Alice|Hello Alice/)).toBeVisible({ timeout: UI_TIMEOUT_MS });
     await expect(page.getByText(/célébrer notre amour|celebrate our love/i)).toBeVisible();
   });
 

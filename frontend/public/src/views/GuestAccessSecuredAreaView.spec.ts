@@ -48,7 +48,6 @@ describe('GuestAccessSecuredAreaView', () => {
 
     await flushPromises();
 
-    expect(wrapper.text()).toContain(t('securedArea.verifiedIntro'));
     expect(wrapper.findComponent({ name: 'GuestRsvpForm' }).exists()).toBe(true);
   });
 
@@ -64,7 +63,7 @@ describe('GuestAccessSecuredAreaView', () => {
 
     await flushPromises();
 
-    expect(wrapper.text()).toContain(`${t('securedArea.greeting')} Alice Martin`);
+    expect(wrapper.text()).toContain(`${t('securedArea.greeting')} Alice`);
   });
 
   it('applies the guest language to the active locale', async () => {
@@ -142,7 +141,7 @@ describe('GuestAccessSecuredAreaView', () => {
     await wrapper.find('button').trigger('click');
     await flushPromises();
 
-    expect(wrapper.text()).toContain(t('securedArea.verifiedIntro'));
+    expect(wrapper.text()).toContain(`${t('securedArea.greeting')} Alice`);
   });
 });
 

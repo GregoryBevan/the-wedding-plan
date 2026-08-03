@@ -34,20 +34,20 @@ const localeValue = computed(() => locale.value);
 .language-switcher {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.2rem;
   border-radius: 999px;
   border: 1px solid rgba(9, 61, 87, 0.2);
   background: rgba(255, 255, 255, 0.65);
-  padding: 0.2rem;
+  padding: 0.15rem;
 }
 
 .language-switcher__button {
-  min-width: 2.2rem;
+  min-width: 1.85rem;
   border-radius: 999px;
   border: none;
   background: transparent;
-  padding: 0.3rem 0.45rem;
-  font-size: 0.72rem;
+  padding: 0.22rem 0.4rem;
+  font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   color: rgba(9, 61, 87, 0.75);

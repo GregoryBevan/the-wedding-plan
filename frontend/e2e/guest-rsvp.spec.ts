@@ -145,7 +145,7 @@ test.describe('Guest RSVP form', () => {
     await page.locator('input[value="MEAT"]').check();
     await submitButton(page).click();
 
-    await expect(page.getByText(/votre réponse n'a pas été enregistrée|couldn't save your answer/i)).toBeVisible();
+    await expect(page.getByText(/ta réponse n'a pas été enregistrée|couldn't save your answer/i)).toBeVisible();
 
     await submitButton(page).click();
 

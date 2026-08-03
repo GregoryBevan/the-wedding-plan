@@ -13,6 +13,9 @@
 @layer base {
   html {
     @apply bg-background text-text;
+    /* Always reserve the (classic, non-overlay) scrollbar gutter so dynamic content
+       - like the song suggestions - can't steal width and shift the layout. */
+    scrollbar-gutter: stable;
   }
 
   * {
