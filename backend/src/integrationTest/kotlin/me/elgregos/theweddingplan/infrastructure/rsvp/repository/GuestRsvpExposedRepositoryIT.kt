@@ -23,6 +23,10 @@ import me.elgregos.theweddingplan.domain.rsvp.repository.PendingSongSync
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.uuid.toJavaUuid
@@ -69,6 +73,30 @@ class GuestRsvpExposedRepositoryIT : AbstractIntegrationTest() {
         val saved = guestRsvpsRepository.save(mismatched)
 
         assertThat(saved).isEqualTo(johnDoeRsvpDeclined)
+    }
+
+    @Test
+    fun `should not create duplicate rows under concurrent submits for the same guest`() {
+        val errors = ConcurrentLinkedQueue<Throwable>()
+        val startGate = CountDownLatch(1)
+        val executor = Executors.newFixedThreadPool(8)
+
+        repeat(20) {
+            executor.submit {
+                startGate.await()
+                runCatching {
+                    guestRsvpsRepository.save(johnDoeRsvp.copy(id = GuestRsvpId()))
+                }.onFailure(errors::add)
+            }
+        }
+
+        startGate.countDown()
+        executor.shutdown()
+        val terminated = executor.awaitTermination(5, TimeUnit.SECONDS)
+
+        assertThat(terminated).isTrue()
+        assertThat(errors).isEmpty()
+        assertThat(rsvpCount()).isEqualTo(1)
     }
 
     @Test
@@ -140,6 +168,16 @@ class GuestRsvpExposedRepositoryIT : AbstractIntegrationTest() {
         guestRsvpsRepository.markSongSynchronized(johnDoeRsvpWithChoices.guestId)
 
         assertThat(guestRsvpsRepository.isSongOnPlaylist(laVieEnRose.deezerId)).isTrue()
+    }
+
+    @Test
+    fun `should flip only the sync flag and preserve the other answers`() {
+        guestRsvpsRepository.save(johnDoeRsvpWithChoices)
+
+        guestRsvpsRepository.markSongSynchronized(johnDoeRsvpWithChoices.guestId)
+
+        assertThat(guestRsvpsRepository.findByGuestId(johnDoeRsvpWithChoices.guestId))
+            .isEqualTo(johnDoeRsvpWithSyncedChoices)
     }
 
     @Test
