@@ -23,6 +23,18 @@ export type RsvpAttendance = 'ATTENDING' | 'DECLINED';
 export type Meal = 'MEAT' | 'FISH' | 'VEGGIE';
 
 /**
+ * A song a guest can pick for the wedding playlist, matching the Deezer proxy and
+ * RSVP song shapes. `preview` is an optional 30s audio URL.
+ */
+export interface Song {
+  deezerId: number;
+  title: string;
+  artist: string;
+  link: string;
+  preview?: string | null;
+}
+
+/**
  * Identity of the currently verified guest, resolved from the `guest_session` cookie.
  */
 export interface GuestSessionResponse {
@@ -36,7 +48,8 @@ export interface GuestSessionResponse {
 /**
  * A guest's stored RSVP, as returned by the secured RSVP endpoints.
  *
- * `meal` is only present for attending guests (it is reset when the guest declines).
+ * `meal` and `song` are only present for attending guests (both are reset when the
+ * guest declines); `song` stays optional even when attending.
  */
 export interface GuestRsvpResponse {
   id: string;
@@ -45,6 +58,7 @@ export interface GuestRsvpResponse {
   updateDate: string;
   attendance: RsvpAttendance;
   meal?: Meal | null;
+  song?: Song | null;
 }
 
 /**
@@ -122,13 +136,24 @@ export const fetchRsvp = async (): Promise<GuestRsvpResponse | null> => {
  * (`POST /api/guest-access/secured/rsvp`) and returns the saved RSVP.
  *
  * A meal is mandatory to attend and irrelevant otherwise, so the overloads make it
- * required for `ATTENDING` and reject it for `DECLINED`. The payload is derived from
- * the attendance, never from the presence of a meal.
+ * required for `ATTENDING` and reject it for `DECLINED`. A song is optional even when
+ * attending: pass a `Song` to set it, `null` to explicitly clear a previously saved
+ * one, or omit it to leave the field out. The payload is derived from the attendance,
+ * never from the meal/song truthiness.
  */
-export function submitRsvp(attendance: 'ATTENDING', meal: Meal): Promise<GuestRsvpResponse>;
+export function submitRsvp(attendance: 'ATTENDING', meal: Meal, song?: Song | null): Promise<GuestRsvpResponse>;
 export function submitRsvp(attendance: 'DECLINED'): Promise<GuestRsvpResponse>;
-export async function submitRsvp(attendance: RsvpAttendance, meal?: Meal): Promise<GuestRsvpResponse> {
-  const payload = attendance === 'ATTENDING' ? { attendance, meal } : { attendance };
+export async function submitRsvp(
+  attendance: RsvpAttendance,
+  meal?: Meal,
+  song?: Song | null,
+): Promise<GuestRsvpResponse> {
+  const payload =
+    attendance === 'ATTENDING'
+      ? song !== undefined
+        ? { attendance, meal, song }
+        : { attendance, meal }
+      : { attendance };
 
   const response = await securedGuestFetch('/rsvp', {
     method: 'POST',
@@ -144,4 +169,22 @@ export async function submitRsvp(attendance: RsvpAttendance, meal?: Meal): Promi
 
   return response.json() as Promise<GuestRsvpResponse>;
 }
+
+/**
+ * Searches the Deezer catalog through the proxy
+ * (`GET /api/guest-access/secured/song-search?q=...`) and returns track suggestions.
+ *
+ * The backend returns an empty list for a blank query; a failure (e.g. the catalog is
+ * unavailable) throws so the caller can surface a recoverable state without blocking,
+ * since choosing a song is optional.
+ */
+export const searchSongs = async (query: string): Promise<Song[]> => {
+  const response = await securedGuestFetch(`/song-search?q=${encodeURIComponent(query)}`);
+
+  if (!response.ok) {
+    throw new GuestAccessSecuredApiError('Unable to search songs at the moment.', response.status);
+  }
+
+  return response.json() as Promise<Song[]>;
+};
 
