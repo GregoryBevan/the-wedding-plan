@@ -6,5 +6,6 @@ data class SongChoice(
     val artist: String,
     val link: String,
     val preview: String? = null,
+    val synchronized: Boolean = false,
 )
 

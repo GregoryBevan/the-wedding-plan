@@ -16,6 +16,8 @@ import org.springframework.test.web.client.match.MockRestRequestMatchers.request
 import org.springframework.test.web.client.response.MockRestResponseCreators.withServerError
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 import org.springframework.web.client.RestClient
+import org.springframework.web.client.support.RestClientAdapter
+import org.springframework.web.service.invoker.HttpServiceProxyFactory
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -28,7 +30,11 @@ class DeezerSongCatalogIT {
     fun setUp() {
         val builder = RestClient.builder().baseUrl("https://api.deezer.com")
         server = MockRestServiceServer.bindTo(builder).build()
-        deezerSongCatalog = DeezerSongCatalog(builder.build())
+        val deezerSearchApi = HttpServiceProxyFactory
+            .builderFor(RestClientAdapter.create(builder.build()))
+            .build()
+            .createClient(DeezerSearchApi::class.java)
+        deezerSongCatalog = DeezerSongCatalog(deezerSearchApi)
     }
 
     @Test

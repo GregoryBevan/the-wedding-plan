@@ -62,6 +62,8 @@ Set these variables in Render dashboard (or through Blueprint secrets), never in
 - `SPRING_MAIL_SMTP_TIMEOUT`
 - `SPRING_MAIL_SMTP_WRITE_TIMEOUT`
 - `SERVER_FORWARD_HEADERS_STRATEGY` (set to `framework` only when requests always come through a trusted proxy that strips/overwrites `Forwarded`/`X-Forwarded-*` headers; otherwise keep default `none`)
+- `APP_DEEZER_ACCESS_TOKEN` (Deezer long-lived user access token with `manage_library` and `delete_library`; see [Deezer playlist sync](#deezer-playlist-sync-oauth))
+- `APP_DEEZER_PLAYLIST_ID` (id of the shared Deezer playlist chosen songs are added to)
 
 Optional (Deezer song search — sensible defaults are provided, override only if needed):
 
@@ -92,15 +94,66 @@ the session-guarded endpoint `GET /api/guest-access/secured/song-search?q=...`, 
 
 - Deezer's **search** endpoint is public and needs **no credentials**, so the proxy works out of the
   box with the defaults above.
-- To register your app anyway (recommended, and required later for playlist sync via OAuth), create a
-  Deezer developer account and application at <https://developers.deezer.com/myapps>. You'll obtain an
-  **Application ID** and **Secret Key**; keep them in secret environment variables (never in git),
-  using these names:
-  - `APP_DEEZER_APP_ID` — Deezer Application ID
-  - `APP_DEEZER_SECRET_KEY` — Deezer Secret Key
+- Playlist sync (below) does require a registered app and a user token. Create a Deezer developer
+  account and application at <https://developers.deezer.com/myapps>. You'll obtain an **Application ID**
+  and **Secret Key**; keep them in secret environment variables (never in git). They are only used to
+  mint the access token during the one-time authorization described below — the running app never reads
+  them directly.
 
-  These credentials are **not** used by the search proxy — they'll be wired in when the playlist-sync
-  (OAuth `manage_library`) feature lands.
+### Deezer playlist sync (OAuth)
+
+Every song a guest picks is mirrored to a **shared Deezer playlist** played on the wedding day. Adding a
+track to a playlist requires the Deezer `manage_library` and `delete_library` permissions, so the couple authorizes the app
+**once** and the resulting long-lived user access token is supplied to the backend as an environment
+variable. There is no OAuth callback endpoint in the app: the token is obtained out-of-band (steps
+below) and the backend simply reuses it.
+
+The sync is best-effort and fully isolated from the RSVP: on submission the guest's answer is saved
+first, then the track is added to the playlist (skipping it when already present, so there are no
+duplicates). Conversely, when a guest **drops** their song (removes it, replaces it, or declines) the
+track is removed from the playlist — unless another guest still chose it. Any Deezer failure is logged
+and swallowed — the guest's RSVP always succeeds. Both the add and remove run asynchronously on a
+background task thread, so the Deezer call never adds latency to the guest's response.
+
+Each chosen song carries a `synchronized` flag in the stored answer; it flips to `true` only once the
+track is confirmed on the playlist. A song whose sync failed (e.g. Deezer was down) stays pending, and
+a **daily reconciliation task** re-drives every pending song so a picked track eventually always lands
+on the playlist. Its schedule can be overridden with the optional `APP_PLAYLIST_RECONCILE_CRON`
+environment variable (a Spring cron expression; default `0 0 3 * * *`, i.e. 03:00 daily).
+
+Required environment variables:
+
+- `APP_DEEZER_ACCESS_TOKEN` — long-lived Deezer user access token with `manage_library` (mandatory)
+- `APP_DEEZER_PLAYLIST_ID` — id of the shared playlist to sync into (mandatory; it is the number in the
+  playlist URL, e.g. `1234567890` in `https://www.deezer.com/playlist/1234567890`)
+
+Both are **mandatory** (no defaults): the backend fails fast on startup if either is missing.
+
+#### Obtaining a long-lived (infinite) access token — one time
+
+Deezer OAuth is a two-legged, browser-based flow. Do this once as the couple's Deezer account owner:
+
+1. In your Deezer app settings (<https://developers.deezer.com/myapps>), set the **Redirect URL after
+   authentication** to any URL you control (it only needs to receive the `code` query param), e.g.
+   `http://localhost:8080/`.
+2. In a browser, authorize the app and request an **infinite** token by passing `expiration=0`:
+
+   ```
+   https://connect.deezer.com/oauth/auth.php?app_id=<APP_ID>&redirect_uri=<REDIRECT_URI>&perms=basic_access,manage_library&expiration=0
+   ```
+
+   Approve the permissions. Deezer redirects to `<REDIRECT_URI>?code=<CODE>`; copy the `code`.
+3. Exchange the `code` for the access token (e.g. with `curl`):
+
+   ```bash
+   curl "https://connect.deezer.com/oauth/access_token.php?app_id=<APP_ID>&secret=<APP_SECRET>&code=<CODE>&output=json"
+   ```
+
+   The response contains `access_token` (and `expires: 0` for an infinite token). Use that
+   `access_token` value as `APP_DEEZER_ACCESS_TOKEN`.
+4. Create (or pick) the shared playlist on the couple's account and use its id as `APP_DEEZER_PLAYLIST_ID`.
+
+If the token is ever revoked, repeat the steps and update `APP_DEEZER_ACCESS_TOKEN`.
 
 #### Adding other providers later
 

@@ -1,6 +1,7 @@
 package me.elgregos.theweddingplan.application.rsvp.command
 
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
+import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.bohemianRhapsodyAnswers
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeAnswers
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.veggieAnswers
 import me.elgregos.theweddingplan.domain.rsvp.entity.RsvpAttendance
@@ -11,6 +12,12 @@ object SubmitGuestRsvpCommandFixtures {
         guestId = johnDoe.id,
         attendance = RsvpAttendance.ATTENDING,
         answers = johnDoeAnswers,
+    )
+
+    val johnDoeAttendingOtherSong = SubmitGuestRsvpCommand(
+        guestId = johnDoe.id,
+        attendance = RsvpAttendance.ATTENDING,
+        answers = bohemianRhapsodyAnswers,
     )
 
     val johnDoeAttendingVeggie = SubmitGuestRsvpCommand(

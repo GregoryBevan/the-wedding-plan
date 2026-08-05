@@ -1,17 +1,25 @@
 package me.elgregos.theweddingplan.infrastructure.rsvp.repository
 
 import assertk.assertThat
+import assertk.assertions.containsExactly
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
 import assertk.assertions.isNull
+import assertk.assertions.isTrue
 import me.elgregos.theweddingplan.AbstractIntegrationTest
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvp
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvp
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvpDeclined
+import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvpMealOnly
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvpWithChoices
+import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvpWithSyncedChoices
+import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.laVieEnRose
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpId
 import me.elgregos.theweddingplan.domain.rsvp.entity.RsvpAttendance
+import me.elgregos.theweddingplan.domain.rsvp.repository.PendingSongSync
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 import java.util.*
@@ -80,6 +88,92 @@ class GuestRsvpExposedRepositoryIT : AbstractIntegrationTest() {
         guestRsvpsRepository.save(johnDoeRsvpWithChoices)
 
         assertThat(guestRsvpsRepository.findByGuestId(johnDoeRsvpWithChoices.guestId)).isEqualTo(johnDoeRsvpWithChoices)
+    }
+
+    @Test
+    fun `should not report an unsynced song as on the playlist`() {
+        guestRsvpsRepository.save(johnDoeRsvpWithChoices)
+
+        assertThat(guestRsvpsRepository.isSongOnPlaylist(laVieEnRose.deezerId)).isFalse()
+    }
+
+    @Test
+    fun `should report a synced song as on the playlist`() {
+        guestRsvpsRepository.save(johnDoeRsvpWithSyncedChoices)
+
+        assertThat(guestRsvpsRepository.isSongOnPlaylist(laVieEnRose.deezerId)).isTrue()
+    }
+
+    @Test
+    fun `should report a chosen song as chosen by a guest even when not synced`() {
+        guestRsvpsRepository.save(johnDoeRsvpWithChoices)
+
+        assertThat(guestRsvpsRepository.isSongChosenByAnyGuest(laVieEnRose.deezerId)).isTrue()
+    }
+
+    @Test
+    fun `should not report a song no guest chose as chosen`() {
+        guestRsvpsRepository.save(johnDoeRsvpMealOnly)
+
+        assertThat(guestRsvpsRepository.isSongChosenByAnyGuest(laVieEnRose.deezerId)).isFalse()
+    }
+
+    @Test
+    fun `should list a guest whose song is not synced yet`() {
+        guestRsvpsRepository.save(johnDoeRsvpWithChoices)
+
+        assertThat(guestRsvpsRepository.findGuestsWithUnsynchronizedSong())
+            .containsExactly(PendingSongSync(johnDoeRsvpWithChoices.guestId, laVieEnRose))
+    }
+
+    @Test
+    fun `should not list a guest whose song is already synced`() {
+        guestRsvpsRepository.save(johnDoeRsvpWithSyncedChoices)
+
+        assertThat(guestRsvpsRepository.findGuestsWithUnsynchronizedSong()).isEmpty()
+    }
+
+    @Test
+    fun `should flag a guest's song as synchronized`() {
+        guestRsvpsRepository.save(johnDoeRsvpWithChoices)
+
+        guestRsvpsRepository.markSongSynchronized(johnDoeRsvpWithChoices.guestId)
+
+        assertThat(guestRsvpsRepository.isSongOnPlaylist(laVieEnRose.deezerId)).isTrue()
+    }
+
+    @Test
+    fun `should keep the guest-facing version when flagging a song as synchronized`() {
+        guestRsvpsRepository.save(johnDoeRsvpWithChoices)
+
+        guestRsvpsRepository.markSongSynchronized(johnDoeRsvpWithChoices.guestId)
+
+        assertThat(rsvpById(johnDoeRsvpWithChoices.id).version).isEqualTo(johnDoeRsvpWithChoices.version)
+    }
+
+    @Test
+    fun `should do nothing when flagging a song synchronized for a guest without rsvp`() {
+        guestRsvpsRepository.markSongSynchronized(janeDoe.id)
+
+        assertThat(rsvpCount()).isEqualTo(0)
+    }
+
+    @Test
+    fun `should do nothing when flagging a song synchronized for a guest without a song`() {
+        guestRsvpsRepository.save(johnDoeRsvpMealOnly)
+
+        guestRsvpsRepository.markSongSynchronized(johnDoeRsvpMealOnly.guestId)
+
+        assertThat(guestRsvpsRepository.findByGuestId(johnDoeRsvpMealOnly.guestId)).isEqualTo(johnDoeRsvpMealOnly)
+    }
+
+    @Test
+    fun `should leave an already synchronized song untouched`() {
+        guestRsvpsRepository.save(johnDoeRsvpWithSyncedChoices)
+
+        guestRsvpsRepository.markSongSynchronized(johnDoeRsvpWithSyncedChoices.guestId)
+
+        assertThat(guestRsvpsRepository.findByGuestId(johnDoeRsvpWithSyncedChoices.guestId)).isEqualTo(johnDoeRsvpWithSyncedChoices)
     }
 
     private fun rsvpCount() =

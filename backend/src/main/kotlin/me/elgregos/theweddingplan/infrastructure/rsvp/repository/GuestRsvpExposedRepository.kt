@@ -5,6 +5,7 @@ import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvp
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpId
 import me.elgregos.theweddingplan.domain.rsvp.entity.RsvpAttendance
 import me.elgregos.theweddingplan.domain.rsvp.repository.GuestRsvps
+import me.elgregos.theweddingplan.domain.rsvp.repository.PendingSongSync
 import me.elgregos.theweddingplan.infrastructure.guest.repository.GuestTable
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
@@ -20,6 +21,37 @@ class GuestRsvpExposedRepository: GuestRsvps {
     @Transactional(readOnly = true)
     override fun findByGuestId(guestId: GuestId): GuestRsvp? =
         selectByGuestId(guestId)?.toGuestRsvp()
+
+    @Transactional(readOnly = true)
+    override fun isSongOnPlaylist(deezerId: Long): Boolean =
+        GuestRsvpTable.selectAll()
+            .any { row -> row[GuestRsvpTable.answers]?.song?.let { it.deezerId == deezerId && it.synchronized } == true }
+
+    @Transactional(readOnly = true)
+    override fun isSongChosenByAnyGuest(deezerId: Long): Boolean =
+        GuestRsvpTable.selectAll()
+            .any { row -> row[GuestRsvpTable.answers]?.song?.deezerId == deezerId }
+
+    @Transactional(readOnly = true)
+    override fun findGuestsWithUnsynchronizedSong(): List<PendingSongSync> =
+        GuestRsvpTable.selectAll()
+            .mapNotNull { row ->
+                row[GuestRsvpTable.answers]?.song
+                    ?.takeUnless { it.synchronized }
+                    ?.let { PendingSongSync(GuestId(row[GuestRsvpTable.guestId]), it) }
+            }
+
+    @Transactional
+    override fun markSongSynchronized(guestId: GuestId) {
+        lockGuest(guestId)
+        val answers = selectByGuestId(guestId)?.get(GuestRsvpTable.answers) ?: return
+        val song = answers.song ?: return
+        if (song.synchronized) return
+
+        GuestRsvpTable.update({ GuestRsvpTable.guestId eq guestId.value }) {
+            it[GuestRsvpTable.answers] = answers.copy(song = song.copy(synchronized = true))
+        }
+    }
 
     @Transactional
     override fun save(rsvp: GuestRsvp): GuestRsvp {

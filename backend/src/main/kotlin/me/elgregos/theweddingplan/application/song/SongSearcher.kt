@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import me.elgregos.theweddingplan.application.song.result.SongSearchResult
 import me.elgregos.theweddingplan.domain.song.SongCatalog
 import me.elgregos.theweddingplan.domain.song.SongCatalogUnavailableException
+import me.elgregos.theweddingplan.infrastructure.shared.warnWithDetails
 import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
@@ -18,7 +19,7 @@ class SongSearcher(private val songCatalog: SongCatalog) {
         return try {
             SongSearchResult.Suggestions(songCatalog.search(trimmed))
         } catch (e: SongCatalogUnavailableException) {
-            logger.warn(e) { "Song catalog unavailable for query '$trimmed'" }
+            logger.warnWithDetails(e, "Song catalog unavailable") { "Song catalog unavailable for query '$trimmed'" }
             SongSearchResult.Unavailable
         }
     }

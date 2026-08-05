@@ -17,6 +17,9 @@ app:
     allowed-emails:
       - gregory@example.com
     success-redirect-url: http://localhost:5173
+  deezer:
+    access-token: test-deezer-access-token
+    playlist-id: "123456789"
   guest-access:
     base-url: http://localhost:8080
     guest-area-url: http://localhost:5174/guest-access/secured-area
