@@ -6,12 +6,11 @@ import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpId
 import me.elgregos.theweddingplan.domain.rsvp.entity.RsvpAttendance
 import me.elgregos.theweddingplan.domain.rsvp.repository.GuestRsvps
 import me.elgregos.theweddingplan.domain.rsvp.repository.PendingSongSync
-import me.elgregos.theweddingplan.infrastructure.guest.repository.GuestTable
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.upsert
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 
@@ -43,53 +42,36 @@ class GuestRsvpExposedRepository: GuestRsvps {
 
     @Transactional
     override fun markSongSynchronized(guestId: GuestId) {
-        lockGuest(guestId)
-        val answers = selectByGuestId(guestId)?.get(GuestRsvpTable.answers) ?: return
-        val song = answers.song ?: return
-        if (song.synchronized) return
-
-        GuestRsvpTable.update({ GuestRsvpTable.guestId eq guestId.value }) {
-            it[GuestRsvpTable.answers] = answers.copy(song = song.copy(synchronized = true))
-        }
+        TransactionManager.current().exec(
+            """
+            update guest_rsvp
+            set answers = jsonb_set(answers, '{song,synchronized}', 'true'::jsonb)
+            where guest_id = ?
+              and answers -> 'song' ->> 'synchronized' = 'false'
+            """.trimIndent(),
+            listOf(GuestRsvpTable.guestId.columnType to guestId.value),
+        )
     }
 
     @Transactional
     override fun save(rsvp: GuestRsvp): GuestRsvp {
-        lockGuest(rsvp.guestId)
-        val existing = selectByGuestId(rsvp.guestId)?.toGuestRsvp()
-        return if (existing != null) {
-            GuestRsvpTable.update({ GuestRsvpTable.guestId eq rsvp.guestId.value }) {
-                it[version] = rsvp.version
-                it[updateDate] = rsvp.updateDate
-                it[attendance] = rsvp.attendance.name
-                it[answers] = rsvp.answers
-            }
-            existing.copy(
-                version = rsvp.version,
-                updateDate = rsvp.updateDate,
-                attendance = rsvp.attendance,
-                answers = rsvp.answers,
-            )
-        } else {
-            GuestRsvpTable.insert {
-                it[id] = rsvp.id.value
-                it[guestId] = rsvp.guestId.value
-                it[version] = rsvp.version
-                it[creationDate] = rsvp.creationDate
-                it[updateDate] = rsvp.updateDate
-                it[attendance] = rsvp.attendance.name
-                it[answers] = rsvp.answers
-            }
-            rsvp
+        GuestRsvpTable.upsert(
+            GuestRsvpTable.guestId,
+            onUpdateExclude = listOf(GuestRsvpTable.id, GuestRsvpTable.creationDate),
+        ) {
+            it[id] = rsvp.id.value
+            it[guestId] = rsvp.guestId.value
+            it[version] = rsvp.version
+            it[creationDate] = rsvp.creationDate
+            it[updateDate] = rsvp.updateDate
+            it[attendance] = rsvp.attendance.name
+            it[answers] = rsvp.answers
         }
+
+        return selectByGuestId(rsvp.guestId)?.toGuestRsvp()
+            ?: error("RSVP row missing immediately after upsert")
     }
 
-    private fun lockGuest(guestId: GuestId) {
-        GuestTable.selectAll()
-            .where { GuestTable.id eq guestId.value }
-            .forUpdate()
-            .firstOrNull()
-    }
 
     private fun selectByGuestId(guestId: GuestId): ResultRow? =
         GuestRsvpTable.selectAll()
