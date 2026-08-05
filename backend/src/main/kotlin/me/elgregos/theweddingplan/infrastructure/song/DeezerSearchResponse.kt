@@ -26,6 +26,8 @@ data class DeezerError(
     val code: Int? = null,
 ) {
     val errorCode: DeezerErrorCode get() = DeezerErrorCode.fromCode(code)
+
+    fun describe() = "$errorCode (code=$code, message=$message)"
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)

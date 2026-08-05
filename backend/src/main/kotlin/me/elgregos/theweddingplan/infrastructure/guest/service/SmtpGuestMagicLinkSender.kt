@@ -6,6 +6,7 @@ import me.elgregos.theweddingplan.domain.guest.entity.GuestMagicLink
 import me.elgregos.theweddingplan.domain.guest.service.GuestMagicLinkSender
 import me.elgregos.theweddingplan.infrastructure.config.GuestAccessProperties
 import me.elgregos.theweddingplan.infrastructure.config.MailProperties
+import me.elgregos.theweddingplan.infrastructure.shared.warnWithDetails
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.mail.MailException
 import org.springframework.mail.javamail.JavaMailSender
@@ -43,7 +44,7 @@ class SmtpGuestMagicLinkSender(
         runCatching { javaMailSender.send(message) }
             .onFailure { error ->
                 if (error is MailException) {
-                    logger.warn {
+                    logger.warnWithDetails(message = "Failed to send magic-link email") {
                         "Failed to send magic-link email (invitationId=${guestMagicLink.invitationId}, guestId=${guestMagicLink.guestId})"
                     }
                     return

@@ -20,6 +20,13 @@ spring:
     basename: messages
     encoding: UTF-8
     fallback-to-system-locale: false
+  task:
+    execution:
+      # Let in-flight @Async tasks (the best-effort playlist sync) drain on shutdown so a normal
+      # redeploy doesn't drop one. Anything not drained in time stays pending for the daily reconciler.
+      shutdown:
+        await-termination: true
+        await-termination-period: 20s
   security:
     oauth2:
       client:
@@ -56,7 +63,9 @@ app:
   guest:
     default-language: ${APP_GUEST_DEFAULT_LANGUAGE:FR}
   deezer:
+    access-token: ${APP_DEEZER_ACCESS_TOKEN}
     base-url: ${APP_DEEZER_BASE_URL:https://api.deezer.com}
+    playlist-id: ${APP_DEEZER_PLAYLIST_ID}
     connect-timeout: ${APP_DEEZER_CONNECT_TIMEOUT:2s}
     read-timeout: ${APP_DEEZER_READ_TIMEOUT:3s}
   guest-access:

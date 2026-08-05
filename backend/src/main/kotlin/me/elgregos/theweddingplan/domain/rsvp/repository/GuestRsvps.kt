@@ -7,5 +7,9 @@ interface GuestRsvps {
 
     fun findByGuestId(guestId: GuestId): GuestRsvp?
     fun save(rsvp: GuestRsvp): GuestRsvp
+    fun isSongOnPlaylist(deezerId: Long): Boolean
+    fun isSongChosenByAnyGuest(deezerId: Long): Boolean
+    fun findGuestsWithUnsynchronizedSong(): List<PendingSongSync>
+    fun markSongSynchronized(guestId: GuestId)
 }
 

@@ -1,6 +1,7 @@
 package me.elgregos.theweddingplan.api.rsvp
 
 import assertk.assertThat
+import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import me.elgregos.theweddingplan.AbstractEndpointIntegrationTest
@@ -8,13 +9,28 @@ import me.elgregos.theweddingplan.api.rsvp.response.GuestRsvpResponse
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.janeDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestFixtures.johnDoe
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
+import me.elgregos.theweddingplan.support.RecordingWeddingPlaylist
+import me.elgregos.theweddingplan.support.RecordingWeddingPlaylistConfig
+import me.elgregos.theweddingplan.support.SynchronousAsyncConfig
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.context.jdbc.Sql
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
+@Import(RecordingWeddingPlaylistConfig::class, SynchronousAsyncConfig::class)
 @Sql(statements = ["DELETE FROM guest_rsvp"], executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class GuestRsvpEndpointIT : AbstractEndpointIntegrationTest() {
+
+    @Autowired
+    private lateinit var recordingWeddingPlaylist: RecordingWeddingPlaylist
+
+    @BeforeTest
+    fun resetPlaylist() {
+        recordingWeddingPlaylist.reset()
+    }
 
 
     @Test
@@ -197,6 +213,37 @@ class GuestRsvpEndpointIT : AbstractEndpointIntegrationTest() {
     }
 
     @Test
+    fun `should add the chosen song to the shared playlist`() {
+        val csrf = csrfContext()
+
+        restTestClient.post().uri("/api/guest-access/secured/rsvp")
+            .header(HttpHeaders.COOKIE, "${csrf.cookies}; ${guestSessionCookie(janeDoe.id)}")
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(mapOf("attendance" to "ATTENDING", "meal" to "FISH", "song" to songBody))
+            .exchange()
+            .expectStatus().isCreated
+
+        assertThat(recordingWeddingPlaylist.addedTrackIds).containsExactly(3135556L)
+    }
+
+    @Test
+    fun `should still record the rsvp when the playlist sync fails`() {
+        recordingWeddingPlaylist.failing = true
+        val csrf = csrfContext()
+
+        restTestClient.post().uri("/api/guest-access/secured/rsvp")
+            .header(HttpHeaders.COOKIE, "${csrf.cookies}; ${guestSessionCookie(janeDoe.id)}")
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(mapOf("attendance" to "ATTENDING", "meal" to "FISH", "song" to songBody))
+            .exchange()
+            .expectStatus().isCreated
+
+        assertThat(fetchRsvp(janeDoe.id).song?.deezerId).isEqualTo(3135556L)
+    }
+
+    @Test
     fun `should ignore choices when the guest declines`() {
         val csrf = csrfContext()
 
@@ -209,6 +256,29 @@ class GuestRsvpEndpointIT : AbstractEndpointIntegrationTest() {
             .expectStatus().isCreated
 
         assertThat(fetchRsvp(janeDoe.id).meal).isNull()
+    }
+
+    @Test
+    fun `should remove the chosen song from the shared playlist when the guest drops it`() {
+        val csrf = csrfContext()
+        restTestClient.post().uri("/api/guest-access/secured/rsvp")
+            .header(HttpHeaders.COOKIE, "${csrf.cookies}; ${guestSessionCookie(janeDoe.id)}")
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(mapOf("attendance" to "ATTENDING", "meal" to "FISH", "song" to songBody))
+            .exchange()
+            .expectStatus().isCreated
+
+        val update = csrfContext()
+        restTestClient.post().uri("/api/guest-access/secured/rsvp")
+            .header(HttpHeaders.COOKIE, "${update.cookies}; ${guestSessionCookie(janeDoe.id)}")
+            .header("X-XSRF-TOKEN", update.csrfToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(mapOf("attendance" to "ATTENDING", "meal" to "FISH"))
+            .exchange()
+            .expectStatus().isOk
+
+        assertThat(recordingWeddingPlaylist.removedTrackIds).containsExactly(3135556L)
     }
 
     private val songBody = mapOf(
@@ -246,5 +316,4 @@ class GuestRsvpEndpointIT : AbstractEndpointIntegrationTest() {
             .responseBody
             ?: error("Expected rsvp in response body")
 }
-
 
