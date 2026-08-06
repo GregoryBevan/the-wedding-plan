@@ -15,7 +15,7 @@ plugins {
 
 
 group = "me.elgregoss"
-version = "0.0.41-SNAPSHOT"
+version = "0.0.42-SNAPSHOT"
 
 java {
     toolchain {
