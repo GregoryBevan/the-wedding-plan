@@ -62,7 +62,12 @@ app:
       window-seconds: ${APP_AUTH_RATE_LIMIT_WINDOW_SECONDS:60}
   mail:
     from: ${APP_MAIL_FROM:no-reply@localhost}
-    enabled: ${APP_MAIL_ENABLED:true}
+    # Magic-link email transport: smtp (local/Mailpit), brevo (prod — Render blocks outbound SMTP), or noop.
+    provider: ${APP_MAIL_PROVIDER:smtp}
+  brevo:
+    api-key: ${BREVO_API_KEY:}
+    base-url: ${BREVO_BASE_URL:https://api.brevo.com}
+    sender-name: ${BREVO_SENDER_NAME:DYWY}
   guest:
     default-language: ${APP_GUEST_DEFAULT_LANGUAGE:FR}
   deezer:

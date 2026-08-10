@@ -49,22 +49,14 @@ Set these variables in Render dashboard (or through Blueprint secrets), never in
 - `POSTGRES_USER`
 - `POSTGRES_PASSWORD`
 - `APP_MAIL_FROM`
-- `APP_MAIL_ENABLED`
+- `APP_MAIL_PROVIDER` (magic-link email transport: `smtp` (default), `brevo`, or `noop`. Use **`brevo`** on Render — its runtime blocks outbound SMTP; see [Magic-link email delivery](#magic-link-email-delivery-smtp-vs-brevo))
 - `APP_GUEST_ACCESS_BASE_URL`
 - `APP_GUEST_AREA_URL`
-- `SPRING_MAIL_HOST`
-- `SPRING_MAIL_PORT`
-- `SPRING_MAIL_USERNAME`
-- `SPRING_MAIL_PASSWORD`
-- `SPRING_MAIL_SMTP_AUTH`
-- `SPRING_MAIL_SMTP_SSL_ENABLE` (implicit TLS for **port 465**; set `true` with STARTTLS `false`. For **port 587** use STARTTLS `true` and leave this `false`)
-- `SPRING_MAIL_SMTP_STARTTLS_ENABLE`
-- `SPRING_MAIL_SMTP_CONNECTION_TIMEOUT`
-- `SPRING_MAIL_SMTP_TIMEOUT`
-- `SPRING_MAIL_SMTP_WRITE_TIMEOUT`
 - `SERVER_FORWARD_HEADERS_STRATEGY` (set to `framework` only when requests always come through a trusted proxy that strips/overwrites `Forwarded`/`X-Forwarded-*` headers; otherwise keep default `none`)
 - `APP_DEEZER_ACCESS_TOKEN` (Deezer long-lived user access token with `manage_library` and `delete_library`; see [Deezer playlist sync](#deezer-playlist-sync-oauth))
 - `APP_DEEZER_PLAYLIST_ID` (id of the shared Deezer playlist chosen songs are added to)
+
+Email-transport variables depend on `APP_MAIL_PROVIDER` — see [Magic-link email delivery](#magic-link-email-delivery-smtp-vs-brevo) for the `brevo` (Render) and `smtp` sets.
 
 Optional (Deezer song search — sensible defaults are provided, override only if needed):
 
@@ -82,6 +74,31 @@ In Google OAuth app settings, configure callback URL:
 
 - Backoffice: `https://<your-render-domain>/backoffice`
 - API base: same origin, under `/api`
+
+### Magic-link email delivery (SMTP vs Brevo)
+
+The guest magic-link email is sent through a pluggable transport selected by `APP_MAIL_PROVIDER`:
+
+- `smtp` (default) — classic SMTP via `JavaMailSender`. Good for local dev (Mailpit) and any host
+  that permits outbound SMTP.
+- `brevo` — Brevo's HTTPS transactional email API (`POST /v3/smtp/email`). **Use this on Render**,
+  whose runtime blocks outbound SMTP ports (25/465/587), so SMTP connections time out. Because Brevo
+  is called over HTTPS (443), it is unaffected.
+- `noop` — no-op sender (sends nothing); useful for environments where email must be disabled.
+
+In all cases delivery is best-effort: a provider failure is logged and swallowed so the magic-link
+request always succeeds (the guest can retry).
+
+**When `APP_MAIL_PROVIDER=brevo`** set:
+
+- `BREVO_API_KEY` — Brevo transactional API key (mandatory; keep it secret)
+- `APP_MAIL_FROM` — the From address; it must be a **verified sender/domain** in Brevo
+- `BREVO_SENDER_NAME` (optional, default `Wedding Plan`)
+- `BREVO_BASE_URL` (optional, default `https://api.brevo.com`)
+
+**When `APP_MAIL_PROVIDER=smtp`** set the standard Spring mail vars: `SPRING_MAIL_HOST`,
+`SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD`, `SPRING_MAIL_SMTP_AUTH`,
+`SPRING_MAIL_SMTP_STARTTLS_ENABLE`, and the `SPRING_MAIL_SMTP_*_TIMEOUT` values.
 
 ### Deezer song search (autocomplete proxy)
 
