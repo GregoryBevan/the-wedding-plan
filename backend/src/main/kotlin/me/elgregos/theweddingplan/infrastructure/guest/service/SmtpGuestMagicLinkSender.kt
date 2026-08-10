@@ -44,7 +44,7 @@ class SmtpGuestMagicLinkSender(
         runCatching { javaMailSender.send(message) }
             .onFailure { error ->
                 if (error is MailException) {
-                    logger.warnWithDetails(message = "Failed to send magic-link email") {
+                    logger.warnWithDetails(error, "Failed to send magic-link email") {
                         "Failed to send magic-link email (invitationId=${guestMagicLink.invitationId}, guestId=${guestMagicLink.guestId})"
                     }
                     return
