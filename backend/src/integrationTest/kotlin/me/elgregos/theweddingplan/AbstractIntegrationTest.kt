@@ -46,7 +46,7 @@ abstract class AbstractIntegrationTest {
 
             registry.add("spring.mail.host") { mailpit.host }
             registry.add("spring.mail.port") { mailpit.getMappedPort(MAILPIT_SMTP_PORT) }
-            registry.add("app.mail.enabled") { true }
+            registry.add("app.mail.provider") { "smtp" }
             registry.add("app.mail.from") { "no-reply@localhost" }
         }
     }

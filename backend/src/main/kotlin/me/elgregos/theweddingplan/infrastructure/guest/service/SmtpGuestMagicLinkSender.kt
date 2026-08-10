@@ -12,13 +12,11 @@ import org.springframework.mail.MailException
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.stereotype.Component
-import org.springframework.context.annotation.Primary
 
 private val logger = KotlinLogging.logger {}
 
 @Component
-@Primary
-@ConditionalOnProperty(prefix = "app.mail", name = ["enabled"], havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "app.mail", name = ["provider"], havingValue = "smtp", matchIfMissing = true)
 class SmtpGuestMagicLinkSender(
     private val javaMailSender: JavaMailSender,
     private val guestAccessProperties: GuestAccessProperties,
