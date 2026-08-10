@@ -57,6 +57,7 @@ Set these variables in Render dashboard (or through Blueprint secrets), never in
 - `SPRING_MAIL_USERNAME`
 - `SPRING_MAIL_PASSWORD`
 - `SPRING_MAIL_SMTP_AUTH`
+- `SPRING_MAIL_SMTP_SSL_ENABLE` (implicit TLS for **port 465**; set `true` with STARTTLS `false`. For **port 587** use STARTTLS `true` and leave this `false`)
 - `SPRING_MAIL_SMTP_STARTTLS_ENABLE`
 - `SPRING_MAIL_SMTP_CONNECTION_TIMEOUT`
 - `SPRING_MAIL_SMTP_TIMEOUT`

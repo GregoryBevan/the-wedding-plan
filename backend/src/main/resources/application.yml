@@ -43,6 +43,9 @@ spring:
       mail:
         smtp:
           auth: ${SPRING_MAIL_SMTP_AUTH:false}
+          # Implicit TLS (SMTPS) — enable for port 465. Mutually exclusive with STARTTLS (port 587).
+          ssl:
+            enable: ${SPRING_MAIL_SMTP_SSL_ENABLE:false}
           starttls:
             enable: ${SPRING_MAIL_SMTP_STARTTLS_ENABLE:false}
           connectiontimeout: ${SPRING_MAIL_SMTP_CONNECTION_TIMEOUT:5000}
