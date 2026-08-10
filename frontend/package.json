@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.0.42",
+  "version": "0.0.43",
   "type": "module",
   "packageManager": "pnpm@11.20.0",
   "scripts": {
@@ -19,24 +19,24 @@
   },
   "dependencies": {
     "qrcode.vue": "^3.10.0",
-    "vue": "^3.5.38",
+    "vue": "^3.5.41",
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
-    "@playwright/test": "^1.61.1",
-    "@tailwindcss/vite": "^4.3.1",
-    "@types/node": "^24.13.2",
-    "@vitejs/plugin-vue": "^6.0.7",
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^24.13.3",
+    "@vitejs/plugin-vue": "^6.0.8",
     "@vitest/coverage-v8": "4.1.9",
     "@vue/test-utils": "^2.4.11",
-    "autoprefixer": "^10.5.0",
+    "autoprefixer": "^10.5.4",
     "jsdom": "^29.1.1",
     "postcss": "8.5.25",
-    "tailwindcss": "^4.3.1",
+    "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "vite": "8.0.16",
-    "vitest": "^4.1.9",
+    "vitest": "^4.1.10",
     "vitest-localstorage-mock": "^0.1.2",
-    "vue-tsc": "^3.3.5"
+    "vue-tsc": "^3.3.9"
   }
 }

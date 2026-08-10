@@ -119,6 +119,7 @@ class SecurityConfig(
                         AuthorizationDecision(authProperties.isAllowed(email))
                     }
                     .requestMatchers(
+                        "/",
                         "/assets/**",
                         "/backoffice/**",
                         "/public/**",
