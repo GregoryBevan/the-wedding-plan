@@ -18,6 +18,8 @@ import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.br
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationId
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationListCriteria
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationPage
+import jakarta.validation.Validation
+import jakarta.validation.Validator
 import org.springframework.http.HttpStatus
 import org.springframework.web.servlet.function.ServerRequest
 import java.util.*
@@ -25,6 +27,8 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class InvitationEndpointTest {
+
+    private lateinit var validator: Validator
 
     private lateinit var invitationAdder: InvitationAdder
     private lateinit var invitationLister: InvitationLister
@@ -40,7 +44,8 @@ class InvitationEndpointTest {
         invitationLister = mockk()
         invitationGetter = mockk()
         invitationUpdater = mockk()
-        invitationEndpoint = InvitationEndpoint(invitationAdder, invitationLister, invitationGetter, invitationUpdater)
+        validator = Validation.buildDefaultValidatorFactory().validator
+        invitationEndpoint = InvitationEndpoint(invitationAdder, invitationLister, invitationGetter, invitationUpdater, validator)
     }
 
     private fun updateInvitationRequest(
@@ -290,6 +295,46 @@ class InvitationEndpointTest {
         every { invitationUpdater.update(payload.toCommandOrNull(invitationId)!!) } returns UpdateInvitationResult.NotFound
 
         assertThat(invitationEndpoint.updateInvitation(request).statusCode()).isEqualTo(HttpStatus.NOT_FOUND)
+    }
+
+    @Test
+    fun `should return bad request when update service reports missing guests`() {
+        val request = mockk<ServerRequest>()
+        val invitationId = brideFamilyInvitation.id
+        val payload = updateInvitationRequest()
+
+        mockUpdateRequest(request, invitationId, payload)
+        every { invitationUpdater.update(payload.toCommandOrNull(invitationId)!!) } returns UpdateInvitationResult.MissingGuests
+
+        assertThat(invitationEndpoint.updateInvitation(request).statusCode()).isEqualTo(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    fun `should return bad request when update service reports invalid guests`() {
+        val request = mockk<ServerRequest>()
+        val invitationId = brideFamilyInvitation.id
+        val payload = updateInvitationRequest()
+
+        mockUpdateRequest(request, invitationId, payload)
+        every { invitationUpdater.update(payload.toCommandOrNull(invitationId)!!) } returns UpdateInvitationResult.InvalidGuests(
+            brideFamilyInvitation.guests.map { it.id }.toSet(),
+        )
+
+        assertThat(invitationEndpoint.updateInvitation(request).statusCode()).isEqualTo(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    fun `should return conflict when update service reports already assigned guests`() {
+        val request = mockk<ServerRequest>()
+        val invitationId = brideFamilyInvitation.id
+        val payload = updateInvitationRequest()
+
+        mockUpdateRequest(request, invitationId, payload)
+        every { invitationUpdater.update(payload.toCommandOrNull(invitationId)!!) } returns UpdateInvitationResult.AlreadyAssignedGuests(
+            brideFamilyInvitation.guests.map { it.id }.toSet(),
+        )
+
+        assertThat(invitationEndpoint.updateInvitation(request).statusCode()).isEqualTo(HttpStatus.CONFLICT)
     }
 
     @Test

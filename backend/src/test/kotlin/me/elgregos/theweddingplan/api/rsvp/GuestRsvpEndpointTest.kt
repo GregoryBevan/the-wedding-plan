@@ -14,6 +14,8 @@ import me.elgregos.theweddingplan.domain.guest.entity.GuestSession
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationFixtures.bridesMaidInvitation
 import me.elgregos.theweddingplan.domain.rsvp.entity.GuestRsvpFixtures.johnDoeRsvp
 import me.elgregos.theweddingplan.infrastructure.guest.security.GuestSessionAuthenticationToken
+import jakarta.validation.Validation
+import jakarta.validation.Validator
 import org.springframework.http.HttpStatus
 import org.springframework.web.servlet.function.ServerRequest
 import java.util.Optional
@@ -23,6 +25,7 @@ import kotlin.test.Test
 class GuestRsvpEndpointTest {
 
     private val session = GuestSession(guestId = janeDoe.id, invitationId = bridesMaidInvitation.id)
+    private lateinit var validator: Validator
 
     private lateinit var guestRsvpSubmitter: GuestRsvpSubmitter
     private lateinit var guestRsvpGetter: GuestRsvpGetter
@@ -32,7 +35,8 @@ class GuestRsvpEndpointTest {
     fun setUp() {
         guestRsvpSubmitter = mockk()
         guestRsvpGetter = mockk()
-        guestRsvpEndpoint = GuestRsvpEndpoint(guestRsvpSubmitter, guestRsvpGetter)
+        validator = Validation.buildDefaultValidatorFactory().validator
+        guestRsvpEndpoint = GuestRsvpEndpoint(guestRsvpSubmitter, guestRsvpGetter, validator)
     }
 
     @Test

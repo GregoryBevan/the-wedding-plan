@@ -1,9 +1,10 @@
 package me.elgregos.theweddingplan.api.guest
 
-import me.elgregos.theweddingplan.api.common.statusQueryParam
 import me.elgregos.theweddingplan.api.common.availabilityQueryParam
+import me.elgregos.theweddingplan.api.common.bindOrBadRequest
 import me.elgregos.theweddingplan.api.common.guestIdPathParam
 import me.elgregos.theweddingplan.api.common.intQueryParam
+import me.elgregos.theweddingplan.api.common.statusQueryParam
 import me.elgregos.theweddingplan.api.guest.request.AddGuestRequest
 import me.elgregos.theweddingplan.api.guest.request.UpdateGuestRequest
 import me.elgregos.theweddingplan.api.guest.response.toResponse
@@ -14,6 +15,7 @@ import me.elgregos.theweddingplan.application.guest.result.UpdateGuestResult
 import me.elgregos.theweddingplan.domain.guest.entity.Guest
 import me.elgregos.theweddingplan.domain.guest.entity.GuestListCriteria
 import me.elgregos.theweddingplan.infrastructure.config.GuestProperties
+import jakarta.validation.Validator
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.function.ServerRequest
@@ -28,6 +30,7 @@ class GuestEndpoint(
     private val guestRestorer: GuestRestorer,
     private val guestUpdater: GuestUpdater,
     private val guestProperties: GuestProperties,
+    private val validator: Validator,
 ) {
 
     fun listGuests(request: ServerRequest): ServerResponse {
@@ -49,11 +52,12 @@ class GuestEndpoint(
     }
 
     fun addGuest(request: ServerRequest): ServerResponse =
-        request.body(AddGuestRequest::class.java)
-            .toCommand(guestProperties.defaultLanguage)
-            .let(guestAdder::add)
-            .let(Guest::toResponse)
-            .let { ServerResponse.status(HttpStatus.CREATED).body(it) }
+        request.bindOrBadRequest<AddGuestRequest>(validator) { body ->
+            body.toCommand(guestProperties.defaultLanguage)
+                .let(guestAdder::add)
+                .let(Guest::toResponse)
+                .let { ServerResponse.status(HttpStatus.CREATED).body(it) }
+        }
 
     fun getGuest(request: ServerRequest): ServerResponse {
         val id = request.guestIdPathParam() ?: return ServerResponse.badRequest().build()
@@ -66,11 +70,10 @@ class GuestEndpoint(
 
     fun updateGuest(request: ServerRequest): ServerResponse {
         val id = request.guestIdPathParam() ?: return ServerResponse.badRequest().build()
-        val payload = request.body(UpdateGuestRequest::class.java)
 
-        return with(guestUpdater.update(payload.toCommand(id))) {
-            when (this) {
-                is UpdateGuestResult.Updated -> ServerResponse.ok().body(guest.toResponse())
+        return request.bindOrBadRequest<UpdateGuestRequest>(validator) { payload ->
+            when (val result = guestUpdater.update(payload.toCommand(id))) {
+                is UpdateGuestResult.Updated -> ServerResponse.ok().body(result.guest.toResponse())
                 is UpdateGuestResult.NotFound -> ServerResponse.notFound().build()
                 is UpdateGuestResult.VersionConflict -> ServerResponse.status(HttpStatus.CONFLICT).build()
             }

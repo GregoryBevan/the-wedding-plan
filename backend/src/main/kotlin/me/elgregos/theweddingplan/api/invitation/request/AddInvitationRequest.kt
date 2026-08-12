@@ -1,17 +1,16 @@
 package me.elgregos.theweddingplan.api.invitation.request
 
+import jakarta.validation.constraints.NotBlank
 import me.elgregos.theweddingplan.application.invitation.command.AddInvitationCommand
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
 
 data class AddInvitationRequest(
+    @field:NotBlank
     val label: String,
     val description: String,
     val guestIds: List<String>,
 ){
     internal fun toCommandOrNull(): AddInvitationCommand? {
-        val normalizedLabel = label.trim()
-        if (normalizedLabel.isEmpty()) return null
-
         val parsedGuestIds = guestIds
             .map(String::trim)
             .filter(String::isNotEmpty)
@@ -19,7 +18,7 @@ data class AddInvitationRequest(
             .toSet()
 
         return AddInvitationCommand(
-            label = normalizedLabel,
+            label = label.trim(),
             description = description.trim(),
             guestIds = parsedGuestIds,
         )
