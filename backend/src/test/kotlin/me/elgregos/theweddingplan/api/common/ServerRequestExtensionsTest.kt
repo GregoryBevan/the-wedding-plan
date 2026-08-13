@@ -17,8 +17,22 @@ import java.util.Optional
 import jakarta.servlet.http.HttpServletRequest
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
+import me.elgregos.theweddingplan.api.guest.request.AddGuestRequest
+import me.elgregos.theweddingplan.api.guest.request.AddGuestRequestFixtures.charlieDavis
+import jakarta.validation.Validation
+import jakarta.validation.Validator
+import org.springframework.http.HttpStatus
+import org.springframework.web.servlet.function.ServerResponse
+import kotlin.test.BeforeTest
 
 class ServerRequestExtensionsTest {
+
+    private lateinit var validator: Validator
+
+    @BeforeTest
+    fun setUp() {
+        validator = Validation.buildDefaultValidatorFactory().validator
+    }
 
     @Test
     fun `should return the guest session when the request is authenticated`() {
@@ -161,5 +175,28 @@ class ServerRequestExtensionsTest {
         every { servletRequest.remoteAddr } returns null
 
         assertThat(request.clientAddress()).isEqualTo("unknown")
+    }
+
+    @Test
+    fun `should return success response when body is valid`() {
+        val request = mockk<ServerRequest>()
+
+        every { request.body(AddGuestRequest::class.java) } returns charlieDavis
+
+        val response = request.bindOrBadRequest<AddGuestRequest>(validator) { ServerResponse.ok().build() }
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK)
+    }
+
+    @Test
+    fun `should return bad request with field errors when body fails validation`() {
+        val request = mockk<ServerRequest>()
+        val invalidRequest = AddGuestRequest(firstName = "", lastName = "Doe", email = "valid@example.com")
+
+        every { request.body(AddGuestRequest::class.java) } returns invalidRequest
+
+        val response = request.bindOrBadRequest<AddGuestRequest>(validator) { ServerResponse.ok().build() }
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST)
     }
 }

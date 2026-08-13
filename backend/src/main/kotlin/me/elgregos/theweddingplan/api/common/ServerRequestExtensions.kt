@@ -8,7 +8,9 @@ import me.elgregos.theweddingplan.domain.guest.entity.GuestSession
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationAccessToken
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationId
 import org.springframework.security.core.Authentication
+import jakarta.validation.Validator
 import org.springframework.web.servlet.function.ServerRequest
+import org.springframework.web.servlet.function.ServerResponse
 
 private const val STATUS_PARAM_NAME = "status"
 private const val AVAILABILITY_PARAM_NAME = "availability"
@@ -55,3 +57,17 @@ private fun String.toGuestStatus() =
 
 private fun String.toGuestAvailability() =
     GuestAvailability.entries.firstOrNull { it.name.equals(this, ignoreCase = true) }
+
+internal inline fun <reified T : Any> ServerRequest.bindOrBadRequest(
+    validator: Validator,
+    onSuccess: (T) -> ServerResponse,
+): ServerResponse =
+    body(T::class.java).let { body ->
+        validator.validate(body)
+            .takeIf { it.isNotEmpty() }
+            ?.map { it.propertyPath.toString() to it.message }
+            ?.sortedWith(compareBy({ it.first }, { it.second }))
+            ?.map { (field, message) -> mapOf("field" to field, "message" to message) }
+            ?.let { ServerResponse.badRequest().body(mapOf("errors" to it)) }
+            ?: onSuccess(body)
+    }

@@ -1,5 +1,6 @@
 package me.elgregos.theweddingplan.api.invitation
 
+import me.elgregos.theweddingplan.api.common.bindOrBadRequest
 import me.elgregos.theweddingplan.api.common.intQueryParam
 import me.elgregos.theweddingplan.api.common.invitationIdPathParam
 import me.elgregos.theweddingplan.api.invitation.request.AddInvitationRequest
@@ -16,6 +17,7 @@ import me.elgregos.theweddingplan.application.invitation.result.AddInvitationRes
 import me.elgregos.theweddingplan.application.invitation.result.UpdateInvitationResult
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
 import me.elgregos.theweddingplan.domain.invitation.entity.InvitationListCriteria
+import jakarta.validation.Validator
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.function.ServerRequest
@@ -27,6 +29,7 @@ class InvitationEndpoint(
     private val invitationLister: InvitationLister,
     private val invitationGetter: InvitationGetter,
     private val invitationUpdater: InvitationUpdater,
+    private val validator: Validator,
 ) {
     fun listInvitations(request: ServerRequest): ServerResponse =
         request.intQueryParam("page", default = 0)?.takeIf { it >= 0 }?.let { page ->
@@ -37,32 +40,33 @@ class InvitationEndpoint(
         } ?: ServerResponse.badRequest().build()
 
     fun addInvitation(request: ServerRequest): ServerResponse =
-        request.body(AddInvitationRequest::class.java)
-            .toCommandOrNull()
-            ?.let { command ->
-                when (val result = invitationAdder.add(command)) {
-                    is AddInvitationResult.Added -> ServerResponse.status(HttpStatus.CREATED)
-                        .body(result.invitation.toResponse())
+        request.bindOrBadRequest<AddInvitationRequest>(validator) { payload ->
+            payload.toCommandOrNull()
+                ?.let { command ->
+                    when (val result = invitationAdder.add(command)) {
+                        is AddInvitationResult.Added -> ServerResponse.status(HttpStatus.CREATED)
+                            .body(result.invitation.toResponse())
 
-                    is AddInvitationResult.MissingGuests -> ServerResponse.badRequest().body(
-                        MissingInvitationGuestsResponse(message = "At least one guest is required.")
-                    )
-
-                    is AddInvitationResult.InvalidGuests -> ServerResponse.badRequest().body(
-                        InvalidInvitationGuestsResponse(
-                            message = "Some guests were not found or are archived.",
-                            guestIds = result.guestIds.map(GuestId::toString).sorted(),
+                        is AddInvitationResult.MissingGuests -> ServerResponse.badRequest().body(
+                            MissingInvitationGuestsResponse(message = "At least one guest is required.")
                         )
-                    )
 
-                    is AddInvitationResult.AlreadyAssignedGuests -> ServerResponse.status(HttpStatus.CONFLICT).body(
-                        AlreadyAssignedInvitationGuestsResponse(
-                            message = "Some guests are already assigned to another invitation.",
-                            guestIds = result.guestIds.map(GuestId::toString).sorted(),
+                        is AddInvitationResult.InvalidGuests -> ServerResponse.badRequest().body(
+                            InvalidInvitationGuestsResponse(
+                                message = "Some guests were not found or are archived.",
+                                guestIds = result.guestIds.map(GuestId::toString).sorted(),
+                            )
                         )
-                    )
-                }
-            } ?: ServerResponse.badRequest().build()
+
+                        is AddInvitationResult.AlreadyAssignedGuests -> ServerResponse.status(HttpStatus.CONFLICT).body(
+                            AlreadyAssignedInvitationGuestsResponse(
+                                message = "Some guests are already assigned to another invitation.",
+                                guestIds = result.guestIds.map(GuestId::toString).sorted(),
+                            )
+                        )
+                    }
+                } ?: ServerResponse.badRequest().build()
+        }
 
     fun getInvitation(request: ServerRequest): ServerResponse =
         request.invitationIdPathParam()?.let { id ->
@@ -74,36 +78,34 @@ class InvitationEndpoint(
 
     fun updateInvitation(request: ServerRequest): ServerResponse =
         request.invitationIdPathParam()?.let { id ->
-            request.body(UpdateInvitationRequest::class.java)
-                .toCommandOrNull(id)
-                ?.let { command ->
-                    when (val result = invitationUpdater.update(command)) {
-                        is UpdateInvitationResult.Updated -> ServerResponse.ok().body(result.invitation.toResponse())
-                        is UpdateInvitationResult.VersionConflict -> ServerResponse.status(HttpStatus.CONFLICT)
-                            .body(mapOf("message" to "This invitation has been modified elsewhere. Please reload and try again."))
-                        is UpdateInvitationResult.NotFound -> ServerResponse.notFound().build()
-                        is UpdateInvitationResult.MissingGuests -> ServerResponse.badRequest().body(
-                            MissingInvitationGuestsResponse(message = "At least one guest is required.")
-                        )
-
-                        is UpdateInvitationResult.InvalidGuests -> ServerResponse.badRequest().body(
-                            InvalidInvitationGuestsResponse(
-                                message = "Some guests were not found or are archived.",
-                                guestIds = result.guestIds.map(GuestId::toString).sorted(),
+            request.bindOrBadRequest<UpdateInvitationRequest>(validator) { payload ->
+                payload.toCommandOrNull(id)
+                    ?.let { command ->
+                        when (val result = invitationUpdater.update(command)) {
+                            is UpdateInvitationResult.Updated -> ServerResponse.ok().body(result.invitation.toResponse())
+                            is UpdateInvitationResult.VersionConflict -> ServerResponse.status(HttpStatus.CONFLICT)
+                                .body(mapOf("message" to "This invitation has been modified elsewhere. Please reload and try again."))
+                            is UpdateInvitationResult.NotFound -> ServerResponse.notFound().build()
+                            is UpdateInvitationResult.MissingGuests -> ServerResponse.badRequest().body(
+                                MissingInvitationGuestsResponse(message = "At least one guest is required.")
                             )
-                        )
 
-                        is UpdateInvitationResult.AlreadyAssignedGuests -> ServerResponse.status(HttpStatus.CONFLICT)
-                            .body(
-                                AlreadyAssignedInvitationGuestsResponse(
-                                    message = "Some guests are already assigned to another invitation.",
+                            is UpdateInvitationResult.InvalidGuests -> ServerResponse.badRequest().body(
+                                InvalidInvitationGuestsResponse(
+                                    message = "Some guests were not found or are archived.",
                                     guestIds = result.guestIds.map(GuestId::toString).sorted(),
                                 )
                             )
-                    }
-                } ?: ServerResponse.badRequest().build()
+
+                            is UpdateInvitationResult.AlreadyAssignedGuests -> ServerResponse.status(HttpStatus.CONFLICT)
+                                .body(
+                                    AlreadyAssignedInvitationGuestsResponse(
+                                        message = "Some guests are already assigned to another invitation.",
+                                        guestIds = result.guestIds.map(GuestId::toString).sorted(),
+                                    )
+                                )
+                        }
+                    } ?: ServerResponse.badRequest().build()
+            }
         } ?: ServerResponse.badRequest().build()
 }
-
-
-

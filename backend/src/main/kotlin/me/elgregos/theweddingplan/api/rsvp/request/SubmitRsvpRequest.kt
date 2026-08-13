@@ -1,5 +1,6 @@
 package me.elgregos.theweddingplan.api.rsvp.request
 
+import jakarta.validation.constraints.NotBlank
 import me.elgregos.theweddingplan.application.rsvp.command.SubmitGuestRsvpCommand
 import me.elgregos.theweddingplan.domain.guest.entity.GuestId
 import me.elgregos.theweddingplan.domain.rsvp.entity.Meal
@@ -7,6 +8,7 @@ import me.elgregos.theweddingplan.domain.rsvp.entity.RsvpAnswers
 import me.elgregos.theweddingplan.domain.rsvp.entity.RsvpAttendance
 
 data class SubmitRsvpRequest(
+    @field:NotBlank
     val attendance: String,
     val meal: String? = null,
     val song: SubmitSongRequest? = null,

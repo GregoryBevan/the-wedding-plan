@@ -17,7 +17,10 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.util.UUID
+import java.util.stream.Stream
 import kotlin.test.Test
 
 class GuestEndpointIT : AbstractEndpointIntegrationTest() {
@@ -109,6 +112,21 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.FOUND)
             .expectHeader().valueMatches(HttpHeaders.LOCATION, ".*/oauth2/authorization/google")
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidAddGuestRequests")
+    fun `should return bad request when adding guest with invalid data`(invalidGuest: AddGuestRequest) {
+        val csrf = authenticatedCsrfContext("gregory@example.com")
+
+        restTestClient.post().uri("/api/guests")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(invalidGuest)
+            .exchange()
+            .expectStatus().isBadRequest
     }
 
     @Test
@@ -591,4 +609,13 @@ class GuestEndpointIT : AbstractEndpointIntegrationTest() {
         val lastName: String,
         val email: String,
     )
+
+    companion object {
+        @JvmStatic
+        fun invalidAddGuestRequests(): Stream<AddGuestRequest> = Stream.of(
+            AddGuestRequest(firstName = "", lastName = "Doe", email = "valid@example.com"),
+            AddGuestRequest(firstName = "Jane", lastName = "", email = "valid@example.com"),
+            AddGuestRequest(firstName = "Jane", lastName = "Doe", email = "not-an-email"),
+        )
+    }
 }

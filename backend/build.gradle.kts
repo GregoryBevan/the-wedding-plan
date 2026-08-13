@@ -15,7 +15,7 @@ plugins {
 
 
 group = "me.elgregoss"
-version = "0.0.44-SNAPSHOT"
+version = "0.0.45-SNAPSHOT"
 
 java {
     toolchain {
@@ -57,6 +57,7 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-mail")

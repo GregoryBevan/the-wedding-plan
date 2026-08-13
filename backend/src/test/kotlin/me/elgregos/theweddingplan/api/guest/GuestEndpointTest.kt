@@ -28,11 +28,15 @@ import me.elgregos.theweddingplan.api.guest.request.AddGuestRequest
 import me.elgregos.theweddingplan.api.guest.request.UpdateGuestRequest
 import me.elgregos.theweddingplan.domain.guest.entity.Language
 import me.elgregos.theweddingplan.infrastructure.config.GuestProperties
+import jakarta.validation.Validation
+import jakarta.validation.Validator
 import java.util.Optional
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class GuestEndpointTest {
+
+    private lateinit var validator: Validator
 
     private lateinit var guestAdder: GuestAdder
     private lateinit var guestLister: GuestLister
@@ -50,6 +54,7 @@ class GuestEndpointTest {
         guestArchiver = mockk()
         guestRestorer = mockk()
         guestUpdater = mockk()
+        validator = Validation.buildDefaultValidatorFactory().validator
         guestEndpoint = GuestEndpoint(
             guestAdder,
             guestLister,
@@ -58,6 +63,7 @@ class GuestEndpointTest {
             guestRestorer,
             guestUpdater,
             GuestProperties(defaultLanguage = Language.FR),
+            validator,
         )
     }
 
