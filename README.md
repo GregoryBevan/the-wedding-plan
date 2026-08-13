@@ -6,6 +6,7 @@
 ## Documentation
 
 - [Guest magic-link authentication — operational & security constraints](docs/guest-magic-link-security.md)
+- [Backoffice read-only permissions & role assignment](docs/backoffice-read-only-permissions.md)
 
 ## Deployment (Render + Aiven)
 
@@ -41,6 +42,7 @@ Set these variables in Render dashboard (or through Blueprint secrets), never in
 - `SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID`
 - `SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET`
 - `APP_AUTH_ALLOWED_EMAILS`
+- `APP_AUTH_READ_ONLY_EMAILS` (optional; **planned — not yet active**, rolling out via the backoffice read-only model in #178–#181. Once live: comma-separated emails granted **read-only** backoffice access — view every module's lists/detail, no create/edit/delete/archive. Admins in `APP_AUTH_ALLOWED_EMAILS` keep full access. See [Backoffice read-only permissions](docs/backoffice-read-only-permissions.md))
 - `APP_CORS_ALLOWED_ORIGINS`
 - `APP_AUTH_SUCCESS_REDIRECT_URL`
 - `POSTGRES_HOST`
