@@ -46,7 +46,7 @@ class SecurityConfigTest {
     ) = SecurityConfig(
         corsProperties = CorsProperties(allowedOrigins = allowedOrigins),
         authProperties = AuthProperties(
-            allowedEmails = listOf("gregory@example.com"),
+            adminEmails = listOf("gregory@example.com"),
             successRedirectUrl = successRedirectUrl,
         ),
     )

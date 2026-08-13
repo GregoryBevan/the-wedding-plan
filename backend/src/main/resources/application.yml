@@ -54,7 +54,8 @@ spring:
 
 app:
   auth:
-    allowed-emails: ${APP_AUTH_ALLOWED_EMAILS:}
+    admin-emails: ${APP_AUTH_ADMIN_EMAILS:}
+    read-only-emails: ${APP_AUTH_READ_ONLY_EMAILS:}
     success-redirect-url: ${APP_AUTH_SUCCESS_REDIRECT_URL:}
     rate-limit:
       enabled: ${APP_AUTH_RATE_LIMIT_ENABLED:true}

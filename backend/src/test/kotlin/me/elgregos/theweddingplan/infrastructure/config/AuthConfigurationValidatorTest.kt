@@ -17,7 +17,7 @@ class AuthConfigurationValidatorTest {
         val validator = AuthConfigurationValidator(
             environment = environment,
             authProperties = AuthProperties(
-                allowedEmails = emptyList(),
+                adminEmails = emptyList(),
                 successRedirectUrl = "http://localhost:5173",
             ),
         )
@@ -26,20 +26,20 @@ class AuthConfigurationValidatorTest {
     }
 
     @Test
-    fun `should fail in prod when allowed emails are empty`() {
+    fun `should fail in prod when admin emails are empty`() {
         val environment = StandardEnvironment().apply { setActiveProfiles("prod") }
 
         assertFailure {
             AuthConfigurationValidator(
                 environment = environment,
                 authProperties = AuthProperties(
-                    allowedEmails = emptyList(),
+                    adminEmails = emptyList(),
                     successRedirectUrl = "https://wedding.example.com",
                 ),
             )
         }
             .isInstanceOf(IllegalStateException::class)
-            .hasMessage("app.auth.allowed-emails must not be empty in prod profile")
+            .hasMessage("app.auth.admin-emails must not be empty in prod profile")
     }
 
     @Test
@@ -50,7 +50,7 @@ class AuthConfigurationValidatorTest {
             AuthConfigurationValidator(
                 environment = environment,
                 authProperties = AuthProperties(
-                    allowedEmails = listOf("gregory@example.com"),
+                    adminEmails = listOf("gregory@example.com"),
                     successRedirectUrl = "http://localhost:5173",
                 ),
             )
@@ -66,7 +66,7 @@ class AuthConfigurationValidatorTest {
         val validator = AuthConfigurationValidator(
             environment = environment,
             authProperties = AuthProperties(
-                allowedEmails = listOf("gregory@example.com"),
+                adminEmails = listOf("gregory@example.com"),
                 successRedirectUrl = "https://wedding.example.com",
             ),
         )

@@ -31,7 +31,12 @@ class AuthEndpoint(
             AuthStatusResponse(
                 isAuthenticated = oauth2User != null,
                 email = email,
-                isAuthorized = authProperties.isAllowed(email)
+                // Backoffice entry is admin-only for now, matching the still-admin-only API gate
+                // (SecurityConfig). This broadens to "has any backoffice role" — and starts reporting
+                // the resolved capabilities — once read-only reads are enforced (#179) and the UI
+                // consumes them (#180); flipping it earlier would admit read-only users into a UI whose
+                // API calls all return 403.
+                isAuthorized = authProperties.isAdmin(email)
             )
         )
     }

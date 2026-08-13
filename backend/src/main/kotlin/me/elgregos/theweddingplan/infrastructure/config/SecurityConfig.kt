@@ -116,7 +116,7 @@ class SecurityConfig(
                         val email = (authentication.get().principal as? OAuth2User)
                             ?.getAttribute<String>("email")
 
-                        AuthorizationDecision(authProperties.isAllowed(email))
+                        AuthorizationDecision(authProperties.isAdmin(email))
                     }
                     .requestMatchers(
                         "/",
