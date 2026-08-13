@@ -5,14 +5,14 @@ import org.springframework.stereotype.Component
 
 @Component
 class AuthConfigurationValidator(
-    private val environment: Environment,
-    private val authProperties: AuthProperties,
+    environment: Environment,
+    authProperties: AuthProperties,
 ) {
 
     init {
         if (environment.activeProfiles.contains("prod")) {
-            check(authProperties.normalizedAllowedEmails().isNotEmpty()) {
-                "app.auth.allowed-emails must not be empty in prod profile"
+            check(authProperties.normalizedAdminEmails().isNotEmpty()) {
+                "app.auth.admin-emails must not be empty in prod profile"
             }
 
             val redirectUrl = authProperties.successRedirectUrl.trim()

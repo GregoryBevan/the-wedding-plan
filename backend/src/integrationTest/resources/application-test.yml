@@ -14,7 +14,7 @@ spring:
 
 app:
   auth:
-    allowed-emails:
+    admin-emails:
       - gregory@example.com
     success-redirect-url: http://localhost:5173
   deezer:

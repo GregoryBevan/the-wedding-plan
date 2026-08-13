@@ -9,7 +9,9 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: APP_AUTH_ALLOWED_EMAILS
+      - key: APP_AUTH_ADMIN_EMAILS
+        sync: false
+      - key: APP_AUTH_READ_ONLY_EMAILS
         sync: false
       - key: APP_AUTH_SUCCESS_REDIRECT_URL
         sync: false

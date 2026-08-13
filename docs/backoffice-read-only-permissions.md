@@ -12,28 +12,33 @@ a contributor can apply the pattern to any module **without tribal knowledge**.
 
 ## Status
 
-> ⚠️ **This document describes the _target_ model, not current behavior.**
+> ⚠️ **This document describes the _target_ model; parts are not yet live.**
 >
-> **Today (allowlist-only):** the backend has a single allowlist, `app.auth.allowed-emails`
-> (`APP_AUTH_ALLOWED_EMAILS`), which grants **full** backoffice access; there is no read-only tier.
-> `GET /auth/me` returns only `isAuthenticated`, `email`, and `isAuthorized` — no role or capability
-> field.
+> **Available now (as of #178):** the backend has two allowlists — `app.auth.admin-emails`
+> (`APP_AUTH_ADMIN_EMAILS`, admin) and `app.auth.read-only-emails` (`APP_AUTH_READ_ONLY_EMAILS`,
+> read-only) — and the auth layer can resolve a caller's `BackofficeRole` and granted capabilities
+> (`backoffice.read` / `backoffice.write` via `BackofficeAuthorization`), with admin-wins precedence.
 >
-> **Target (this document):** the `backoffice.read_only` capability, the `app.auth.read-only-emails`
-> (`APP_AUTH_READ_ONLY_EMAILS`) allowlist, the global verb-based enforcement, and the `/auth/me`
-> capability field are introduced across sub-issues **#178–#183**. Until those ship, the configuration
-> and behavior below are the **agreed design**, not live behavior — read "is/are" as "will be".
+> **Not yet enforced:** the resolved capability does **not** yet change behavior. `/api/**` still gates
+> on admin-only access, so read-only users are currently still denied writes *and reads* until the
+> global enforcement lands (#179 / #181); the UI does not yet hide write actions (#180); and
+> `GET /auth/me` still returns only `isAuthenticated`, `email`, and `isAuthorized` (no capability field
+> until #180 needs it). Until those ship, the enforcement/UI sections below are the **agreed design**,
+> not live behavior — read "is/are" as "will be".
 
-## Roles & the `backoffice.read_only` capability
+## Roles & backoffice capabilities
 
-_Target model — delivered by #178 (capability & role mapping). Not active yet; see [Status](#status)._
+_Capabilities, role mapping, and precedence are **implemented** as of #178
+(`BackofficeAuthorization` / `BackofficeCapability` / `BackofficeRole`). Enforcement (#179 / #181) and
+the UI guard (#180) are still pending; see [Status](#status)._
 
-Backoffice access is granted through Google OAuth2 login combined with email allowlists. The model has
-a single, authoritative read-only capability — **`backoffice.read_only`** — shared by every module (#178):
+Backoffice access is granted through Google OAuth2 login combined with email allowlists. Access is
+expressed as two **positive** capabilities shared by every module — `backoffice.read` and
+`backoffice.write` — and each role grants a subset (#178):
 
-- **Admin** — full read **and** write across all backoffice modules. Assigned via
-  `app.auth.allowed-emails` (`APP_AUTH_ALLOWED_EMAILS`).
-- **Read-only** — holds the `backoffice.read_only` capability: may view every backoffice list/detail but
+- **Admin** — grants **both** `backoffice.read` and `backoffice.write` (full access). Assigned via
+  `app.auth.admin-emails` (`APP_AUTH_ADMIN_EMAILS`).
+- **Read-only** — grants only `backoffice.read`: may view every backoffice list/detail but
   cannot perform any mutation. Assigned via `app.auth.read-only-emails` (`APP_AUTH_READ_ONLY_EMAILS`).
 
 A signed-in Google user whose email is in **neither** list is *unauthorized* and receives `403` on any
@@ -98,7 +103,7 @@ This path is **not** part of the Admin / read-only model:
   invitation's view, never the list.
 - Attendee **mutations** (RSVP, song choices under `/api/guest-access/secured/**`) require a magic-link
   guest session, described in [Guest magic-link authentication](guest-magic-link-security.md).
-- `APP_AUTH_READ_ONLY_EMAILS` and `APP_AUTH_ALLOWED_EMAILS` have **no effect** on this path.
+- `APP_AUTH_READ_ONLY_EMAILS` and `APP_AUTH_ADMIN_EMAILS` have **no effect** on this path.
 
 In short: backoffice access is gated by staff **roles**; attendee access is gated by **token
 possession**. The two are independent.
@@ -119,13 +124,13 @@ Assignment is configuration-only; no database change or code redeploy is require
    Locally, set the same value via `app.auth.read-only-emails` in your environment or an untracked
    override.
 
-2. Ensure the email is **not** also in `APP_AUTH_ALLOWED_EMAILS` unless you intend a full admin (admin
+2. Ensure the email is **not** also in `APP_AUTH_ADMIN_EMAILS` unless you intend a full admin (admin
    precedence applies).
 
 3. Restart / redeploy so the configuration is picked up.
 
 4. The user signs in at `/backoffice` with Google. `GET /auth/me` reflects their access — reporting the
-   `backoffice.read_only` capability once #178/#180 expose it (today `/auth/me` returns only
+   granted capabilities (e.g. `backoffice.read`) once #180 exposes them (today `/auth/me` returns only
    `isAuthenticated`, `email`, and `isAuthorized`) — and the UI renders every module in read-only mode,
    hiding write affordances.
 
@@ -170,7 +175,7 @@ _Current exceptions: none._
 - **A read-only user still succeeds on a write via the API.** The route uses a non-mutating verb for a
   mutation (e.g. a write behind `GET`), or sits outside `/api/**`. Fix the verb/placement or add a
   documented exception.
-- **An admin gets `403`.** Their email isn't in `APP_AUTH_ALLOWED_EMAILS` (check casing/whitespace — the
+- **An admin gets `403`.** Their email isn't in `APP_AUTH_ADMIN_EMAILS` (check casing/whitespace — the
   list is normalized) or the app didn't pick up the new env value (restart/redeploy).
 - **A read-only user gets `403` on a legitimate read.** Confirm the read uses `GET`/`HEAD` and the email
   is in `APP_AUTH_READ_ONLY_EMAILS`; if it's a `POST`-based read, it needs a documented exception.
@@ -201,6 +206,6 @@ Sign in with an **unauthorized** Google account (in neither list) and confirm:
 
 > **Backoffice read-only role.** Operators can now grant view-only backoffice access by adding emails to
 > `APP_AUTH_READ_ONLY_EMAILS`. These users can browse all backoffice modules (lists and details) but
-> cannot create, edit, delete, archive, or restore anything. Admins listed in `APP_AUTH_ALLOWED_EMAILS`
+> cannot create, edit, delete, archive, or restore anything. Admins listed in `APP_AUTH_ADMIN_EMAILS`
 > keep full access; an email present in both lists remains a full admin.
 
