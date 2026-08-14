@@ -14,23 +14,22 @@ a contributor can apply the pattern to any module **without tribal knowledge**.
 
 > ⚠️ **This document describes the _target_ model; parts are not yet live.**
 >
-> **Available now (as of #178):** the backend has two allowlists — `app.auth.admin-emails`
+> **Available now (as of #178 / #179):** the backend has two allowlists — `app.auth.admin-emails`
 > (`APP_AUTH_ADMIN_EMAILS`, admin) and `app.auth.read-only-emails` (`APP_AUTH_READ_ONLY_EMAILS`,
-> read-only) — and the auth layer can resolve a caller's `BackofficeRole` and granted capabilities
-> (`backoffice.read` / `backoffice.write` via `BackofficeAuthorization`), with admin-wins precedence.
+> read-only) — the auth layer resolves a caller's `BackofficeRole` and granted capabilities
+> (`backoffice.read` / `backoffice.write` via `BackofficeAuthorization`) with admin-wins precedence, **and
+> the server-side read/write policy below is enforced** on every `/api/**` route (#179): read-only users
+> pass `GET`/`HEAD` and are blocked (`403`) from every mutating verb.
 >
-> **Not yet enforced:** the resolved capability does **not** yet change behavior. `/api/**` still gates
-> on admin-only access, so read-only users are currently still denied writes *and reads* until the
-> global enforcement lands (#179 / #181); the UI does not yet hide write actions (#180); and
-> `GET /auth/me` still returns only `isAuthenticated`, `email`, and `isAuthorized` (no capability field
-> until #180 needs it). Until those ship, the enforcement/UI sections below are the **agreed design**,
-> not live behavior — read "is/are" as "will be".
+> **Not yet done:** the UI does not yet hide write actions (#180); and `GET /auth/me` still returns only
+> `isAuthenticated`, `email`, and `isAuthorized` (no capability field until #180 needs it). Until those
+> ship, the UI sections below are the **agreed design**, not live behavior — read "is/are" as "will be".
 
 ## Roles & backoffice capabilities
 
 _Capabilities, role mapping, and precedence are **implemented** as of #178
-(`BackofficeAuthorization` / `BackofficeCapability` / `BackofficeRole`). Enforcement (#179 / #181) and
-the UI guard (#180) are still pending; see [Status](#status)._
+(`BackofficeAuthorization` / `BackofficeCapability` / `BackofficeRole`), and enforced server-side as of
+#179 (`SecurityConfig`). The UI guard (#180) is still pending; see [Status](#status)._
 
 Backoffice access is granted through Google OAuth2 login combined with email allowlists. Access is
 expressed as two **positive** capabilities shared by every module — `backoffice.read` and
@@ -50,7 +49,8 @@ read-only capability never downgrades a more privileged role. If additional priv
 
 ## Global policy — how enforcement works
 
-_Target model — delivered by #179 / #181 (server-side enforcement). Not active yet; see [Status](#status)._
+_Implemented server-side as of #179 (`SecurityConfig` verb-based capability check on `/api/**`); #181
+migrates the remaining modules onto it. See [Status](#status)._
 
 Enforcement is **verb-based and global**, not wired per endpoint. Applied to every backoffice `/api/**`
 route:
@@ -58,7 +58,7 @@ route:
 | Caller | Safe methods (`GET`, `HEAD`) | Mutating methods (`POST`, `PUT`, `PATCH`, `DELETE`) |
 | --- | :---: | :---: |
 | Admin | ✅ | ✅ |
-| Read-only (`backoffice.read_only`) | ✅ | ❌ `403` |
+| Read-only (`backoffice.read`) | ✅ | ❌ `403` |
 | Unauthorized | ❌ `403` | ❌ `403` |
 
 Because the rule keys off the HTTP verb, **any new module that follows REST conventions is covered
@@ -110,7 +110,8 @@ possession**. The two are independent.
 
 ## Assigning the read-only role
 
-_Target workflow — available once #178–#181 ship; see [Status](#status)._
+_Server-side enforcement is live (#178–#179); the UI read-only rendering follows in #180. See
+[Status](#status)._
 
 Assignment is configuration-only; no database change or code redeploy is required.
 
@@ -129,10 +130,11 @@ Assignment is configuration-only; no database change or code redeploy is require
 
 3. Restart / redeploy so the configuration is picked up.
 
-4. The user signs in at `/backoffice` with Google. `GET /auth/me` reflects their access — reporting the
+4. The user signs in at `/backoffice` with Google and is authorized: they can read every module but any
+   write returns `403` (enforced server-side as of #179). `GET /auth/me` will additionally report the
    granted capabilities (e.g. `backoffice.read`) once #180 exposes them (today `/auth/me` returns only
-   `isAuthenticated`, `email`, and `isAuthorized`) — and the UI renders every module in read-only mode,
-   hiding write affordances.
+   `isAuthenticated`, `email`, and `isAuthorized`), at which point the UI renders every module in
+   read-only mode, hiding write affordances.
 
 To **revoke**, remove the email from `APP_AUTH_READ_ONLY_EMAILS` and restart.
 

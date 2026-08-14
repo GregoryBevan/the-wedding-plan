@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.annotation.Order
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AnonymousAuthenticationToken
 import org.springframework.security.authentication.InsufficientAuthenticationException
@@ -38,28 +39,8 @@ import java.net.URI
 class SecurityConfig(
     private val corsProperties: CorsProperties,
     private val authProperties: AuthProperties,
+    private val backofficeAuthorization: BackofficeAuthorization,
 ) {
-
-    internal fun resolveSuccessRedirectUrl(): String {
-        val allowedOrigins = corsProperties.allowedOrigins
-            .map(String::trim)
-            .filter(String::isNotBlank)
-            .map { it.removeSuffix("/") }
-            .toSet()
-
-        val configured = authProperties.successRedirectUrl.trim()
-
-        return configured
-            .takeIf(String::isNotBlank)
-            ?.takeIf { it.startsWith("/") || it.originOrNull() in allowedOrigins }
-            ?: "/"
-    }
-
-    private fun String.originOrNull(): String? =
-        runCatching { URI(this) }
-            .getOrNull()
-            ?.takeIf { it.scheme == "http" || it.scheme == "https" }
-            ?.let { "${it.scheme}://${it.authority}" }
 
     @Bean
     @Order(1)
@@ -106,17 +87,17 @@ class SecurityConfig(
             .authorizeHttpRequests { auth ->
                 auth
                     .requestMatchers("/api/guest-access/**").permitAll()
-                    .requestMatchers("/api/**").access { authentication, _ ->
+                    .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
+                    .requestMatchers("/api/**").access { authentication, context ->
                         val authn = authentication.get()
 
                         if (!authn.isAuthenticated || authn is AnonymousAuthenticationToken) {
                             throw InsufficientAuthenticationException("Full authentication is required")
                         }
 
-                        val email = (authentication.get().principal as? OAuth2User)
-                            ?.getAttribute<String>("email")
+                        val email = (authn.principal as? OAuth2User)?.getAttribute<String>("email")
 
-                        AuthorizationDecision(authProperties.isAdmin(email))
+                        AuthorizationDecision(backofficeAuthorization.hasCapability(email, requiredCapabilityFor(context.request.method)))
                     }
                     .requestMatchers(
                         "/",
@@ -158,5 +139,34 @@ class SecurityConfig(
         return UrlBasedCorsConfigurationSource().apply {
             registerCorsConfiguration("/**", corsConfiguration)
         }
+    }
+
+    internal fun resolveSuccessRedirectUrl(): String {
+        val allowedOrigins = corsProperties.allowedOrigins
+            .map(String::trim)
+            .filter(String::isNotBlank)
+            .map { it.removeSuffix("/") }
+            .toSet()
+
+        val configured = authProperties.successRedirectUrl.trim()
+
+        return configured
+            .takeIf(String::isNotBlank)
+            ?.takeIf { it.startsWith("/") || it.originOrNull() in allowedOrigins }
+            ?: "/"
+    }
+
+    private fun String.originOrNull(): String? =
+        runCatching { URI(this) }
+            .getOrNull()
+            ?.takeIf { it.scheme == "http" || it.scheme == "https" }
+            ?.let { "${it.scheme}://${it.authority}" }
+
+    internal fun requiredCapabilityFor(method: String?): BackofficeCapability =
+        if (method in READ_METHODS) BackofficeCapability.READ
+        else BackofficeCapability.WRITE
+
+    private companion object {
+        val READ_METHODS = setOf(HttpMethod.GET.name(), HttpMethod.HEAD.name())
     }
 }

@@ -40,6 +40,62 @@ class SecurityConfigTest {
         assertThat(config.resolveSuccessRedirectUrl()).isEqualTo("/")
     }
 
+    @Test
+    fun `should require read capability for safe methods`() {
+        val config = securityConfig(successRedirectUrl = "/backoffice")
+
+        assertThat(config.requiredCapabilityFor("GET")).isEqualTo(BackofficeCapability.READ)
+    }
+
+    @Test
+    fun `should require read capability for head method`() {
+        val config = securityConfig(successRedirectUrl = "/backoffice")
+
+        assertThat(config.requiredCapabilityFor("HEAD")).isEqualTo(BackofficeCapability.READ)
+    }
+
+    @Test
+    fun `should require write capability for post method`() {
+        val config = securityConfig(successRedirectUrl = "/backoffice")
+
+        assertThat(config.requiredCapabilityFor("POST")).isEqualTo(BackofficeCapability.WRITE)
+    }
+
+    @Test
+    fun `should require write capability for put method`() {
+        val config = securityConfig(successRedirectUrl = "/backoffice")
+
+        assertThat(config.requiredCapabilityFor("PUT")).isEqualTo(BackofficeCapability.WRITE)
+    }
+
+    @Test
+    fun `should require write capability for patch method`() {
+        val config = securityConfig(successRedirectUrl = "/backoffice")
+
+        assertThat(config.requiredCapabilityFor("PATCH")).isEqualTo(BackofficeCapability.WRITE)
+    }
+
+    @Test
+    fun `should require write capability for delete method`() {
+        val config = securityConfig(successRedirectUrl = "/backoffice")
+
+        assertThat(config.requiredCapabilityFor("DELETE")).isEqualTo(BackofficeCapability.WRITE)
+    }
+
+    @Test
+    fun `should require write capability for an unknown extension method`() {
+        val config = securityConfig(successRedirectUrl = "/backoffice")
+
+        assertThat(config.requiredCapabilityFor("PROPFIND")).isEqualTo(BackofficeCapability.WRITE)
+    }
+
+    @Test
+    fun `should require write capability for a null method`() {
+        val config = securityConfig(successRedirectUrl = "/backoffice")
+
+        assertThat(config.requiredCapabilityFor(null)).isEqualTo(BackofficeCapability.WRITE)
+    }
+
     private fun securityConfig(
         successRedirectUrl: String,
         allowedOrigins: List<String> = emptyList(),
@@ -48,6 +104,9 @@ class SecurityConfigTest {
         authProperties = AuthProperties(
             adminEmails = listOf("gregory@example.com"),
             successRedirectUrl = successRedirectUrl,
+        ),
+        backofficeAuthorization = BackofficeAuthorization(
+            AuthProperties(adminEmails = listOf("gregory@example.com")),
         ),
     )
 }
