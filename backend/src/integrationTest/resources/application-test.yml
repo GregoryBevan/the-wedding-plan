@@ -16,6 +16,8 @@ app:
   auth:
     admin-emails:
       - gregory@example.com
+    read-only-emails:
+      - viewer@example.com
     success-redirect-url: http://localhost:5173
   deezer:
     access-token: test-deezer-access-token
