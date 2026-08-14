@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { allowAuthorizedSession } from './fixtures/authSetup';
+import { allowAdminSession } from './fixtures/authSetup';
 import { fulfillJson } from './fixtures/httpHelpers';
 import { NAVIGATION_TIMEOUT_MS, UI_TIMEOUT_MS } from './fixtures/timeouts';
 
 test.describe('Invitation edit', () => {
   test('edit invitation successfully and redirect to details', async ({ page }) => {
-    await allowAuthorizedSession(page);
+    await allowAdminSession(page);
 
     const invitationId = 'inv-1';
 
@@ -113,7 +113,7 @@ test.describe('Invitation edit', () => {
   });
 
   test('shows validation error when label is empty', async ({ page }) => {
-    await allowAuthorizedSession(page);
+    await allowAdminSession(page);
 
     const invitationId = 'inv-2';
 
@@ -170,7 +170,7 @@ test.describe('Invitation edit', () => {
   });
 
   test('loads selectable guests using unassigned availability filter', async ({ page }) => {
-    await allowAuthorizedSession(page);
+    await allowAdminSession(page);
 
     const invitationId = 'inv-unassigned-filter';
     let guestAvailability: string | null = null;
@@ -226,7 +226,7 @@ test.describe('Invitation edit', () => {
   });
 
   test('shows validation error when no guests are selected', async ({ page }) => {
-    await allowAuthorizedSession(page);
+    await allowAdminSession(page);
 
     const invitationId = 'inv-3';
 
@@ -283,7 +283,7 @@ test.describe('Invitation edit', () => {
   });
 
   test('shows error when invitation not found', async ({ page }) => {
-    await allowAuthorizedSession(page);
+    await allowAdminSession(page);
 
     const invitationId = 'inv-404';
 
@@ -297,7 +297,7 @@ test.describe('Invitation edit', () => {
   });
 
   test('cancel button returns to invitation details', async ({ page }) => {
-    await allowAuthorizedSession(page);
+    await allowAdminSession(page);
 
     const invitationId = 'inv-5';
 

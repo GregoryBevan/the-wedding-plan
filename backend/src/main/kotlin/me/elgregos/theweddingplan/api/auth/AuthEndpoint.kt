@@ -1,7 +1,8 @@
 package me.elgregos.theweddingplan.api.auth
 
 import me.elgregos.theweddingplan.api.common.clientAddress
-import me.elgregos.theweddingplan.infrastructure.config.AuthProperties
+import me.elgregos.theweddingplan.infrastructure.config.BackofficeAuthorization
+import me.elgregos.theweddingplan.infrastructure.config.BackofficeCapability
 import org.springframework.http.HttpStatus
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.stereotype.Component
@@ -10,7 +11,7 @@ import org.springframework.web.servlet.function.ServerResponse
 
 @Component
 class AuthEndpoint(
-    private val authProperties: AuthProperties,
+    private val backofficeAuthorization: BackofficeAuthorization,
     private val authRateLimiter: AuthRateLimiter,
 ) {
 
@@ -29,21 +30,18 @@ class AuthEndpoint(
 
         return ServerResponse.ok().body(
             AuthStatusResponse(
-                isAuthenticated = oauth2User != null,
+                authenticated = oauth2User != null,
                 email = email,
-                // Backoffice entry is admin-only for now, matching the still-admin-only API gate
-                // (SecurityConfig). This broadens to "has any backoffice role" — and starts reporting
-                // the resolved capabilities — once read-only reads are enforced (#179) and the UI
-                // consumes them (#180); flipping it earlier would admit read-only users into a UI whose
-                // API calls all return 403.
-                isAuthorized = authProperties.isAdmin(email)
+                authorized = backofficeAuthorization.hasCapability(email, BackofficeCapability.READ),
+                canWrite = backofficeAuthorization.hasCapability(email, BackofficeCapability.WRITE),
             )
         )
     }
 }
 
 data class AuthStatusResponse(
-    val isAuthenticated: Boolean,
+    val authenticated: Boolean,
     val email: String?,
-    val isAuthorized: Boolean,
+    val authorized: Boolean,
+    val canWrite: Boolean,
 )

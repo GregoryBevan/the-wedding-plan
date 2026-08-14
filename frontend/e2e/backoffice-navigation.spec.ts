@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { allowAuthorizedSession } from './fixtures/authSetup';
+import { allowAdminSession } from './fixtures/authSetup';
 import { fulfillJson } from './fixtures/httpHelpers';
 
 test.describe('Backoffice navigation', () => {
   test('add guest view shows success toast and returns to list after submit', async ({ page }) => {
-    await allowAuthorizedSession(page);
+    await allowAdminSession(page);
 
     await page.route('**/api/guests', async (route) => {
       if (route.request().method() === 'POST') {
@@ -43,7 +43,7 @@ test.describe('Backoffice navigation', () => {
   });
 
   test('edit flow keeps list context when canceling', async ({ page }) => {
-    await allowAuthorizedSession(page);
+    await allowAdminSession(page);
 
     await page.route('**/api/guests**', async (route) => {
       const requestUrl = new URL(route.request().url());
@@ -98,7 +98,7 @@ test.describe('Backoffice navigation', () => {
 
 test.describe('Unsaved changes confirmation dialog', () => {
   test('shows custom confirm dialog when canceling form with unsaved changes', async ({ page }) => {
-    await allowAuthorizedSession(page);
+    await allowAdminSession(page);
 
     await page.goto('/guests/new');
 
@@ -118,7 +118,7 @@ test.describe('Unsaved changes confirmation dialog', () => {
   });
 
   test('continues editing when clicking Continue button in dialog', async ({ page }) => {
-    await allowAuthorizedSession(page);
+    await allowAdminSession(page);
 
     await page.goto('/guests/new');
 
@@ -131,7 +131,7 @@ test.describe('Unsaved changes confirmation dialog', () => {
   });
 
   test('leaves form and navigates when clicking Leave button in dialog', async ({ page }) => {
-    await allowAuthorizedSession(page);
+    await allowAdminSession(page);
 
     await page.route('**/api/guests', async (route) => {
       await fulfillJson(route, {

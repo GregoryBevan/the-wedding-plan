@@ -44,6 +44,7 @@ import ConfirmDialog from './components/ui/ConfirmDialog.vue';
 import ToastContainer from './components/ui/ToastContainer.vue';
 import { logout } from './services/authApi';
 import { clearSessionAuthStatus, getSessionAuthStatus } from './services/authStatusCache';
+import { applyCapabilities, resetCapabilities } from './composables/useCapabilities';
 import { BACKOFFICE_ROUTE_NAMES } from './router/routeNames';
 
 const isLoggingOut = ref(false);
@@ -64,6 +65,7 @@ watch(isProtectedRoute, async (isNowProtected, _, onInvalidate) => {
   if (!isNowProtected) {
     if (!isInvalidated) {
       connectedUserEmail.value = null;
+      resetCapabilities();
     }
     return;
   }
@@ -73,10 +75,12 @@ watch(isProtectedRoute, async (isNowProtected, _, onInvalidate) => {
 
     if (!isInvalidated) {
       connectedUserEmail.value = status.email;
+      applyCapabilities(status);
     }
   } catch {
     if (!isInvalidated) {
       connectedUserEmail.value = null;
+      resetCapabilities();
     }
   }
 }, { immediate: true });
@@ -93,6 +97,7 @@ const handleLogout = async () => {
     await logout();
     clearSessionAuthStatus();
     connectedUserEmail.value = null;
+    resetCapabilities();
     await router.push({ name: BACKOFFICE_ROUTE_NAMES.signInRequired });
   } catch {
     logoutErrorMessage.value = 'Unable to sign out. Please try again.';

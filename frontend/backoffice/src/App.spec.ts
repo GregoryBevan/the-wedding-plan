@@ -7,7 +7,7 @@ import { createBackofficeRouter } from './router';
 import { BACKOFFICE_ROUTE_NAMES } from './router/routeNames';
 import { clearSessionAuthStatus } from './services/authStatusCache';
 import type { AuthStatus } from './services/authApi';
-import { authorizedAuthStatus, unauthenticatedAuthStatus, unauthorizedAuthStatus } from './testFixtures/authFixtures';
+import { adminAuthStatus, readOnlyAuthStatus, unauthenticatedAuthStatus, unauthorizedAuthStatus } from './testFixtures/authFixtures';
 import { createGuestPayload } from './testFixtures/guestFixtures';
 
 const authApiMock = vi.hoisted(() => ({
@@ -40,7 +40,7 @@ const guestFormSubmitStub = defineComponent({
 });
 
 
-const mockAuthStatus = (status: AuthStatus = authorizedAuthStatus) => {
+const mockAuthStatus = (status: AuthStatus = adminAuthStatus) => {
   authApiMock.getAuthStatus.mockResolvedValue(status);
 };
 
@@ -144,6 +144,26 @@ describe('App auth states', () => {
     expect(wrapper.text()).toContain('Add a New Guest');
     expect(wrapper.findComponent({ name: 'GuestForm' }).exists()).toBe(true);
     expect(wrapper.findComponent({ name: 'GuestListView' }).exists()).toBe(false);
+  });
+
+  it('allows read-only users to view read routes', async () => {
+    mockAuthStatus(readOnlyAuthStatus);
+
+    const { wrapper, router } = await mountApp({ route: '/guests' });
+
+    expect(router.currentRoute.value.path).toBe('/guests');
+    expect(wrapper.findComponent({ name: 'GuestListView' }).exists()).toBe(true);
+  });
+
+  it('redirects read-only users away from write routes to access denied', async () => {
+    mockAuthStatus(readOnlyAuthStatus);
+
+    const { router } = await mountApp({ route: '/guests' });
+
+    await router.push({ name: BACKOFFICE_ROUTE_NAMES.guestAdd });
+    await flushPromises();
+
+    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.accessDenied);
   });
 
   it('does not refetch auth status in App when only the query string changes', async () => {
