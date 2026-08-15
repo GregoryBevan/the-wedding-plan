@@ -59,27 +59,13 @@ is treated as a write (fail-closed). A read-only user therefore gets `403` even 
 never declared (e.g. `PATCH /api/guests/{id}`, or `DELETE /api/invitations/{id}` where no delete route
 exists) — there is no bypass via direct URL or verb manipulation.
 
-### Illustrative matrix
+### Per-module matrix
 
-Concrete examples of the global rule on the two current modules:
-
-**Invitations (`/api/invitations`)**
-
-| Action | HTTP | Admin | Read-only | Unauthorized |
-| --- | --- | :---: | :---: | :---: |
-| List / detail | `GET /api/invitations`, `GET /api/invitations/{id}` | ✅ | ✅ | ❌ `403` |
-| Create / update | `POST /api/invitations`, `PUT /api/invitations/{id}` | ✅ | ❌ `403` | ❌ `403` |
-
-**Guests (`/api/guests`)**
-
-| Action | HTTP | Admin | Read-only | Unauthorized |
-| --- | --- | :---: | :---: | :---: |
-| List / detail | `GET /api/guests`, `GET /api/guests/{id}` | ✅ | ✅ | ❌ `403` |
-| Create / update | `POST /api/guests`, `PUT /api/guests/{id}` | ✅ | ❌ `403` | ❌ `403` |
-| Archive / restore | `DELETE /api/guests/{id}`, `POST /api/guests/{id}/restoration` | ✅ | ❌ `403` | ❌ `403` |
-
-Note `POST /api/guests/{id}/restoration` is a mutation and is blocked by the verb rule like any other
-`POST` — no special handling needed.
+The complete resource × action breakdown for every module — with each action classified
+(list/show/create/update/delete/custom) and documented decisions for the ambiguous cases (guest
+archive/restore, invitation QR download, list filters) — lives in the authoritative
+[Backoffice permissions matrix](backoffice-permissions-matrix.md). It is the single source of truth; this
+guide intentionally does not restate those tables.
 
 ## Guest self-service access (separate path)
 
