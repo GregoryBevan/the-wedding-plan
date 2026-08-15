@@ -4,14 +4,14 @@ export interface AuthStatus {
   isAuthenticated: boolean;
   email: string | null;
   isAuthorized: boolean;
+  canWrite: boolean;
 }
 
 interface RawAuthStatus {
-  isAuthenticated?: boolean;
   authenticated?: boolean;
   email?: string | null;
-  isAuthorized?: boolean;
   authorized?: boolean;
+  canWrite?: boolean;
 }
 
 export const getAuthStatus = async (): Promise<AuthStatus> => {
@@ -26,9 +26,10 @@ export const getAuthStatus = async (): Promise<AuthStatus> => {
   const payload = await response.json() as RawAuthStatus;
 
   return {
-    isAuthenticated: payload.isAuthenticated ?? payload.authenticated ?? false,
+    isAuthenticated: payload.authenticated ?? false,
     email: payload.email ?? null,
-    isAuthorized: payload.isAuthorized ?? payload.authorized ?? false,
+    isAuthorized: payload.authorized ?? false,
+    canWrite: payload.canWrite ?? payload.authorized ?? false,
   };
 };
 

@@ -77,14 +77,16 @@
       />
 
       <div class="mt-6 flex gap-3">
-        <RouterLink
-          :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationEdit, params: { id: invitation.id } }"
-          aria-label="Edit invitation"
-          class="flex-1 rounded bg-primary px-4 py-2 text-center text-sm text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-          data-test="edit-invitation-link"
-        >
-          Edit
-        </RouterLink>
+        <WriteOnly>
+          <RouterLink
+            :to="{ name: BACKOFFICE_ROUTE_NAMES.invitationEdit, params: { id: invitation.id } }"
+            aria-label="Edit invitation"
+            class="flex-1 rounded bg-primary px-4 py-2 text-center text-sm text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            data-test="edit-invitation-link"
+          >
+            Edit
+          </RouterLink>
+        </WriteOnly>
       </div>
     </article>
   </section>
@@ -94,6 +96,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import InvitationQrCodePanel from '../components/InvitationQrCodePanel.vue';
+import WriteOnly from '../components/ui/WriteOnly.vue';
 import backIcon from '../assets/icons/back.svg';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 import { buildGuestAccessUrl } from '../services/guestAccessUrl';

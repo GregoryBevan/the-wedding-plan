@@ -12,9 +12,10 @@ describe('authApi', () => {
     const fetchMock = mockFetchResponse({
       ok: true,
       body: {
-        isAuthenticated: true,
+        authenticated: true,
         email: 'allowed@example.com',
-        isAuthorized: true
+        authorized: true,
+        canWrite: true
       }
     });
 
@@ -26,16 +27,39 @@ describe('authApi', () => {
     expect(result).toEqual({
       isAuthenticated: true,
       email: 'allowed@example.com',
-      isAuthorized: true
+      isAuthorized: true,
+      canWrite: true
     });
   });
 
-  it('maps backend boolean fields without is-prefix', async () => {
+
+  it('reads read-only users as authorized without write access', async () => {
     mockFetchResponse({
       ok: true,
       body: {
         authenticated: true,
-        email: 'allowed@example.com',
+        email: 'viewer@example.com',
+        authorized: true,
+        canWrite: false
+      }
+    });
+
+    const result = await getAuthStatus();
+
+    expect(result).toEqual({
+      isAuthenticated: true,
+      email: 'viewer@example.com',
+      isAuthorized: true,
+      canWrite: false
+    });
+  });
+
+  it('falls back to the authorized signal for write access when canWrite is absent', async () => {
+    mockFetchResponse({
+      ok: true,
+      body: {
+        authenticated: true,
+        email: 'legacy-admin@example.com',
         authorized: true
       }
     });
@@ -44,8 +68,9 @@ describe('authApi', () => {
 
     expect(result).toEqual({
       isAuthenticated: true,
-      email: 'allowed@example.com',
-      isAuthorized: true
+      email: 'legacy-admin@example.com',
+      isAuthorized: true,
+      canWrite: true
     });
   });
 

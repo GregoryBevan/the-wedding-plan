@@ -1,9 +1,10 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { defineComponent } from 'vue';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import InvitationsListView from './InvitationsListView.vue';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
+import { applyCapabilities, resetCapabilities } from '../composables/useCapabilities';
 
 const listInvitationsMock = vi.hoisted(() => vi.fn());
 const listGuestsMock = vi.hoisted(() => vi.fn());
@@ -24,6 +25,11 @@ vi.mock('../services/guestApi', async (importOriginal) => {
 describe('InvitationsListView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    applyCapabilities({ canWrite: true });
+  });
+
+  afterEach(() => {
+    resetCapabilities();
   });
 
   const mountView = async () => {
@@ -185,6 +191,59 @@ describe('InvitationsListView', () => {
     expect(wrapper.find('[data-test="empty-no-invitations"]').exists()).toBe(true);
     expect(wrapper.find('[data-test="create-first-guest-cta"]').exists()).toBe(false);
     expect(wrapper.text()).toContain('No invitations yet.');
+  });
+
+  it('hides create and edit CTAs in read-only mode while keeping view link', async () => {
+    resetCapabilities();
+    listInvitationsMock.mockResolvedValue({
+      items: [
+        {
+          id: 'inv-1',
+          accessToken: 'token-invitation-1234567890',
+          version: 1,
+          creationDate: '2026-07-01T10:45:28Z',
+          updateDate: '2026-07-01T10:45:28Z',
+          label: 'Family table',
+          description: 'ignored by card content',
+          guests: [],
+          guestCount: 0
+        }
+      ],
+      page: 0,
+      size: 20,
+      totalItems: 1,
+      totalPages: 1
+    });
+
+    const { wrapper } = await mountView();
+    const cards = wrapper.findAll('[data-test="invitation-card"]');
+
+    expect(wrapper.find('[data-test="create-invitation-cta"]').exists()).toBe(false);
+    expect(cards[0].find('a[aria-label="Edit invitation"]').exists()).toBe(false);
+    expect(cards[0].find('a[aria-label="View invitation"]').exists()).toBe(true);
+  });
+
+  it('hides create-first-guest CTA in read-only mode', async () => {
+    resetCapabilities();
+    listInvitationsMock.mockResolvedValue({
+      items: [],
+      page: 0,
+      size: 20,
+      totalItems: 0,
+      totalPages: 0
+    });
+    listGuestsMock.mockResolvedValue({
+      items: [],
+      page: 0,
+      size: 1,
+      totalItems: 0,
+      totalPages: 0
+    });
+
+    const { wrapper } = await mountView();
+
+    expect(wrapper.find('[data-test="empty-no-guests"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="create-first-guest-cta"]').exists()).toBe(false);
   });
 });
 

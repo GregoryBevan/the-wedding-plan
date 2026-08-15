@@ -42,7 +42,7 @@ Set these variables in Render dashboard (or through Blueprint secrets), never in
 - `SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID`
 - `SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET`
 - `APP_AUTH_ADMIN_EMAILS`
-- `APP_AUTH_READ_ONLY_EMAILS` (optional; comma-separated emails for the **read-only** backoffice tier. **Enforced server-side as of #179**: these users can view every module's lists/detail (`GET`) but are blocked (`403`) from any create/edit/delete/archive/restore; UI hiding of write actions (#180) is still pending. Admins in `APP_AUTH_ADMIN_EMAILS` keep full access. See [Backoffice read-only permissions](docs/backoffice-read-only-permissions.md))
+- `APP_AUTH_READ_ONLY_EMAILS` (optional; comma-separated emails for the **read-only** backoffice tier. Enforced server-side and reflected in the UI: these users can view every module's lists/detail (`GET`) but are blocked (`403`) from any create/edit/delete/archive/restore, and the backoffice hides write controls and redirects write routes for them. Admins in `APP_AUTH_ADMIN_EMAILS` keep full access. See [Backoffice read-only permissions](docs/backoffice-read-only-permissions.md))
 - `APP_CORS_ALLOWED_ORIGINS`
 - `APP_AUTH_SUCCESS_REDIRECT_URL`
 - `POSTGRES_HOST`

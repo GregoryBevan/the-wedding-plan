@@ -5,21 +5,22 @@
 
       <h2 class="justify-self-center text-3xl font-light tracking-wide">{{ isArchivedView ? 'Archived Guests' : 'Guests' }}</h2>
 
-      <RouterLink
-        v-if="!isArchivedView"
-        :to="{
-          name: BACKOFFICE_ROUTE_NAMES.guestAdd,
-          query: {
-            page: route.query.page,
-            size: route.query.size
-          }
-        }"
-        data-test="add-guest-shortcut"
-        aria-label="Add a new guest"
-        class="justify-self-end flex h-10 w-10 items-center justify-center rounded-full border border-primary bg-primary text-2xl leading-none text-white hover:opacity-90"
-      >
-        <img :src="addGuestIcon" alt="" aria-hidden="true" class="h-5 w-5 brightness-0 invert" />
-      </RouterLink>
+      <WriteOnly v-if="!isArchivedView">
+        <RouterLink
+          :to="{
+            name: BACKOFFICE_ROUTE_NAMES.guestAdd,
+            query: {
+              page: route.query.page,
+              size: route.query.size
+            }
+          }"
+          data-test="add-guest-shortcut"
+          aria-label="Add a new guest"
+          class="justify-self-end flex h-10 w-10 items-center justify-center rounded-full border border-primary bg-primary text-2xl leading-none text-white hover:opacity-90"
+        >
+          <img :src="addGuestIcon" alt="" aria-hidden="true" class="h-5 w-5 brightness-0 invert" />
+        </RouterLink>
+      </WriteOnly>
       <span v-else class="justify-self-end h-10 w-10" aria-hidden="true"></span>
     </div>
 
@@ -70,42 +71,45 @@
             <td class="px-3 py-2">{{ formatDate(guest.creationDate) }}</td>
             <td class="px-3 py-2 text-right">
               <div class="inline-flex items-center justify-end gap-2">
-                <RouterLink
-                  v-if="!isArchivedView"
-                  :to="{
-                    name: BACKOFFICE_ROUTE_NAMES.guestEdit,
-                    params: { id: guest.id },
-                    query: {
-                      page: route.query.page,
-                      size: route.query.size
-                    }
-                  }"
-                  :data-test="`edit-guest-${guest.id}`"
-                  aria-label="Edit guest"
-                  class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-lg leading-none text-white hover:opacity-90"
-                >
-                  <img :src="editIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
-                </RouterLink>
+                <WriteOnly v-if="!isArchivedView">
+                  <RouterLink
+                    :to="{
+                      name: BACKOFFICE_ROUTE_NAMES.guestEdit,
+                      params: { id: guest.id },
+                      query: {
+                        page: route.query.page,
+                        size: route.query.size
+                      }
+                    }"
+                    :data-test="`edit-guest-${guest.id}`"
+                    aria-label="Edit guest"
+                    class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-lg leading-none text-white hover:opacity-90"
+                  >
+                    <img :src="editIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
+                  </RouterLink>
+                </WriteOnly>
 
-                <button
-                  v-if="!isArchivedView"
-                  :data-test="`archive-guest-${guest.id}`"
-                  aria-label="Archive guest"
-                  class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm leading-none text-white hover:opacity-90"
-                  @click="archiveGuestById(guest.id)"
-                >
-                  <img :src="archiveIcon" alt="" aria-hidden="true" class="h-[18px] w-[18px] brightness-0 invert" />
-                </button>
+                <WriteOnly v-if="!isArchivedView">
+                  <button
+                    :data-test="`archive-guest-${guest.id}`"
+                    aria-label="Archive guest"
+                    class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm leading-none text-white hover:opacity-90"
+                    @click="archiveGuestById(guest.id)"
+                  >
+                    <img :src="archiveIcon" alt="" aria-hidden="true" class="h-[18px] w-[18px] brightness-0 invert" />
+                  </button>
+                </WriteOnly>
 
-                <button
-                  v-if="isArchivedView"
-                  :data-test="`restore-guest-${guest.id}`"
-                  aria-label="Restore guest"
-                  class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm leading-none text-white hover:opacity-90"
-                  @click="restoreGuestById(guest.id)"
-                >
-                  <img :src="restoreIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
-                </button>
+                <WriteOnly v-if="isArchivedView">
+                  <button
+                    :data-test="`restore-guest-${guest.id}`"
+                    aria-label="Restore guest"
+                    class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm leading-none text-white hover:opacity-90"
+                    @click="restoreGuestById(guest.id)"
+                  >
+                    <img :src="restoreIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
+                  </button>
+                </WriteOnly>
               </div>
             </td>
           </tr>
@@ -143,6 +147,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useConfirmDialog } from '../composables/useConfirmDialog';
 import { formatDateInTimeZone } from '../composables/useDateFormatter';
 import { useToast } from '../composables/useToast';
+import WriteOnly from '../components/ui/WriteOnly.vue';
 import archiveIcon from '../assets/icons/archive.svg';
 import addGuestIcon from '../assets/icons/add-guest.svg';
 import editIcon from '../assets/icons/edit.svg';

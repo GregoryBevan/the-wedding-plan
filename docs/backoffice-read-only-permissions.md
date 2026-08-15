@@ -12,28 +12,19 @@ a contributor can apply the pattern to any module **without tribal knowledge**.
 
 ## Status
 
-> ⚠️ **This document describes the _target_ model; parts are not yet live.**
->
-> **Available now (as of #178 / #179):** the backend has two allowlists — `app.auth.admin-emails`
-> (`APP_AUTH_ADMIN_EMAILS`, admin) and `app.auth.read-only-emails` (`APP_AUTH_READ_ONLY_EMAILS`,
-> read-only) — the auth layer resolves a caller's `BackofficeRole` and granted capabilities
-> (`backoffice.read` / `backoffice.write` via `BackofficeAuthorization`) with admin-wins precedence, **and
-> the server-side read/write policy below is enforced** on every `/api/**` route (#179): read-only users
-> pass `GET`/`HEAD` and are blocked (`403`) from every mutating verb.
->
-> **Not yet done:** the UI does not yet hide write actions (#180); and `GET /auth/me` still returns only
-> `isAuthenticated`, `email`, and `isAuthorized` (no capability field until #180 needs it). Until those
-> ship, the UI sections below are the **agreed design**, not live behavior — read "is/are" as "will be".
+The model is **live**: read-only assignment, server-side enforcement, and read-only UI rendering all
+ship. `GET /auth/me` returns JSON fields `authenticated`, `email`, `authorized` (true for admin **and**
+read-only — i.e. may access the backoffice) and `canWrite` (true for admins only); the frontend keys
+write affordances and write-route guards off `canWrite`.
+
+Remaining work — migrating any not-yet-covered modules onto the global rules — is tracked in the epic
+(#176).
 
 ## Roles & backoffice capabilities
 
-_Capabilities, role mapping, and precedence are **implemented** as of #178
-(`BackofficeAuthorization` / `BackofficeCapability` / `BackofficeRole`), and enforced server-side as of
-#179 (`SecurityConfig`). The UI guard (#180) is still pending; see [Status](#status)._
-
 Backoffice access is granted through Google OAuth2 login combined with email allowlists. Access is
 expressed as two **positive** capabilities shared by every module — `backoffice.read` and
-`backoffice.write` — and each role grants a subset (#178):
+`backoffice.write` — and each role grants a subset:
 
 - **Admin** — grants **both** `backoffice.read` and `backoffice.write` (full access). Assigned via
   `app.auth.admin-emails` (`APP_AUTH_ADMIN_EMAILS`).
@@ -49,8 +40,6 @@ read-only capability never downgrades a more privileged role. If additional priv
 
 ## Global policy — how enforcement works
 
-_Implemented server-side as of #179 (`SecurityConfig` verb-based capability check on `/api/**`); #181
-migrates the remaining modules onto it. See [Status](#status)._
 
 Enforcement is **verb-based and global**, not wired per endpoint. Applied to every backoffice `/api/**`
 route:
@@ -110,9 +99,6 @@ possession**. The two are independent.
 
 ## Assigning the read-only role
 
-_Server-side enforcement is live (#178–#179); the UI read-only rendering follows in #180. See
-[Status](#status)._
-
 Assignment is configuration-only; no database change or code redeploy is required.
 
 1. Set the read-only allowlist as a comma-separated list of emails (case-insensitive, whitespace is
@@ -131,10 +117,9 @@ Assignment is configuration-only; no database change or code redeploy is require
 3. Restart / redeploy so the configuration is picked up.
 
 4. The user signs in at `/backoffice` with Google and is authorized: they can read every module but any
-   write returns `403` (enforced server-side as of #179). `GET /auth/me` will additionally report the
-   granted capabilities (e.g. `backoffice.read`) once #180 exposes them (today `/auth/me` returns only
-   `isAuthenticated`, `email`, and `isAuthorized`), at which point the UI renders every module in
-   read-only mode, hiding write affordances.
+   write returns `403` (enforced server-side). `GET /auth/me` reports `authorized: true` and
+   `canWrite: false`, so the UI renders every module in read-only mode — write affordances are hidden and
+   write routes redirect to access-denied.
 
 To **revoke**, remove the email from `APP_AUTH_READ_ONLY_EMAILS` and restart.
 
@@ -149,8 +134,8 @@ hold. For each new module:
 2. **Route under `/api/**`.** The global filter only covers backoffice API routes; keep the module there
    so it inherits the policy.
 3. **Use the shared UI guard.** Render write affordances (create/edit/delete buttons, menu items,
-   toolbars) through the reusable permission-aware component/helper (#180) so they are hidden for
-   read-only users. Do **not** re-implement per-module permission checks.
+   toolbars) through the reusable permission-aware guard (`WriteOnly` / `useCapabilities`) so they are
+   hidden for read-only users. Do **not** re-implement per-module permission checks.
 4. **Key the UI off `/auth/me`.** Use the capability reported there rather than hard-coding email
    checks in components.
 5. **Handle exceptions explicitly** (see next section) if the module has a non-RESTful verb.
@@ -173,7 +158,7 @@ _Current exceptions: none._
 ## Troubleshooting
 
 - **A read-only user sees a write button.** The component isn't using the shared UI guard, or it hard-codes
-  visibility. Route it through the permission-aware helper and key off `/auth/me` (#180).
+  visibility. Route it through the permission-aware guard and key off `/auth/me`.
 - **A read-only user still succeeds on a write via the API.** The route uses a non-mutating verb for a
   mutation (e.g. a write behind `GET`), or sits outside `/api/**`. Fix the verb/placement or add a
   documented exception.

@@ -1,10 +1,11 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { defineComponent } from 'vue';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import GuestList from '../views/GuestListView.vue';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 import { createGuestPage, createGuestResponse } from '../testFixtures/guestFixtures';
+import { applyCapabilities, resetCapabilities } from '../composables/useCapabilities';
 
 const listGuestsMock = vi.hoisted(() => vi.fn());
 const archiveGuestMock = vi.hoisted(() => vi.fn());
@@ -34,6 +35,11 @@ describe('GuestList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     openConfirmMock.mockResolvedValue(true);
+    applyCapabilities({ canWrite: true });
+  });
+
+  afterEach(() => {
+    resetCapabilities();
   });
 
   const mountGuestList = async (route = '/?page=0&size=10') => {
@@ -381,5 +387,35 @@ describe('GuestList', () => {
     expect(restoreGuestMock).toHaveBeenCalledWith('guest-2');
     expect(showToastMock).toHaveBeenCalledWith('Guest restored successfully.');
     expect(listGuestsMock).toHaveBeenNthCalledWith(2, { page: 0, size: 10, status: 'archived' });
+  });
+
+  it('hides write actions in read-only mode', async () => {
+    resetCapabilities();
+    listGuestsMock.mockResolvedValue(createGuestPage({
+      items: [createGuestResponse({ id: 'guest-42' })],
+      totalItems: 1,
+      totalPages: 1,
+      size: 10
+    }));
+
+    const { wrapper } = await mountGuestList();
+
+    expect(wrapper.find('[data-test="add-guest-shortcut"]').exists()).toBe(false);
+    expect(wrapper.find('[data-test="edit-guest-guest-42"]').exists()).toBe(false);
+    expect(wrapper.find('[data-test="archive-guest-guest-42"]').exists()).toBe(false);
+  });
+
+  it('still renders guest rows in read-only mode', async () => {
+    resetCapabilities();
+    listGuestsMock.mockResolvedValue(createGuestPage({
+      items: [createGuestResponse({ id: 'guest-42' })],
+      totalItems: 1,
+      totalPages: 1,
+      size: 10
+    }));
+
+    const { wrapper } = await mountGuestList();
+
+    expect(wrapper.text()).toContain('John Doe');
   });
 });

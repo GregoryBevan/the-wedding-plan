@@ -21,7 +21,8 @@ const routes: RouteRecordRaw[] = [
     name: BACKOFFICE_ROUTE_NAMES.invitationAdd,
     component: () => import('../views/CreateInvitationView.vue'),
     meta: {
-      requiresAuthorized: true
+      requiresAuthorized: true,
+      requiresWrite: true
     }
   },
   {
@@ -29,7 +30,8 @@ const routes: RouteRecordRaw[] = [
     name: BACKOFFICE_ROUTE_NAMES.invitationEdit,
     component: () => import('../views/EditInvitationView.vue'),
     meta: {
-      requiresAuthorized: true
+      requiresAuthorized: true,
+      requiresWrite: true
     }
   },
   {
@@ -61,7 +63,8 @@ const routes: RouteRecordRaw[] = [
     name: BACKOFFICE_ROUTE_NAMES.guestAdd,
     component: () => import('../views/AddGuestView.vue'),
     meta: {
-      requiresAuthorized: true
+      requiresAuthorized: true,
+      requiresWrite: true
     }
   },
   {
@@ -69,7 +72,8 @@ const routes: RouteRecordRaw[] = [
     name: BACKOFFICE_ROUTE_NAMES.guestEdit,
     component: () => import('../views/EditGuestView.vue'),
     meta: {
-      requiresAuthorized: true
+      requiresAuthorized: true,
+      requiresWrite: true
     }
   },
   {
@@ -112,6 +116,12 @@ export const createBackofficeRouter = (
       }
 
       if (!status.isAuthorized) {
+        return { name: BACKOFFICE_ROUTE_NAMES.accessDenied };
+      }
+
+      const requiresWrite = to.matched.some((record) => record.meta.requiresWrite);
+
+      if (requiresWrite && !status.canWrite) {
         return { name: BACKOFFICE_ROUTE_NAMES.accessDenied };
       }
 
