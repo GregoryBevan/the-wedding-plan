@@ -39,6 +39,7 @@ describe('BackofficeSidebar', () => {
     expect(links[1].attributes('href')).toBe('/guests');
   });
 
+
   it('marks invitations link as active on invitations routes', async () => {
     const wrapper = await createSidebarWrapper('/invitations');
 

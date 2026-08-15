@@ -155,6 +155,18 @@ describe('App auth states', () => {
     expect(wrapper.findComponent({ name: 'GuestListView' }).exists()).toBe(true);
   });
 
+  it('surfaces only read routes in navigation for read-only users', async () => {
+    mockAuthStatus(readOnlyAuthStatus);
+
+    const { wrapper } = await mountApp({ route: '/guests' });
+
+    const navHrefs = wrapper
+      .findAll('nav[aria-label="Backoffice navigation"] a')
+      .map((link) => link.attributes('href'));
+
+    expect(navHrefs).toEqual(['/invitations', '/guests']);
+  });
+
   it('redirects read-only users away from write routes to access denied', async () => {
     mockAuthStatus(readOnlyAuthStatus);
 
