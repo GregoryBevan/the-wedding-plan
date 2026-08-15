@@ -166,6 +166,17 @@ describe('App auth states', () => {
     expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.accessDenied);
   });
 
+  it('redirects read-only users away from invitation write routes to access denied', async () => {
+    mockAuthStatus(readOnlyAuthStatus);
+
+    const { router } = await mountApp({ route: '/invitations' });
+
+    await router.push({ name: BACKOFFICE_ROUTE_NAMES.invitationAdd });
+    await flushPromises();
+
+    expect(router.currentRoute.value.name).toBe(BACKOFFICE_ROUTE_NAMES.accessDenied);
+  });
+
   it('does not refetch auth status in App when only the query string changes', async () => {
     mockAuthStatus();
 
