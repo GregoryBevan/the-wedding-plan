@@ -1,9 +1,10 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { defineComponent } from 'vue';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import InvitationDetailsView from './InvitationDetailsView.vue';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
+import { applyCapabilities, resetCapabilities } from '../composables/useCapabilities';
 
 const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: 'medium',
@@ -19,6 +20,11 @@ vi.mock('../services/invitationApi', () => ({
 describe('InvitationDetailsView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    applyCapabilities({ canWrite: true });
+  });
+
+  afterEach(() => {
+    resetCapabilities();
   });
 
   const mountView = async ({
@@ -172,5 +178,42 @@ describe('InvitationDetailsView', () => {
 
     expect(wrapper.get('[data-test="invitation-details-error"]').text()).toBe('Invitation not found.');
     expect(wrapper.find('[data-test="invitation-details-card"]').exists()).toBe(false);
+  });
+
+  it('shows the edit link for users with write access', async () => {
+    getInvitationByIdMock.mockResolvedValue({
+      id: 'inv-1',
+      accessToken: 'token-invitation-1234567890',
+      version: 1,
+      creationDate: '2026-07-03T10:00:00Z',
+      updateDate: '2026-07-04T10:00:00Z',
+      label: 'Family table',
+      description: 'Main family table',
+      guests: [],
+      guestCount: 0
+    });
+
+    const { wrapper } = await mountView();
+
+    expect(wrapper.get('[data-test="edit-invitation-link"]').attributes('href')).toBe('/invitations/inv-1/edit');
+  });
+
+  it('hides the edit link in read-only mode', async () => {
+    resetCapabilities();
+    getInvitationByIdMock.mockResolvedValue({
+      id: 'inv-1',
+      accessToken: 'token-invitation-1234567890',
+      version: 1,
+      creationDate: '2026-07-03T10:00:00Z',
+      updateDate: '2026-07-04T10:00:00Z',
+      label: 'Family table',
+      description: 'Main family table',
+      guests: [],
+      guestCount: 0
+    });
+
+    const { wrapper } = await mountView();
+
+    expect(wrapper.find('[data-test="edit-invitation-link"]').exists()).toBe(false);
   });
 });
