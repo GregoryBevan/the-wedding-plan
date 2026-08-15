@@ -94,4 +94,3 @@ read-only model:
 
 Any new backoffice module must extend this matrix (one row per action) as part of its rollout, keeping it
 complete for all current modules.
-
