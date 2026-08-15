@@ -132,6 +132,30 @@ class BackofficeReadOnlyPolicyIT : AbstractEndpointIntegrationTest() {
     }
 
     @Test
+    fun `should forbid read-only user from mutating through an unmapped verb`() {
+        val csrf = authenticatedCsrfContext(readOnlyEmail)
+
+        restTestClient.patch().uri("/api/guests/${johnDoe.id}")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `should forbid read-only user from mutating a module without a matching write route`() {
+        val csrf = authenticatedCsrfContext(readOnlyEmail)
+
+        restTestClient.delete().uri("/api/invitations/${brideFamilyInvitation.id}")
+            .header(HttpHeaders.COOKIE, csrf.cookies)
+            .header("X-XSRF-TOKEN", csrf.csrfToken)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isForbidden
+    }
+
+    @Test
     fun `should forbid an authenticated but unlisted user from reading`() {
         val csrf = authenticatedCsrfContext(unlistedEmail)
 

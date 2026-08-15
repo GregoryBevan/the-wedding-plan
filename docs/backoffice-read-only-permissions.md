@@ -54,6 +54,11 @@ Because the rule keys off the HTTP verb, **any new module that follows REST conv
 automatically** — reads use `GET`, writes use `POST`/`PUT`/`PATCH`/`DELETE`. Blocking happens at the
 **API layer** (server-side), so hiding UI controls is defense-in-depth, not the only guard.
 
+The check runs in the security filter chain **before request routing**, and any verb that is not `GET`/`HEAD`
+is treated as a write (fail-closed). A read-only user therefore gets `403` even on a verb or path a module
+never declared (e.g. `PATCH /api/guests/{id}`, or `DELETE /api/invitations/{id}` where no delete route
+exists) — there is no bypass via direct URL or verb manipulation.
+
 ### Illustrative matrix
 
 Concrete examples of the global rule on the two current modules:
