@@ -70,6 +70,13 @@ describe('GuestList', () => {
           component: defineComponent({
             template: '<div />'
           })
+        },
+        {
+          path: '/guests/:id',
+          name: BACKOFFICE_ROUTE_NAMES.guestDetails,
+          component: defineComponent({
+            template: '<div />'
+          })
         }
       ]
     });
@@ -369,6 +376,13 @@ describe('GuestList', () => {
           path: '/archive',
           component: GuestList,
           props: { status: 'archived' }
+        },
+        {
+          path: '/guests/:id',
+          name: BACKOFFICE_ROUTE_NAMES.guestDetails,
+          component: defineComponent({
+            template: '<div />'
+          })
         }
       ]
     });
@@ -403,6 +417,7 @@ describe('GuestList', () => {
     expect(wrapper.find('[data-test="add-guest-shortcut"]').exists()).toBe(false);
     expect(wrapper.find('[data-test="edit-guest-guest-42"]').exists()).toBe(false);
     expect(wrapper.find('[data-test="archive-guest-guest-42"]').exists()).toBe(false);
+    expect(wrapper.find('[data-test="view-guest-guest-42"]').exists()).toBe(true);
   });
 
   it('still renders guest rows in read-only mode', async () => {

@@ -71,6 +71,22 @@
             <td class="px-3 py-2">{{ formatDate(guest.creationDate) }}</td>
             <td class="px-3 py-2 text-right">
               <div class="inline-flex items-center justify-end gap-2">
+                <RouterLink
+                  :to="{
+                    name: BACKOFFICE_ROUTE_NAMES.guestDetails,
+                    params: { id: guest.id },
+                    query: {
+                      page: route.query.page,
+                      size: route.query.size
+                    }
+                  }"
+                  :data-test="`view-guest-${guest.id}`"
+                  aria-label="View guest"
+                  class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-lg leading-none text-white hover:opacity-90"
+                >
+                  <img :src="viewIcon" alt="" aria-hidden="true" class="h-4 w-4 brightness-0 invert" />
+                </RouterLink>
+
                 <WriteOnly v-if="!isArchivedView">
                   <RouterLink
                     :to="{
@@ -152,6 +168,7 @@ import archiveIcon from '../assets/icons/archive.svg';
 import addGuestIcon from '../assets/icons/add-guest.svg';
 import editIcon from '../assets/icons/edit.svg';
 import restoreIcon from '../assets/icons/restore.svg';
+import viewIcon from '../assets/icons/view.svg';
 import { BACKOFFICE_ROUTE_NAMES } from '../router/routeNames';
 import {
   archiveGuest,
