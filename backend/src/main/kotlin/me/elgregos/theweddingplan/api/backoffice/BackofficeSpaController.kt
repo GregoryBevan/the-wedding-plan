@@ -10,10 +10,8 @@ class BackofficeSpaController {
         value = [
             "/backoffice",
             "/backoffice/",
-            "/backoffice/guests",
-            "/backoffice/guests/archive",
-            "/backoffice/guests/new",
-            "/backoffice/guests/{id}/edit",
+            "/backoffice/invitations/**",
+            "/backoffice/guests/**",
             "/backoffice/login-required",
             "/backoffice/access-denied",
         ]
