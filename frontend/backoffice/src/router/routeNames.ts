@@ -7,6 +7,7 @@ export const BACKOFFICE_ROUTE_NAMES = {
   guestArchive: 'guest-archive',
   guestAdd: 'guest-add',
   guestEdit: 'guest-edit',
+  guestDetails: 'guest-details',
   signInRequired: 'sign-in-required',
   accessDenied: 'access-denied',
   notFound: 'not-found'

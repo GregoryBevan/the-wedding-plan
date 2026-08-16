@@ -39,3 +39,5 @@ services:
         sync: false
       - key: POSTGRES_PASSWORD
         sync: false
+      - key: SERVER_FORWARD_HEADERS_STRATEGY
+        value: framework

@@ -77,6 +77,14 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/guests/:id',
+    name: BACKOFFICE_ROUTE_NAMES.guestDetails,
+    component: () => import('../views/GuestDetailsView.vue'),
+    meta: {
+      requiresAuthorized: true
+    }
+  },
+  {
     path: '/login-required',
     name: BACKOFFICE_ROUTE_NAMES.signInRequired,
     component: () => import('../views/SignInRequiredView.vue')
